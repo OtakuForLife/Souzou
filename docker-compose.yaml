@@ -1,0 +1,20 @@
+services:
+    webapp:
+        stdin_open: true
+        build: 
+            context: "webapp"
+            dockerfile: Dockerfile
+        volumes:
+            - /app/node_modules
+            - /app/.next
+            - ./webapp/:/app
+        ports:
+            - 3000:3000
+        environment:
+            - WATCHPACK_POLLING=true
+        restart: always
+        networks:
+            - app
+networks:
+    app:
+        driver: bridge
