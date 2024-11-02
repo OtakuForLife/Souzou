@@ -1,4 +1,5 @@
-/mongodb
+env/
+postgres/*
 
 # Logs
 logs
