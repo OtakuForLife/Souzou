@@ -1,10 +1,10 @@
-import api from '@/api';
+import api from '../../api';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { RootState } from '../store';
 import { Note } from '../models/Note';
 
 
-export const createNote = createAsyncThunk('notes/createNote', async (note: {title: string, content: string, parent: number}) => {
+export const createNote = createAsyncThunk('notes/createNote', async (note: {title: string, content: string, parent: string|null}) => {
   var newNoteData = null
   try{
     const createResponse = await api.post("/api/notes/", note);
@@ -21,15 +21,16 @@ export const createNote = createAsyncThunk('notes/createNote', async (note: {tit
 
 export const saveNote = createAsyncThunk('notes/saveNote', async (note: Note) => {
   try{
-    const response = await api.put(`/api/notes/update/${note.id}/`, {title:note.title,content:note.content});
+    const response = await api.put(`/api/notes/update/${note.id}/`, {title:note.title, content:note.content, parent:note.parent});
     //console.log(response);
   } catch (error) {
     console.log(error);
   }
-  return true;
+  const fetchResponse = await api.get("/api/notes/");
+  return {updatedNotes: fetchResponse.data};
 });
 
-export const deleteNote = createAsyncThunk('notes/deleteNote', async (id: number) => {
+export const deleteNote = createAsyncThunk('notes/deleteNote', async (id: string) => {
   try {
     const deleteResponse = await api.delete(`/api/notes/delete/${id}/`);
     if(deleteResponse.status === 204){
@@ -47,12 +48,13 @@ export const deleteNote = createAsyncThunk('notes/deleteNote', async (id: number
 
 export const fetchNotes = createAsyncThunk('notes/fetchNotes', async () =>{
     const response = await api.get("/api/notes/");
+    console.log(`[LOG] Notes fetched: ${JSON.stringify(response.data)}`);
     return response.data;
 });
 
 interface notesState {
   rootNotes: Note[];
-  allNotes: { [id: number] : Note; };
+  allNotes: { [id: string] : Note; };
   openNotes: Note[];
   currentNote: Note | null;
 }
@@ -85,24 +87,39 @@ export const notesSlice = createSlice({
       if(noteIndex>=0){
         state.openNotes.splice(noteIndex, 1);
       }
-      if(state.openNotes.length>0){
-        var newNoteIndex = Math.max(0,noteIndex-1);
-        var newCurrentNote = state.openNotes[newNoteIndex];
-        state.currentNote = newCurrentNote;
-        
-      } else {
-        state.currentNote = null;
+      if(action.payload==state.currentNote?.id) {
+        if(state.openNotes.length>0){
+          var newNoteIndex = Math.max(0,noteIndex-1);
+          var newCurrentNote = state.openNotes[newNoteIndex];
+          state.currentNote = newCurrentNote;
+        } else {
+          state.currentNote = null;
+        }
       }
     },
     updateNote: (state, action) => {
-      const noteID: number = action.payload.noteID;
+      const noteID: string = action.payload.noteID;
       var note: Note = state.allNotes[noteID];
       if(note){
         note.title = action.payload.title;
         note.content = action.payload.content;
+        note.parent = action.payload.parent;
         state.allNotes[noteID] = note;
       }
+      /* var openNoteIndex = state.openNotes.findIndex((note: Note) => note.id == noteID);
+      if(openNoteIndex>0){
+        state.openNotes[openNoteIndex] = note;
+      } */
     },
+    moveOpenNote: (state, action) => {
+      var startNoteIndex = state.openNotes.findIndex((note: Note) => note.id == action.payload.startID);
+      var endNoteIndex = state.openNotes.findIndex((note: Note) => note.id == action.payload.endID);
+
+      state.openNotes.splice(endNoteIndex, 0, state.openNotes.splice(startNoteIndex, 1)[0]);
+    },
+    changeNoteParent: (state, action) => {
+      
+    }
   },
   extraReducers: builder => {
     builder
@@ -131,12 +148,14 @@ export const notesSlice = createSlice({
       
     })
     .addCase(saveNote.fulfilled, (state, action)=>{
-      
+      state.rootNotes = action.payload.updatedNotes.filter((note:Note)=> note.parent==null);
+      state.allNotes = Object.fromEntries(action.payload.updatedNotes.map((note: Note) => [note.id, note]));
+      state.openNotes = state.openNotes.filter((note:Note)=> note.id in state.allNotes);
     })
   },
 })
 
 export const selectNotes = (state: RootState) => state.notes.rootNotes;
-export const {openNote, changeCurrentNote, closeNote, updateNote} = notesSlice.actions;
+export const {openNote, changeCurrentNote, closeNote, updateNote, moveOpenNote} = notesSlice.actions;
 export default notesSlice.reducer;
 export type {notesState};

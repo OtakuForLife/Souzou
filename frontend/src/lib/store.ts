@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import notesSlice from './slices/notesSlice';
+import themeSlice from './slices/themeSlice';
 
 const store = configureStore({
   reducer: {
     notes: notesSlice,
+    theme: themeSlice,
   },
 });
 

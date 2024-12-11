@@ -14,7 +14,7 @@ function Form({route, method}: formProps) {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: { preventDefault: () => void; }) => {
         setLoading(true);
         e.preventDefault();
 

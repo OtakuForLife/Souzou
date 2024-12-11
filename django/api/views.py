@@ -12,7 +12,7 @@ class NoteListCreate(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Note.objects.filter(author=user)#, parent__isnull=True)
+        return Note.objects.filter(author=user).order_by('created_at')#, parent__isnull=True)
 
     def perform_create(self, serializer):
         if serializer.is_valid():

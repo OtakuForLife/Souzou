@@ -1,22 +1,33 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Home from './pages/Home'
-import NotFound from './pages/NotFound'
-import ProtectedRoute from './components/ProtectedRoute'
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import NotFound from './pages/NotFound';
+import Test from './pages/Test';
+import ProtectedRoute from './components/ProtectedRoute';
+import { useAppDispatch } from "./lib/hooks";
+import { loadTheme } from "./lib/slices/themeSlice";
+import { ACCESS_TOKEN, REFRESH_TOKEN } from './constants';
 
 function Logout() {
-  localStorage.clear()
+  localStorage.removeItem(ACCESS_TOKEN);
+  localStorage.removeItem(REFRESH_TOKEN);
   return <Navigate to="/login"/>
 }
 
 function RegisterAndLogout() {
-  localStorage.clear()
+  localStorage.removeItem(ACCESS_TOKEN);
+  localStorage.removeItem(REFRESH_TOKEN);
   return <Register/>
 }
 
 function App() {
+  const dispatch = useAppDispatch();
+  useEffect(()=> {
+    dispatch(loadTheme());
+  }, [dispatch]);
+  
   return (
     <BrowserRouter>
       <Routes>
@@ -36,6 +47,9 @@ function App() {
         }/>
         <Route path='*' element={
           <NotFound/>
+        }/>
+        <Route path='/test' element={
+          <Test/>
         }/>
       </Routes>
     </BrowserRouter>
