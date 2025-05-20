@@ -3,7 +3,7 @@ import * as ThemeSlice from "../themeSlice";
 
 const reducer = ThemeSlice.default;
 const { setTheme, loadTheme, LOCAL_STORAGE_KEY } = ThemeSlice;
-type themeState = ThemeSlice.themeState;
+type themeState = ThemeSlice.ThemeState;
 
 
 const getItemSpy = vi.spyOn(Storage.prototype, 'getItem')
