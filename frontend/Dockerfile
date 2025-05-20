@@ -1,11 +1,23 @@
-FROM node:alpine 
+FROM node:18-alpine as build
 
 WORKDIR /app
 
-COPY package.json /app
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
-RUN npm install
+# Install dependencies
+RUN npm ci
 
-COPY .  /app
+# Copy the rest of the code
+COPY . .
 
-CMD npm run dev
+# Build the app
+RUN npm run build
+
+
+FROM node:18-alpine
+
+RUN npm install -g serve
+
+# Use serve to host the built files
+CMD ["serve", "-s", "dist", "-l", ${FRONTEND_PORT}, "--cors", "--no-clipboard", "--no-port-switching"]

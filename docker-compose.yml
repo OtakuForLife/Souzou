@@ -1,0 +1,43 @@
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+    # Port exposed for direct access if needed
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - BACKEND_PORT=8000
+      - DJANGO_SETTINGS_MODULE=backend.dev_settings
+    networks:
+      - default
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # Port exposed for direct access if needed
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - FRONTEND_PORT=5173
+      - NODE_ENV=development
+      - VITE_BACKEND_HOST=localhost
+      - VITE_BACKEND_PORT=8000
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - default
+
+networks:
+  default :
+    name: custom_network

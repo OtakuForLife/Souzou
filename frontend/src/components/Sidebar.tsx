@@ -19,8 +19,8 @@ import {
   } from "./ui/sidebar";
 import { Button } from "./ui/button";
 import SettingsDialog from "./SettingsDialog";
-import { useAppDispatch } from "../lib/hooks";
-import { createNote } from "../lib/slices/notesSlice";
+import { useAppDispatch } from "@/hooks";
+import { createNote } from "@/store/slices/notesSlice";
 
 interface AppSidebarProps {
   onIconOneClick: ()=>void

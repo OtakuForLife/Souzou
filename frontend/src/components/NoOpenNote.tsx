@@ -1,6 +1,6 @@
 import { Button } from "./ui/button";
-import { useAppDispatch } from "../lib/hooks";
-import { createNote } from "../lib/slices/notesSlice";
+import { useAppDispatch } from "@/hooks";
+import { createNote } from "@/store/slices/notesSlice";
 
 export default function NoOpenNote(){
     const dispatch = useAppDispatch();

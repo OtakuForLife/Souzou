@@ -1,14 +1,14 @@
-
 import NoteTreeItem from "./NoteTreeItem";
-import { useAppSelector } from "../lib/hooks";
-import { Note } from "../lib/models/Note";
-import { notesState } from "../lib/slices/notesSlice";
+import { Note } from "@/models/Note";
+import { RootState } from "@/store";
+import { NoteState } from "@/store/slices/notesSlice";
+import { useSelector } from "react-redux";
 
 
 export const NoteTree = () => {
-  const notes: Note[] = useAppSelector((state: { notes: notesState }) => state.notes.rootNotes);
+  const noteState: NoteState = useSelector((state: RootState) => state.notes);
+  const notes: Note[] = noteState.rootNotes;
   return (
-    
     <div className="flex-initial justify-center w-full h-full bg-skin-primary text-skin-primary">
       <h1 className="text-center text-2xl font-bold mb-4 w-full">My Notes</h1>
       <div className="px-1">

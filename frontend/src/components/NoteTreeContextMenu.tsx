@@ -1,11 +1,8 @@
+import { useAppDispatch } from "@/hooks";
 import {
     ContextMenu,
-    ContextMenuCheckboxItem,
     ContextMenuContent,
     ContextMenuItem,
-    ContextMenuLabel,
-    ContextMenuRadioGroup,
-    ContextMenuRadioItem,
     ContextMenuSeparator,
     ContextMenuShortcut,
     ContextMenuSub,
@@ -13,9 +10,8 @@ import {
     ContextMenuSubTrigger,
     ContextMenuTrigger,
   } from "../components/ui/context-menu";
-import { Note } from "../lib/models/Note";
-import { useAppDispatch } from "../lib/hooks";
-import { deleteNote, createNote, closeNote } from "../lib/slices/notesSlice";
+import { Note } from "@/models/Note";
+import { closeNote, createNote, deleteNote } from "@/store/slices/notesSlice";
   
 interface NoteTreeContextMenuProps {
     children: React.ReactNode;

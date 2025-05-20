@@ -1,59 +1,41 @@
-import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Home from './pages/Home';
-import NotFound from './pages/NotFound';
-import Test from './pages/Test';
-import ProtectedRoute from './components/ProtectedRoute';
-import { useAppDispatch } from "./lib/hooks";
-import { loadTheme } from "./lib/slices/themeSlice";
-import { ACCESS_TOKEN, REFRESH_TOKEN } from './constants';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Provider } from 'react-redux'
+import { setupStore } from './store'
+import { useEffect } from 'react'
+import HomePage from './pages/HomePage'
+import NotFoundPage from './pages/NotFoundPage'
+import { useAppDispatch } from './hooks/useAppDispatch'
+import { loadTheme } from './store/slices/themeSlice'
 
-function Logout() {
-  localStorage.removeItem(ACCESS_TOKEN);
-  localStorage.removeItem(REFRESH_TOKEN);
-  return <Navigate to="/login"/>
-}
+// Create a component to load theme
+const AppContent = () => {
+  const dispatch = useAppDispatch()
 
-function RegisterAndLogout() {
-  localStorage.removeItem(ACCESS_TOKEN);
-  localStorage.removeItem(REFRESH_TOKEN);
-  return <Register/>
+  useEffect(() => {
+    dispatch(loadTheme())
+  }, [dispatch])
+
+  return (
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+  )
 }
 
 function App() {
-  const dispatch = useAppDispatch();
-  useEffect(()=> {
-    dispatch(loadTheme());
-  }, [dispatch]);
-  
+  const store = setupStore()
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={
-          <ProtectedRoute>
-            <Home/>
-          </ProtectedRoute>
-        }/>
-        <Route path='/login' element={
-          <Login/>
-        }/>
-        <Route path='/logout' element={
-          <Logout/>
-        }/>
-        <Route path='/register' element={
-          <RegisterAndLogout/>
-        }/>
-        <Route path='*' element={
-          <NotFound/>
-        }/>
-        <Route path='/test' element={
-          <Test/>
-        }/>
-      </Routes>
-    </BrowserRouter>
+    <Provider store={store}>
+      <Router>
+        <AppContent />
+      </Router>
+    </Provider>
   )
 }
 
 export default App
+
+
+
+

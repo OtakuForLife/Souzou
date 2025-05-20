@@ -5,34 +5,22 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../components/ui/collapsible"
-import React, { ReactNode, useState } from 'react';
+import React, { JSX, useState } from 'react';
 import {
-  DndContext,
   useDraggable,
-  useDroppable, 
-  DragOverlay, 
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
+  useDroppable,
 } from '@dnd-kit/core';
 import {Active, Over} from '@dnd-kit/core/dist/store/types';
-import {CSS} from '@dnd-kit/utilities';
-import {SortableContext, horizontalListSortingStrategy, useSortable} from '@dnd-kit/sortable';
-import {
-  restrictToHorizontalAxis,
-  restrictToWindowEdges
-} from '@dnd-kit/modifiers';
 
 
-import {Note} from '../lib/models/Note';
 import {NoteTreeItemContextMenu} from '../components/NoteTreeContextMenu';
 
-import { useAppDispatch } from "../lib/hooks";
-import { notesState, openNote, saveNote } from "../lib/slices/notesSlice";
-import { useAppSelector } from '../lib/hooks';
-import internal from 'stream';
+
+import { useAppDispatch } from '@/hooks';
+import { NoteState, openNote, saveNote } from '@/store/slices/notesSlice';
+import { useSelector } from 'react-redux';
+import { Note } from '@/models/Note';
+import { RootState } from '@/store';
 
 interface TreeItemDroppableProps {
   noteID: string;
@@ -41,7 +29,8 @@ interface TreeItemDroppableProps {
 
 function TreeItemDroppable({noteID, children}: TreeItemDroppableProps){
   const dispatch = useAppDispatch();
-  const notes: { [id: string] : Note; } = useAppSelector((state: { notes: notesState }) => state.notes.allNotes);
+  const noteState: NoteState = useSelector((state: RootState) => state.notes);
+  const notes: { [id: string] : Note; } = noteState.allNotes;
   
   const onTreeItemDropped = (active: Active, over: Over) => {
     var startNoteID = active.data.current?.note;
@@ -121,14 +110,15 @@ interface NoteTreeItemProps {
 
 function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
   const depthSize = 4;
-  const note: Note = useAppSelector((state: {notes: notesState}) => state.notes.allNotes[noteID]);
+  const noteState: NoteState = useSelector((state: RootState) => state.notes);
+  const note: Note = noteState.allNotes[noteID];
   const dispatch = useAppDispatch();
   const onClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     dispatch(openNote(note));
   }
   const [isOpen, setIsOpen] = useState(false);
-  const onDragStart = (active: Active) => {
+  const onDragStart = (_active: Active) => {
     setIsOpen(false);
   };
   
