@@ -1,5 +1,5 @@
 import { expect, test, vi, afterEach, describe, beforeEach } from "vitest"
-import * as NotesSlice from "../notesSlice";
+import * as NotesSlice from "@/store/slices/notesSlice";
 import api from '@/lib/api';
 import { Note } from '@/models/Note';
 

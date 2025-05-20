@@ -1,5 +1,5 @@
 import { expect, test, vi, afterEach } from "vitest"
-import * as ThemeSlice from "../themeSlice";
+import * as ThemeSlice from "@/store/slices/themeSlice";
 
 const reducer = ThemeSlice.default;
 const { setTheme, loadTheme, LOCAL_STORAGE_KEY } = ThemeSlice;
