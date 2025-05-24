@@ -72,7 +72,10 @@ Souzou is in active development. Contributions, feedback, and ideas are always w
 
 ## 📄 License
 
-*MIT License* – use it, fork it, make it yours.
+This project is licensed under the [GNU General Public License v3.0](./LICENSE).
+
+You are free to use, modify, and distribute the software, provided any derivative work is also open-sourced under the same license.
+
 
 ---
 
