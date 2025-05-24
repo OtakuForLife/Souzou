@@ -59,6 +59,7 @@ dist/
 # IDE
 .idea/
 .vscode/
+.continue
 *.swp
 *.swo
 *~

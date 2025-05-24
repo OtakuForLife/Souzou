@@ -1,31 +1,42 @@
 
-import { createSlice } from '@reduxjs/toolkit'
-
-const DEFAULT_THEME = "dark";
-export const LOCAL_STORAGE_KEY = "theme";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { THEME_CONFIG, ThemeType } from '@/config/constants';
+import { log } from '@/lib/logger';
 
 interface ThemeState {
-  theme: string;
+  theme: ThemeType;
 }
 
 const initialState: ThemeState = {
-  theme: DEFAULT_THEME,
+  theme: THEME_CONFIG.DEFAULT_THEME,
 }
 
 const themeSlice = createSlice({
     name: 'theme',
     initialState,
     reducers: {
-        setTheme: (state, action) => {
-            const newTheme: string = action.payload || DEFAULT_THEME;
-            localStorage.setItem(LOCAL_STORAGE_KEY, newTheme);
-            document.querySelector('body')?.setAttribute('data-theme', newTheme);
-            state.theme = newTheme;
+        setTheme: (state, action: PayloadAction<ThemeType>) => {
+            const newTheme: ThemeType = action.payload || THEME_CONFIG.DEFAULT_THEME;
+
+            try {
+                localStorage.setItem(THEME_CONFIG.LOCAL_STORAGE_KEY, newTheme);
+                document.querySelector('body')?.setAttribute('data-theme', newTheme);
+                state.theme = newTheme;
+                log.info('Theme changed', { theme: newTheme });
+            } catch (error) {
+                log.error('Failed to set theme', error as Error, { theme: newTheme });
+            }
         },
         loadTheme: (state) => {
-            const theme: string = localStorage.getItem(LOCAL_STORAGE_KEY) || DEFAULT_THEME;
-            document.querySelector('body')?.setAttribute('data-theme', theme);
-            state.theme = theme;
+            try {
+                const theme: ThemeType = (localStorage.getItem(THEME_CONFIG.LOCAL_STORAGE_KEY) as ThemeType) || THEME_CONFIG.DEFAULT_THEME;
+                document.querySelector('body')?.setAttribute('data-theme', theme);
+                state.theme = theme;
+                log.info('Theme loaded', { theme });
+            } catch (error) {
+                log.error('Failed to load theme', error as Error);
+                state.theme = THEME_CONFIG.DEFAULT_THEME;
+            }
         }
     },
 })

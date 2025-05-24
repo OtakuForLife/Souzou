@@ -17,7 +17,9 @@ import {NoteTreeItemContextMenu} from '../components/NoteTreeContextMenu';
 
 
 import { useAppDispatch } from '@/hooks';
-import { NoteState, openNote, saveNote } from '@/store/slices/notesSlice';
+import { NoteState, saveNote } from '@/store/slices/notesSlice';
+import { openTab } from '@/store/slices/tabsSlice';
+import { ContentType } from '@/types/contentTypes';
 import { useSelector } from 'react-redux';
 import { Note } from '@/models/Note';
 import { RootState } from '@/store';
@@ -31,11 +33,11 @@ function TreeItemDroppable({noteID, children}: TreeItemDroppableProps){
   const dispatch = useAppDispatch();
   const noteState: NoteState = useSelector((state: RootState) => state.notes);
   const notes: { [id: string] : Note; } = noteState.allNotes;
-  
+
   const onTreeItemDropped = (active: Active, over: Over) => {
     var startNoteID = active.data.current?.note;
     var endNoteID = over.data.current?.note;
-    
+
     const note = notes[startNoteID];
     var updatedNote: Note = {...note};
     updatedNote.parent = endNoteID;
@@ -100,7 +102,7 @@ function VerticalLine({depth, maxDepth, lineSize, depthSize, children}: Vertical
   return (
     <>{children}</>
   );
-  
+
 }
 
 interface NoteTreeItemProps {
@@ -115,13 +117,16 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
   const dispatch = useAppDispatch();
   const onClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
-    dispatch(openNote(note));
+    dispatch(openTab({
+      objectType: ContentType.NOTE,
+      objectID: note.id
+    }));
   }
   const [isOpen, setIsOpen] = useState(false);
   const onDragStart = (_active: Active) => {
     setIsOpen(false);
   };
-  
+
   if(note.children?.length>0){
     return (
       <NoteTreeItemContextMenu note={note}>
@@ -175,7 +180,7 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
         </TreeItemDroppable>
       </NoteTreeItemContextMenu>
     );
-  }  
+  }
 }
 
 export default NoteTreeItem;

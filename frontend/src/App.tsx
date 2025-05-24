@@ -6,20 +6,31 @@ import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import { useAppDispatch } from './hooks/useAppDispatch'
 import { loadTheme } from './store/slices/themeSlice'
+import { ErrorBoundary } from './components/common'
+import { log } from './lib/logger'
 
 // Create a component to load theme
 const AppContent = () => {
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    dispatch(loadTheme())
+    log.info('Application starting');
+    dispatch(loadTheme());
   }, [dispatch])
 
   return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        log.error('Application error caught by boundary', error, {
+          componentStack: errorInfo.componentStack,
+        });
+      }}
+    >
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+    </ErrorBoundary>
   )
 }
 

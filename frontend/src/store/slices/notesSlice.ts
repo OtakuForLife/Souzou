@@ -1,158 +1,137 @@
-import api from '@/lib/api';
 import { Note } from '@/models/Note';
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { noteService, CreateNoteRequest } from '@/services/noteService';
 
-
-export const createNote = createAsyncThunk('notes/createNote', async (note: {title: string, content: string, parent: string|null}) => {
-  var newNoteData = null
-  try{
-    const createResponse = await api.post("/api/notes/", note);
-    if(createResponse.status === 201){
-      newNoteData = createResponse.data;
-      console.log(`[LOG] successfully created Note with data: ${JSON.stringify(note)}`);
-    }
-  } catch (error) {
-    console.log(error);
+export const createNote = createAsyncThunk(
+  'notes/createNote',
+  async (note: CreateNoteRequest) => {
+    return await noteService.createNote(note);
   }
-  const fetchResponse = await api.get("/api/notes/");
-  return {parent:note.parent, newNoteData:newNoteData, updatedNotes: fetchResponse.data};
-});
+);
 
-export const saveNote = createAsyncThunk('notes/saveNote', async (note: Note) => {
-  try{
-    await api.put(`/api/notes/${note.id}/`, {title:note.title, content:note.content, parent:note.parent});
-  } catch (error) {
-    console.log(error);
+export const saveNote = createAsyncThunk(
+  'notes/saveNote',
+  async (note: Note) => {
+    return await noteService.saveNote(note);
   }
-  const fetchResponse = await api.get("/api/notes/");
-  return {updatedNotes: fetchResponse.data};
-});
+);
 
-export const deleteNote = createAsyncThunk('notes/deleteNote', async (id: string) => {
-  try {
-    const deleteResponse = await api.delete(`/api/notes/${id}/`);
-    if(deleteResponse.status === 204){
-      console.log(`[LOG] note successfully deleted: ${id}`);
-    } else {
-      console.warn(`[WARN] note could not be deleted: ${id}`);
-    }
-  } catch (error) {
-    console.error(error);
+export const deleteNote = createAsyncThunk(
+  'notes/deleteNote',
+  async (id: string) => {
+    return await noteService.deleteNote(id);
   }
+);
 
-  const fetchResponse = await api.get("/api/notes/");
-  return fetchResponse.data;
-});
-
-export const fetchNotes = createAsyncThunk('notes/fetchNotes', async () =>{
-    const response = await api.get("/api/notes/");
-    console.log(`[LOG] Notes fetched: ${JSON.stringify(response.data)}`);
-    return response.data;
-});
+export const fetchNotes = createAsyncThunk(
+  'notes/fetchNotes',
+  async () => {
+    return await noteService.fetchNotes();
+  }
+);
 
 interface NoteState {
   rootNotes: Note[];
   allNotes: { [id: string] : Note; };
-  openNotes: Note[];
-  currentNote: Note | null;
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: NoteState = {
   rootNotes: [],
   allNotes: {},
-  openNotes: [],
-  currentNote: null
+  loading: false,
+  error: null,
 }
 
 export const notesSlice = createSlice({
   name: 'notes',
   initialState,
   reducers: {
-    openNote: (state, action) => {
-      var payload: Note = action.payload;
-      var noteIndex = state.openNotes.findIndex((note: Note) => note.id == payload.id);
-      if(noteIndex < 0){
-        state.openNotes.push(payload);
-      }
-      state.currentNote = payload;
-    },
-    changeCurrentNote: (state, action) => {
-      var noteIndex = state.openNotes.findIndex((note: Note) => note.id == action.payload);
-      state.currentNote = state.openNotes[noteIndex];
-    },
-    closeNote: (state, action) => {
-      var noteIndex = state.openNotes.findIndex((note: Note) => note.id == action.payload);
-      if(noteIndex>=0){
-        state.openNotes.splice(noteIndex, 1);
-      }
-      if(action.payload==state.currentNote?.id) {
-        if(state.openNotes.length>0){
-          var newNoteIndex = Math.max(0,noteIndex-1);
-          var newCurrentNote = state.openNotes[newNoteIndex];
-          state.currentNote = newCurrentNote;
-        } else {
-          state.currentNote = null;
-        }
-      }
-    },
-    updateNote: (state, action) => {
+    updateNote: (state, action: PayloadAction<{
+      noteID: string;
+      title?: string;
+      content?: string;
+      parent?: string | null;
+    }>) => {
       const noteID: string = action.payload.noteID;
       var note: Note = state.allNotes[noteID];
       if(note){
-        note.title = action.payload.title;
-        note.content = action.payload.content;
-        note.parent = action.payload.parent;
+        if (action.payload.title !== undefined) note.title = action.payload.title;
+        if (action.payload.content !== undefined) note.content = action.payload.content;
+        if (action.payload.parent !== undefined) note.parent = action.payload.parent;
         state.allNotes[noteID] = note;
       }
-      /* var openNoteIndex = state.openNotes.findIndex((note: Note) => note.id == noteID);
-      if(openNoteIndex>0){
-        state.openNotes[openNoteIndex] = note;
-      } */
     },
-    moveOpenNote: (state, action) => {
-      var startNoteIndex = state.openNotes.findIndex((note: Note) => note.id == action.payload.startID);
-      var endNoteIndex = state.openNotes.findIndex((note: Note) => note.id == action.payload.endID);
-
-      state.openNotes.splice(endNoteIndex, 0, state.openNotes.splice(startNoteIndex, 1)[0]);
-    },
-    changeNoteParent: (state, action) => {
-      
+    changeNoteParent: (state, action: PayloadAction<{ noteID: string; newParent: string | null }>) => {
+      // TODO: Implement note parent change logic
+      const { noteID, newParent } = action.payload;
+      if (state.allNotes[noteID]) {
+        state.allNotes[noteID].parent = newParent;
+      }
     }
   },
   extraReducers: builder => {
     builder
-    .addCase(fetchNotes.pending, (state, action) => {
-
+    .addCase(fetchNotes.pending, (state) => {
+      state.loading = true;
+      state.error = null;
     })
     .addCase(fetchNotes.fulfilled, (state, action)=>{
-      state.rootNotes = action.payload.filter((note:Note)=> note.parent==null);
+      state.loading = false;
+      state.error = null;
+      state.rootNotes = action.payload.filter((note:Note)=> note.parent === null);
       state.allNotes = Object.fromEntries(action.payload.map((note: Note) => [note.id, note]));
     })
-    .addCase(deleteNote.fulfilled, (state, action)=>{
-      state.rootNotes = action.payload.filter((note:Note)=> note.parent==null);
-      state.allNotes = Object.fromEntries(action.payload.map((note: Note) => [note.id, note]));
-
-      state.openNotes = state.openNotes.filter((note:Note)=> note.id in state.allNotes);
+    .addCase(fetchNotes.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to fetch notes';
+    })
+    .addCase(createNote.pending, (state) => {
+      state.loading = true;
+      state.error = null;
     })
     .addCase(createNote.fulfilled, (state, action)=>{
-      //{parent:note.parent, newNoteData:newNoteData, updatedNotes: fetchResponse.data}
-      state.rootNotes = action.payload.updatedNotes.filter((note:Note)=> note.parent==null);
+      state.loading = false;
+      state.error = null;
+      state.rootNotes = action.payload.updatedNotes.filter((note:Note)=> note.parent === null);
       state.allNotes = Object.fromEntries(action.payload.updatedNotes.map((note: Note) => [note.id, note]));
-      state.openNotes = state.openNotes.filter((note:Note)=> note.id in state.allNotes);
-      
-      const newNote: Note = state.allNotes[action.payload.newNoteData.id];
-      state.openNotes.push(newNote);
-      state.currentNote = newNote;
-      
+    })
+    .addCase(createNote.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to create note';
+    })
+    .addCase(saveNote.pending, (state) => {
+      state.loading = true;
+      state.error = null;
     })
     .addCase(saveNote.fulfilled, (state, action)=>{
-      state.rootNotes = action.payload.updatedNotes.filter((note:Note)=> note.parent==null);
+      state.loading = false;
+      state.error = null;
+      state.rootNotes = action.payload.updatedNotes.filter((note:Note)=> note.parent === null);
       state.allNotes = Object.fromEntries(action.payload.updatedNotes.map((note: Note) => [note.id, note]));
-      state.openNotes = state.openNotes.filter((note:Note)=> note.id in state.allNotes);
+    })
+    .addCase(saveNote.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to save note';
+    })
+    .addCase(deleteNote.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(deleteNote.fulfilled, (state, action)=>{
+      state.loading = false;
+      state.error = null;
+      state.rootNotes = action.payload.filter((note:Note)=> note.parent === null);
+      state.allNotes = Object.fromEntries(action.payload.map((note: Note) => [note.id, note]));
+    })
+    .addCase(deleteNote.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to delete note';
     })
   },
 })
 
-export const {openNote, changeCurrentNote, closeNote, updateNote, moveOpenNote} = notesSlice.actions;
+export const {updateNote, changeNoteParent} = notesSlice.actions;
 export default notesSlice.reducer;
 export type {NoteState};

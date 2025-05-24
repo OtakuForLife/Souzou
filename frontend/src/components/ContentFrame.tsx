@@ -1,20 +1,21 @@
 
 import NoOpenNote from "./NoOpenNote";
-import EditorTabs from './EditorTabs';
-import { Note } from "@/models/Note";
+import TabContentGroup from './TabContentGroup';
 import { RootState } from "@/store";
-import { NoteState } from "@/store/slices/notesSlice";
+import { TabsState } from "@/store/slices/tabsSlice";
 import { useSelector } from "react-redux";
 
 
 export default function ContentFrame(){
-    const noteState: NoteState = useSelector((state: RootState) => state.notes);
-    const openNotes: Note[] = noteState.openNotes;
-    const currentNote: Note | null = noteState.currentNote;
+    const tabsState: TabsState = useSelector((state: RootState) => state.tabs);
+
+    // Show TabContentGroup if there are any open tabs
+    const hasOpenTabs = tabsState.openTabs.length > 0;
+
     return (
-        <>
-            {openNotes?.length>0 && currentNote!=null ? <EditorTabs/>: <NoOpenNote/>}
-        </>
+        <div className="h-full w-full bg-skin-primary">
+            {hasOpenTabs ? <TabContentGroup/>: <NoOpenNote/>}
+        </div>
     )
-    
+
 }

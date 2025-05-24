@@ -14,12 +14,9 @@ vi.mock('@/lib/api', () => ({
 }));
 
 const reducer = NotesSlice.default;
-const { 
-  openNote, 
-  changeCurrentNote, 
-  closeNote, 
-  updateNote, 
-  moveOpenNote,
+const {
+  updateNote,
+  changeNoteParent,
   fetchNotes,
   createNote,
   saveNote,
@@ -70,77 +67,15 @@ describe('notesSlice', () => {
     const initialState = reducer(undefined, { type: '' });
     expect(initialState).toEqual({
       rootNotes: [],
-      allNotes: {},
-      openNotes: [],
-      currentNote: null
+      allNotes: {}
     });
   });
 
   describe('reducers', () => {
-    test('should handle openNote', () => {
-      const previousState: NoteState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
-        openNotes: [],
-        currentNote: null
-      };
-
-      // Open a note
-      let nextState = reducer(previousState, openNote(mockNote1));
-      expect(nextState.openNotes).toHaveLength(1);
-      expect(nextState.openNotes[0]).toEqual(mockNote1);
-      expect(nextState.currentNote).toEqual(mockNote1);
-
-      // Open another note
-      nextState = reducer(nextState, openNote(mockNote2));
-      expect(nextState.openNotes).toHaveLength(2);
-      expect(nextState.openNotes[1]).toEqual(mockNote2);
-      expect(nextState.currentNote).toEqual(mockNote2);
-
-      // Open a note that's already open (shouldn't add it again)
-      nextState = reducer(nextState, openNote(mockNote1));
-      expect(nextState.openNotes).toHaveLength(2);
-      expect(nextState.currentNote).toEqual(mockNote1);
-    });
-
-    test('should handle changeCurrentNote', () => {
-      const previousState: NoteState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
-        openNotes: [mockNote1, mockNote2],
-        currentNote: mockNote1
-      };
-
-      const nextState = reducer(previousState, changeCurrentNote('2'));
-      expect(nextState.currentNote).toEqual(mockNote2);
-    });
-
-    test('should handle closeNote', () => {
-      const previousState: NoteState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
-        openNotes: [mockNote1, mockNote2],
-        currentNote: mockNote2
-      };
-
-      // Close the current note
-      let nextState = reducer(previousState, closeNote('2'));
-      expect(nextState.openNotes).toHaveLength(1);
-      expect(nextState.openNotes[0]).toEqual(mockNote1);
-      expect(nextState.currentNote).toEqual(mockNote1);
-
-      // Close the only remaining note
-      nextState = reducer(nextState, closeNote('1'));
-      expect(nextState.openNotes).toHaveLength(0);
-      expect(nextState.currentNote).toBeNull();
-    });
-
     test('should handle updateNote', () => {
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
-        openNotes: [mockNote1],
-        currentNote: mockNote1
+        allNotes: { '1': mockNote1, '2': mockNote2 }
       };
 
       const updatedTitle = 'Updated Title';
@@ -157,23 +92,17 @@ describe('notesSlice', () => {
       expect(nextState.allNotes['1'].content).toEqual(updatedContent);
     });
 
-    test('should handle moveOpenNote', () => {
+    test('should handle changeNoteParent', () => {
       const previousState: NoteState = {
-        rootNotes: [mockNote1, mockNote2, mockNote3],
-        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
-        openNotes: [mockNote1, mockNote2, mockNote3],
-        currentNote: mockNote1
+        rootNotes: [mockNote1, mockNote2],
+        allNotes: { '1': mockNote1, '2': mockNote2 }
       };
 
-      const nextState = reducer(previousState, moveOpenNote({
-        startID: '1',
-        endID: '3'
-      }));
+      // This is a placeholder test since the implementation is TODO
+      const nextState = reducer(previousState, changeNoteParent({ noteID: '1', newParent: '2' }));
 
-      // The order should be: mockNote2, mockNote3, mockNote1
-      expect(nextState.openNotes[0]).toEqual(mockNote2);
-      expect(nextState.openNotes[1]).toEqual(mockNote3);
-      expect(nextState.openNotes[2]).toEqual(mockNote1);
+      // Since the implementation is empty, state should remain unchanged
+      expect(nextState).toEqual(previousState);
     });
   });
 
@@ -184,9 +113,7 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [],
-        allNotes: {},
-        openNotes: [],
-        currentNote: null
+        allNotes: {}
       };
 
       // The issue is that the payload needs to match what the reducer expects
@@ -197,7 +124,7 @@ describe('notesSlice', () => {
         {...mockNote2, parent: null},
         mockNote3
       ];
-      
+
       const action = { type: fetchNotes.fulfilled.type, payload: mockNotesWithNullParent };
       const nextState = reducer(previousState, action);
 
@@ -220,9 +147,7 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
-        openNotes: [mockNote1],
-        currentNote: mockNote1
+        allNotes: { '1': mockNote1, '2': mockNote2 }
       };
 
       const action = {
@@ -238,8 +163,6 @@ describe('notesSlice', () => {
 
       expect(Object.keys(nextState.allNotes)).toHaveLength(4);
       expect(nextState.allNotes['4']).toEqual(newNoteData);
-      expect(nextState.openNotes).toContainEqual(newNoteData);
-      expect(nextState.currentNote).toEqual(newNoteData);
     });
 
     test('should handle saveNote.fulfilled', async () => {
@@ -251,9 +174,7 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
-        openNotes: [mockNote1],
-        currentNote: mockNote1
+        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 }
       };
 
       const action = {
@@ -271,9 +192,7 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
-        openNotes: [mockNote1, mockNote2],
-        currentNote: mockNote1
+        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 }
       };
 
       const action = {
@@ -285,8 +204,6 @@ describe('notesSlice', () => {
 
       expect(Object.keys(nextState.allNotes)).toHaveLength(2);
       expect(nextState.allNotes['1']).toBeUndefined();
-      expect(nextState.openNotes).toHaveLength(1);
-      expect(nextState.openNotes[0]).toEqual(mockNote2);
     });
   });
 });

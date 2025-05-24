@@ -11,8 +11,11 @@ import {
     ContextMenuTrigger,
   } from "../components/ui/context-menu";
 import { Note } from "@/models/Note";
-import { closeNote, createNote, deleteNote } from "@/store/slices/notesSlice";
-  
+import { createNote, deleteNote } from "@/store/slices/notesSlice";
+import { openTab, closeTab } from "@/store/slices/tabsSlice";
+import { ContentType } from "@/types/contentTypes";
+import { CONTENT_TYPE_CONFIG } from "@/config/constants";
+
 interface NoteTreeContextMenuProps {
     children: React.ReactNode;
     note: Note;
@@ -29,8 +32,20 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                 <ContextMenuSub>
                     <ContextMenuSubTrigger inset className="cursor-pointer hover:bg-skin-primary-hover">New</ContextMenuSubTrigger>
                     <ContextMenuSubContent className="w-48 bg-skin-primary">
-                        <ContextMenuItem className="cursor-pointer hover:bg-skin-primary-hover" onSelect={()=>{
-                            dispatch(createNote({title: "New Note", content:"", parent:note.id}));
+                        <ContextMenuItem className="cursor-pointer hover:bg-skin-primary-hover" onSelect={async ()=>{
+                            const result = await dispatch(createNote({
+                                title: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_TITLE,
+                                content: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_CONTENT,
+                                parent: note.id
+                            }));
+
+                            // Open the newly created note in a tab
+                            if (createNote.fulfilled.match(result) && result.payload.newNoteData) {
+                              dispatch(openTab({
+                                objectType: ContentType.NOTE,
+                                objectID: result.payload.newNoteData.id
+                              }));
+                            }
                         }}>
                             Note
                             <ContextMenuShortcut>⌘[</ContextMenuShortcut>
@@ -42,7 +57,13 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                     </ContextMenuSubContent>
                 </ContextMenuSub>
                 <ContextMenuItem inset className="cursor-pointer hover:bg-skin-primary-hover" onSelect={()=>{
-                    dispatch(closeNote(note.id));
+                    // Close the tab if it's open
+                    dispatch(closeTab({
+                        objectType: ContentType.NOTE,
+                        objectID: note.id
+                    }));
+
+                    // Delete the note from the store
                     dispatch(deleteNote(note.id));
                 }}>
                     Delete Note
@@ -52,4 +73,3 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
         </ContextMenu>
     )
 }
-  
