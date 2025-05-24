@@ -67,7 +67,9 @@ describe('notesSlice', () => {
     const initialState = reducer(undefined, { type: '' });
     expect(initialState).toEqual({
       rootNotes: [],
-      allNotes: {}
+      allNotes: {},
+      loading: false,
+      error: null
     });
   });
 
@@ -75,7 +77,9 @@ describe('notesSlice', () => {
     test('should handle updateNote', () => {
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 }
+        allNotes: { '1': mockNote1, '2': mockNote2 },
+        loading: false,
+        error: null
       };
 
       const updatedTitle = 'Updated Title';
@@ -95,14 +99,20 @@ describe('notesSlice', () => {
     test('should handle changeNoteParent', () => {
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 }
+        allNotes: { '1': mockNote1, '2': mockNote2 },
+        loading: false,
+        error: null
       };
 
-      // This is a placeholder test since the implementation is TODO
+      // Test that changeNoteParent actually changes the parent
       const nextState = reducer(previousState, changeNoteParent({ noteID: '1', newParent: '2' }));
 
-      // Since the implementation is empty, state should remain unchanged
-      expect(nextState).toEqual(previousState);
+      // The parent of note '1' should now be '2'
+      expect(nextState.allNotes['1'].parent).toEqual('2');
+      // Other properties should remain unchanged
+      expect(nextState.allNotes['1'].title).toEqual(mockNote1.title);
+      expect(nextState.allNotes['1'].content).toEqual(mockNote1.content);
+      expect(nextState.allNotes['2']).toEqual(mockNote2);
     });
   });
 
@@ -113,7 +123,9 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [],
-        allNotes: {}
+        allNotes: {},
+        loading: false,
+        error: null
       };
 
       // The issue is that the payload needs to match what the reducer expects
@@ -147,7 +159,9 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 }
+        allNotes: { '1': mockNote1, '2': mockNote2 },
+        loading: false,
+        error: null
       };
 
       const action = {
@@ -174,7 +188,9 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 }
+        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
+        loading: false,
+        error: null
       };
 
       const action = {
@@ -192,7 +208,9 @@ describe('notesSlice', () => {
 
       const previousState: NoteState = {
         rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 }
+        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
+        loading: false,
+        error: null
       };
 
       const action = {
