@@ -37,7 +37,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
 
   return (
     <div
-      className="flex text-skin-primary w-[150px]"
+      className="flex w-[150px]"
       ref={setNodeRef}
       {...attributes}
       {...listeners}
@@ -49,7 +49,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
         asChild
         ref={tabRef}
         key={uid}
-        className="flex justify-between custom-tab text-skin-primary w-full rounded-none rounded-t-lg p-1"
+        className="flex justify-between w-full rounded-none rounded-t-lg p-1 theme-main-tab-background theme-main-tab-text"
         value={uid}
       >
         <div>
@@ -62,7 +62,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
             }}
             onClick={onClose}
           >
-            <X className="w-5 h-5 hover:bg-skin-primary-hover" />
+            <X className="w-5 h-5 " />
           </span>
         </div>
       </TabsTrigger>

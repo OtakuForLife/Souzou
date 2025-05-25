@@ -1,4 +1,5 @@
-import { Settings } from "lucide-react";
+import { Settings, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 import {
     Dialog,
@@ -9,21 +10,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "./ui/dialog"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "./ui/select"
 import {Button} from "./ui/button";
 import { Label } from "./ui/label";
-import { RootState } from "@/store";
-import { useSelector } from "react-redux";
-import { useAppDispatch, useLocalStorage } from "@/hooks";
-import { setTheme } from "@/store/slices/themeSlice";
-import { THEME_CONFIG, ThemeType, STORAGE_KEYS } from "@/config/constants";
+import { useLocalStorage } from "@/hooks";
+import { useTheme } from "@/hooks/useTheme";
+import { STORAGE_KEYS } from "@/config/constants";
 import { log } from "@/lib/logger";
+import { Theme } from "@/types/themeTypes";
 
 interface UserPreferences {
     autoSave: boolean;
@@ -32,8 +25,9 @@ interface UserPreferences {
 }
 
 export default function SettingsDialog(){
-    const dispatch = useAppDispatch();
-    const theme: ThemeType = useSelector((state: RootState) => state.theme.theme);
+    const { currentTheme, allThemes, switchTheme } = useTheme();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Use localStorage hook for user preferences
     const [preferences, setPreferences] = useLocalStorage<UserPreferences>(
@@ -45,10 +39,30 @@ export default function SettingsDialog(){
         }
     );
 
-    const handleThemeChange = (newTheme: string) => {
-        const themeValue = newTheme as ThemeType;
-        log.info('User changing theme', { from: theme, to: themeValue });
-        dispatch(setTheme(themeValue));
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleThemeChange = (newThemeId: string) => {
+        const newTheme = allThemes.find((t: Theme) => t.id === newThemeId);
+        log.info('User changing theme', {
+            from: currentTheme?.name,
+            to: newTheme?.name
+        });
+
+        // Close dropdown immediately
+        setIsDropdownOpen(false);
+
+        // Switch theme directly without delays
+        switchTheme(newThemeId);
     };
 
     const handlePreferenceChange = (key: keyof UserPreferences, value: any) => {
@@ -61,7 +75,7 @@ export default function SettingsDialog(){
             <DialogTrigger className="w-full h-full">
                 <Settings className="w-full h-full p-1"/>
             </DialogTrigger>
-            <DialogContent className="w-100 h-50 bg-skin-primary text-skin-primary">
+            <DialogContent className="bg-skin-primary text-skin-primary">
                 <DialogHeader>
                     <DialogTitle>Settings</DialogTitle>
                     <DialogDescription>
@@ -73,19 +87,34 @@ export default function SettingsDialog(){
                     {/* Theme Setting */}
                     <div className="flex flex-row items-center justify-between">
                         <Label className="text-right">Theme</Label>
-                        <div className="w-1/2">
-                            <Select value={theme} onValueChange={handleThemeChange}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Theme" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-skin-primary text-skin-primary">
-                                    {THEME_CONFIG.AVAILABLE_THEMES.map((themeOption) => (
-                                        <SelectItem key={themeOption} value={themeOption}>
-                                            {themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
-                                        </SelectItem>
+                        <div className="w-1/2 relative" ref={dropdownRef}>
+                            {/* Custom Dropdown Trigger */}
+                            <button
+                                type="button"
+                                className="w-full px-3 py-2 text-left theme-bg-surface theme-text-primary theme-border-default border rounded-md shadow-sm focus:outline-none focus:theme-ring-primary focus:ring-2 hover:theme-bg-surface-hover flex items-center justify-between transition-colors"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            >
+                                <span>{currentTheme?.name || 'Select theme'}</span>
+                                <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Custom Dropdown Content */}
+                            {isDropdownOpen && (
+                                <div className="absolute z-50 w-full mt-1 theme-bg-surface theme-border-default border rounded-md shadow-lg max-h-60 overflow-auto">
+                                    {allThemes.map((theme: Theme) => (
+                                        <button
+                                            key={theme.id}
+                                            type="button"
+                                            className={`w-full px-3 py-2 text-left hover:theme-bg-surface-hover focus:outline-none focus:theme-bg-surface-hover transition-colors ${
+                                                currentTheme?.id === theme.id ? 'theme-bg-primary theme-text-on-primary' : 'theme-text-primary'
+                                            }`}
+                                            onClick={() => handleThemeChange(theme.id)}
+                                        >
+                                            {theme.name}
+                                        </button>
                                     ))}
-                                </SelectContent>
-                            </Select>
+                                </div>
+                            )}
                         </div>
                     </div>
 

@@ -25,7 +25,7 @@ export default function NoOpenNote(){
     };
 
     return (
-        <div className={`${CSS_CLASSES.LAYOUT.FLEX_CENTER} h-full w-full ${CSS_CLASSES.SKIN.SECONDARY}`}>
+        <div className={`${CSS_CLASSES.LAYOUT.FLEX_CENTER} h-full w-full theme-main-content-background theme-main-content-text`}>
             <Button variant="ghost" onClick={handleCreateNote}>
                 Create a Note
             </Button>

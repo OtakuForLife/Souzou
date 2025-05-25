@@ -4,19 +4,25 @@ import { setupStore } from './store'
 import { useEffect } from 'react'
 import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
-import { useAppDispatch } from './hooks/useAppDispatch'
-import { loadTheme } from './store/slices/themeSlice'
+import { useTheme } from './hooks/useTheme'
 import { ErrorBoundary } from './components/common'
 import { log } from './lib/logger'
 
 // Create a component to load theme
 const AppContent = () => {
-  const dispatch = useAppDispatch()
+  const { refreshThemes, currentTheme } = useTheme()
 
   useEffect(() => {
     log.info('Application starting');
-    dispatch(loadTheme());
-  }, [dispatch])
+    // Load themes from database on app start
+    refreshThemes();
+  }, [refreshThemes])
+
+  useEffect(() => {
+    if (currentTheme) {
+      log.info('Theme loaded', { theme: currentTheme.name, id: currentTheme.id });
+    }
+  }, [currentTheme])
 
   return (
     <ErrorBoundary

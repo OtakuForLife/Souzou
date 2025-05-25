@@ -5,61 +5,105 @@
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    --color-background-primary: rgb(200, 200, 200);
-    --color-background-secondary: rgb(166, 166, 166);
-    --color-background-primary-hover: rgb(168, 168, 168);
-    --color-text-primary: rgb(0, 0, 0);
 
-    --caret-color: rgb(0, 0, 0);
+    /* Default theme colors - matches database default theme */
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
+    --color-secondary: #64748b;
+    --color-background: #ffffff;
+    --color-surface: #f8fafc;
+    --color-surface-hover: #f1f5f9;
 
-    [data-theme="dark"]{
-      --color-background-primary: rgb(32, 39, 49);
-      --color-background-primary-hover: rgb(51, 56, 66);
-      --color-background-secondary: rgb(19, 25, 34);
-      --color-text-primary: rgb(140, 148, 154);
+    /* Text colors */
+    --color-text-primary: #1f2937;
+    --color-text-secondary: #6b7280;
+    --color-text-muted: #9ca3af;
+    --color-text-on-primary: #ffffff;
 
-      --caret-color: rgb(140, 148, 154);
-    }
+    /* Border colors */
+    --color-border-default: #e5e7eb;
+    --color-border-hover: #d1d5db;
 
+    /* Editor colors */
+    --color-editor-background: #ffffff;
+    --color-editor-text: #1f2937;
+    --color-editor-selection: #3b82f620;
+    --color-editor-cursor: #3b82f6;
+    --color-editor-line-number: #9ca3af;
 
-    [data-theme="red"]{
-      --color-background-primary: rgb(49, 32, 32);
-      --color-background-primary-hover: rgb(66, 51, 51);
-      --color-background-secondary: rgb(34, 19, 19);
-      --color-text-primary: rgb(158, 124, 124);
+    /* Syntax highlighting */
+    --color-editor-syntax-keyword: #7c3aed;
+    --color-editor-syntax-string: #059669;
+    --color-editor-syntax-comment: #6b7280;
+    --color-editor-syntax-function: #dc2626;
+    --color-editor-syntax-variable: #1f2937;
 
-      --caret-color: rgb(158, 124, 124);
-    }
+    /* Legacy support - map old variables to new ones */
+    --color-background-primary: var(--color-surface);
+    --color-background-secondary: var(--color-background);
+    --color-background-primary-hover: var(--color-surface-hover);
+    --caret-color: var(--color-editor-cursor);
   }
-
 }
 
 @layer utilities {
-  .bg-skin-primary {
-    background-color: var(--color-background-primary);
-  }
-  .bg-skin-secondary {
-    background-color: var(--color-background-secondary);
-  }
-  .bg-skin-primary-hover {
-    background-color: var(--color-background-primary-hover);
-  }
-  .text-skin-primary {
-    color: var(--color-text-primary);
+  /* Theme-specific utility classes with custom prefix */
+  .theme-sidebar-background {
+    background-color: var(--color-sidebar-background);
   }
 
-  /* Custom override for tab styling */
-  .custom-tab[data-state="active"] {
-    background-color: var(--color-background-secondary) !important;
+  .theme-sidebar-text {
+    color: var(--color-sidebar-text);
   }
 
-  .custom-tab:not([data-state="active"]) {
-    background-color: var(--color-background-primary-hover);
+  .theme-explorer-background {
+    background-color: var(--color-explorer-background);
   }
 
-  .custom-tab:not([data-state="active"]):hover {
-    background-color: var(--color-background-primary);
+  .theme-explorer-item-background:hover {
+    background-color: var(--color-explorer-item-background-hover);
   }
 
+  .theme-explorer-item-text {
+    color: var(--color-explorer-item-text-default);
+  }
+  .theme-explorer-item-text:hover {
+    color: var(--color-explorer-item-text-hover);
+  }
+
+  .theme-main-tabs-background {
+    background-color: var(--color-main-tabs-background);
+  }
+
+  .theme-main-tab-background:not([data-state="active"]) {
+    background-color: var(--color-main-tab-background-default);
+  }
+  .theme-main-tab-text:not([data-state="active"]) {
+    color: var(--color-main-tab-text-default);
+  }
+
+  .theme-main-tab-text:not([data-state="active"]):hover {
+    color: var(--color-main-tab-text-hover);
+  }
   
+  .theme-main-tab-text[data-state="active"]  {
+    color: var(--color-main-tab-active-text);
+  }
+
+  .theme-main-tab-background[data-state="active"] {
+    background-color: var(--color-main-tab-active-background);
+  }
+  
+  .theme-main-tab-background:not([data-state="active"]):hover {
+    background-color: var(--color-main-tab-background-hover);
+  }
+
+
+  .theme-main-content-background {
+    background-color: var(--color-main-content-background);
+  }
+  .theme-main-content-text {
+    color: var(--color-main-content-text);
+  }
+
 }

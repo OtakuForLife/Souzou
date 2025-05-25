@@ -4,6 +4,7 @@
 
 export { noteService } from './noteService';
 export { graphService } from './graphService';
+export { themeService } from './themeService';
 
 export type {
   CreateNoteRequest,

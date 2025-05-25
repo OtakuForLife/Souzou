@@ -40,7 +40,7 @@ export default function TabContentGroup() {
       onValueChange={onTabChange}
       activationMode="manual"
     >
-      <TabsList className="flex justify-start w-full bg-skin-primary p-0 gap-2">
+      <TabsList className="flex justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
         <SortableContext items={openTabIDs} strategy={rectSortingStrategy}>
           {tabsState.openTabs.map((tab: TabData) => (
             <ContentRenderer
@@ -54,7 +54,7 @@ export default function TabContentGroup() {
       <div className="pb-2 w-full h-full">
         {tabsState.openTabs.map((tab: TabData) => (
           <TabsContent
-            className="w-full h-full max-w-full max-h-full p-4 bg-skin-secondary text-skin-primary outline-2 outline-black"
+            className="w-full h-full max-w-full max-h-full p-4 theme-main-content-background theme-main-content-text outline-2 outline-black"
             key={tab.objectType + "-" + tab.objectID}
             value={tab.objectType + "-" + tab.objectID}
           >

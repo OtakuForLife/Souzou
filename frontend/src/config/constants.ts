@@ -19,6 +19,7 @@ export const API_CONFIG = {
   ENDPOINTS: {
     NOTES: '/api/notes/',
     GRAPHS: '/api/graphs/',
+    THEMES: '/api/themes/',
   },
 } as const;
 

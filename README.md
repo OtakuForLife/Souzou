@@ -10,18 +10,26 @@ Whether you're building a second brain, tracking personal goals, managing tasks,
 
 The word **Souzou (創造)** in Japanese means *creation* or *imagination*. That core idea is at the heart of this project. Souzou isn’t just another tool to organize your thoughts — it’s a space designed to empower your capacity to **create**, **grow**, and **evolve** with clarity.
 
-Most personal knowledge management (PKM) tools are either too simple or overwhelming. Souzou bridges that gap, providing a powerful feature set wrapped in a minimalist, calming interface. It's more than just a second brain — it's a **life management platform** built to help you live and think more intentionally.
+Most personal knowledge management (PKM) tools are either too simple or overwhelming or (most importantly!) not open source. Souzou bridges that gap, providing a powerful feature set wrapped in a minimalist, calming interface. It's more than just a second brain — it's a **life management platform** built to help you live and think more intentionally.
 
-### Key Benefits:
+---
 
-- ✍️ **Effortless Notes**: Markdown-based, richly linkable notes with a clean, distraction-free interface.
-- 🧠 **Second Brain Made Simple**: Link ideas, thoughts, and projects together naturally — no steep learning curve.
-- 🗖️ **Life Hub**: Manage tasks, goals, habits, journal entries, and calendars all in one place.
-- 🌱 **Grow Organically**: Start small and scale — design your system at your pace.
-- 🔐 **Local-First and Private**: Your data stays with you. Fully offline and secure.
-- 🌈 **Flexible and Customizable**: Make it yours with optional plugins and workflows.
+## My Vision
+I envision Souzou as a platform that is not another jumble of notes, but that is a living, breathing system that actively helps you manage your life, from simple notes, tasks, calendar events, to complex thoughts and ideas. It's a place where you can grow yourself without getting lost in the details and infrastructure. A tool that is not just a tool, but a companion throughout your daily life.
 
-Souzou is inspired by tools like Obsidian, Notion, and Tana, but centers itself on life design. It's for thinkers, makers, and anyone seeking more intention in their digital and physical lives.
+---
+
+## Design Choices
+
+- **Web-based**: Souzou is designed to be accessible from anywhere, on any device but is not designed to be local-first. 
+*Why?*
+With a self-hostable server that provides a REST API, you can easily trigger automations and integrations with other services from outside.
+- **Database**: Compared to multiple plain text files, Souzou uses a database to store your data. This allows for more complex functionality and relationships between your data with increased performance.
+---
+
+## Project Status
+
+ - [ ] 
 
 ---
 

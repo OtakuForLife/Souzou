@@ -33,7 +33,7 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
   return (
     <Sidebar
       collapsible="none"
-      className="min-w-11 !w-11 bg-skin-secondary text-skin-primary"
+      className="min-w-11 !w-11 theme-sidebar-background theme-sidebar-text"
     >
       <SidebarHeader>
         <SidebarMenu>
@@ -74,7 +74,7 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
                     }
                   }}
                 >
-                  <StickyNote />
+                  <StickyNote/>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

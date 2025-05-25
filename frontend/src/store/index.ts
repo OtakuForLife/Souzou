@@ -5,7 +5,7 @@ import graphReducer from './slices/graphSlice'
 import tabsReducer from './slices/tabsSlice'
 
 const rootReducer = combineReducers({
-  theme: themeReducer,
+  themes: themeReducer,
   notes: notesReducer,
   graphs: graphReducer,
   tabs: tabsReducer,

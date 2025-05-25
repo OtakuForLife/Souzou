@@ -133,7 +133,7 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
         <TreeItemDroppable noteID={note.id}>
           <TreeItemDraggable noteID={note.id} onDragStart={onDragStart}>
             <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-              <div className='w-full hover:bg-skin-primary-hover rounded-md'>
+              <div className='w-full theme-explorer-item-background theme-explorer-item-text rounded-md'>
                 <VerticalLine depth={0} maxDepth={depth} lineSize={1} depthSize={depthSize}>
                   <div className="flex flex-shrink items-center w-full h-7">
                     <CollapsibleTrigger asChild>
@@ -166,9 +166,9 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
       <NoteTreeItemContextMenu note={note}>
         <TreeItemDroppable noteID={note.id}>
           <TreeItemDraggable noteID={note.id} onDragStart={onDragStart}>
-                <div className='w-full hover:bg-skin-primary-hover rounded-md'>
+                <div className='w-full theme-explorer-item-background rounded-md'>
                   <VerticalLine depth={0} maxDepth={depth} lineSize={1} depthSize={depthSize}>
-                    <div className="pl-2 flex flex-shrink items-center w-full h-7">
+                    <div className="pl-2 flex flex-shrink items-center w-full h-7 theme-explorer-item-text">
                         <StickyNote className="flex-none items-center w-4 h-4 mr-2"/>
                         <div className='cursor-pointer w-full truncate ... mr-1' onClick={onClick}>
                           <span className='text-xs'>{note.title}</span>
