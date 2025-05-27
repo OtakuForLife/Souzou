@@ -3,7 +3,7 @@ import { useAppDispatch } from "@/hooks";
 import { createNote } from "@/store/slices/notesSlice";
 import { openTab } from "@/store/slices/tabsSlice";
 import { ContentType } from "@/types/contentTypes";
-import { CONTENT_TYPE_CONFIG, CSS_CLASSES } from "@/config/constants";
+import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 
 export default function NoOpenNote(){
     const dispatch = useAppDispatch();
@@ -25,7 +25,7 @@ export default function NoOpenNote(){
     };
 
     return (
-        <div className={`${CSS_CLASSES.LAYOUT.FLEX_CENTER} h-full w-full theme-main-content-background theme-main-content-text`}>
+        <div className="h-full w-full flex justify-center items-center theme-main-content-background theme-main-content-text">
             <Button variant="ghost" onClick={handleCreateNote}>
                 Create a Note
             </Button>

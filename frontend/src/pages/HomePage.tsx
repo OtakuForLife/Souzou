@@ -26,7 +26,7 @@ import { useAppDispatch, useKeyboardShortcuts } from "@/hooks";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import { Note } from "@/models/Note";
-import { LoadingSpinner } from "@/components/common";
+
 import { createNote } from "@/store/slices/notesSlice";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 import { ContentType, GraphContentData } from "@/types/contentTypes";
@@ -36,14 +36,21 @@ import { openTab } from "@/store/slices/tabsSlice";
 function Home() {
     const dispatch = useAppDispatch();
 
+    const noteState: NoteState = useSelector((state: RootState) => state.notes);
+    const notes: { [id: string]: Note; } = noteState.allNotes;
+    const { error: notesError } = noteState;
+
     // Fetch notes on component mount
     useEffect(()=> {
         dispatch(fetchNotes());
     }, [dispatch]);
 
-    const noteState: NoteState = useSelector((state: RootState) => state.notes);
-    const notes: { [id: string]: Note; } = noteState.allNotes;
-    const { loading: notesLoading, error: notesError } = noteState;
+    // Show toast notification for notes errors
+    useEffect(() => {
+        if (notesError) {
+            //TODO display error
+        }
+    }, [notesError, dispatch]);
 
     const graphState: GraphState = useSelector((state: RootState) => state.graphs);
     const graphs: { [id: string]: GraphContentData; } = graphState.allGraphs;
@@ -115,36 +122,6 @@ function Home() {
 
     };
 
-    // Show loading state while notes are being fetched
-    if (notesLoading) {
-        return (
-            <div className="flex bg-skin-primary h-full">
-                <div className="flex-1 flex items-center justify-center">
-                    <LoadingSpinner size="lg" text="Loading notes..." />
-                </div>
-            </div>
-        );
-    }
-
-    // Show error state if notes failed to load
-    if (notesError) {
-        return (
-            <div className="flex bg-skin-primary h-full">
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="text-red-500 text-center">
-                        <p className="text-lg font-semibold mb-2">Failed to load notes</p>
-                        <p className="text-sm">{notesError}</p>
-                        <button
-                            onClick={() => dispatch(fetchNotes())}
-                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                        >
-                            Retry
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
     const toggleNavigationBar = () => {
         if(isCollapsed){
             navigationRef.current?.expand();
@@ -156,7 +133,7 @@ function Home() {
     };
 
     return (
-        <div className="flex bg-skin-primary h-full w-full">
+        <div className="flex h-full w-full">
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]} sensors={sensors}>
                 <SidebarProvider>
                     <AppSidebar onIconOneClick={toggleNavigationBar}/>
@@ -173,7 +150,7 @@ function Home() {
                             >
                                 <NoteTree/>
                             </ResizablePanel>
-                            <ResizableHandle className="w-1"/>
+                            <ResizableHandle className="w-1 theme-explorer-background"/>
                             <ResizablePanel className="h-full overflow-hidden">
                                 <ContentFrame/>
                             </ResizablePanel>
@@ -185,14 +162,14 @@ function Home() {
                         <>
                             {/* Note tree item drag overlay */}
                             {activeDrag.data.current?.type === "treeitem" && (
-                                <div className="text-neutral-500 bg-gray-900 w-[150px] p-1 truncate shadow-lg rounded">
+                                <div className="w-[150px] p-1 truncate shadow-lg rounded">
                                     <span>{notes[activeDrag.data.current?.note]?.title}</span>
                                 </div>
                             )}
 
                             {/* Tab drag overlay */}
                             {activeDrag.data.current?.type === "tab" && (
-                                <div className="bg-gray-800 border border-blue-500 rounded w-[150px] p-2 text-white shadow-xl">
+                                <div className="border border-blue-500 rounded w-[150px] p-2 shadow-xl">
                                     <span className="text-sm font-medium">
                                         {activeDrag.data.current?.objectType === "note"
                                             ? notes[activeDrag.data.current?.objectID]?.title || "Unknown Note"

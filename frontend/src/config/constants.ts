@@ -4,9 +4,8 @@
 
 // Theme Configuration
 export const THEME_CONFIG = {
-  DEFAULT_THEME: 'dark',
+  DEFAULT_THEME: 'default', // currently not used!
   LOCAL_STORAGE_KEY: 'theme',
-  AVAILABLE_THEMES: ['light', 'dark', 'red'] as const,
 } as const;
 
 
@@ -91,19 +90,3 @@ export const STORAGE_KEYS = {
   USER_PREFERENCES: 'user_preferences',
   RECENT_FILES: 'recent_files',
 } as const;
-
-// CSS Classes (for consistency)
-export const CSS_CLASSES = {
-  SKIN: {
-    PRIMARY: 'bg-skin-primary text-skin-primary',
-    SECONDARY: 'bg-skin-secondary text-skin-primary',
-    HOVER: 'hover:bg-skin-primary-hover',
-  },
-  LAYOUT: {
-    FULL_SCREEN: 'w-full h-screen',
-    FLEX_CENTER: 'flex justify-center items-center',
-    FLEX_BETWEEN: 'flex justify-between items-center',
-  },
-} as const;
-
-export type ThemeType = typeof THEME_CONFIG.AVAILABLE_THEMES[number];

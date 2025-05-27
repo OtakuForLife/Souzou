@@ -35,7 +35,7 @@ export default function TabContentGroup() {
 
   return (
     <Tabs
-      className="flex size-full gap-0 p-0"
+      className="flex h-full w-full gap-0 p-0"
       value={currentTabValue}
       onValueChange={onTabChange}
       activationMode="manual"
@@ -51,10 +51,10 @@ export default function TabContentGroup() {
           ))}
         </SortableContext>
       </TabsList>
-      <div className="pb-2 w-full h-full">
+      <div className="w-full h-full">
         {tabsState.openTabs.map((tab: TabData) => (
           <TabsContent
-            className="w-full h-full max-w-full max-h-full p-4 theme-main-content-background theme-main-content-text outline-2 outline-black"
+            className="w-full h-full p-4 theme-main-content-background theme-main-content-text outline-2 outline-black"
             key={tab.objectType + "-" + tab.objectID}
             value={tab.objectType + "-" + tab.objectID}
           >

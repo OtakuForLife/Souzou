@@ -58,8 +58,8 @@ class Command(BaseCommand):
                         },
                     },
                     "editor": {
-                        "background": "#FFFFFF",
-                        "text": "#FFFFFF",
+                        "background": "#474BB0",
+                        "text": "#428048",
                         "selection": "#FFFFFF",
                         "cursor": "#FFFFFF",
                         "lineNumber": "#FFFFFF",
@@ -175,10 +175,10 @@ class Command(BaseCommand):
                         },
                     },
                     "editor": {
-                        "background": "#FFFFFF",
-                        "text": "#FFFFFF",
+                        "background": "#111827",
+                        "text": "#adadad",
                         "selection": "#FFFFFF",
-                        "cursor": "#FFFFFF",
+                        "cursor": "#adadad",
                         "lineNumber": "#FFFFFF",
                         "syntax": {
                             "keyword": "#FFFFFF",

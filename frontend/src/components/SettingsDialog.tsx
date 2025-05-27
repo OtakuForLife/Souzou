@@ -75,7 +75,7 @@ export default function SettingsDialog(){
             <DialogTrigger className="w-full h-full">
                 <Settings className="w-full h-full p-1"/>
             </DialogTrigger>
-            <DialogContent className="bg-skin-primary text-skin-primary">
+            <DialogContent className="theme-explorer-background theme-explorer-item-text">
                 <DialogHeader>
                     <DialogTitle>Settings</DialogTitle>
                     <DialogDescription>
@@ -91,7 +91,7 @@ export default function SettingsDialog(){
                             {/* Custom Dropdown Trigger */}
                             <button
                                 type="button"
-                                className="w-full px-3 py-2 text-left theme-bg-surface theme-text-primary theme-border-default border rounded-md shadow-sm focus:outline-none focus:theme-ring-primary focus:ring-2 hover:theme-bg-surface-hover flex items-center justify-between transition-colors"
+                                className="w-full px-3 py-2 text-left border rounded-md shadow-sm focus:outline-none focus:ring-2 flex items-center justify-between transition-colors"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             >
                                 <span>{currentTheme?.name || 'Select theme'}</span>
@@ -100,13 +100,13 @@ export default function SettingsDialog(){
 
                             {/* Custom Dropdown Content */}
                             {isDropdownOpen && (
-                                <div className="absolute z-50 w-full mt-1 theme-bg-surface theme-border-default border rounded-md shadow-lg max-h-60 overflow-auto">
+                                <div className="absolute z-50 w-full mt-1 theme-explorer-background theme-explorer-item-text border rounded-md shadow-lg max-h-60 overflow-auto">
                                     {allThemes.map((theme: Theme) => (
                                         <button
                                             key={theme.id}
                                             type="button"
-                                            className={`w-full px-3 py-2 text-left hover:theme-bg-surface-hover focus:outline-none focus:theme-bg-surface-hover transition-colors ${
-                                                currentTheme?.id === theme.id ? 'theme-bg-primary theme-text-on-primary' : 'theme-text-primary'
+                                            className={`w-full px-3 py-2 text-left focus:outline-none transition-colors ${
+                                                currentTheme?.id === theme.id ? 'theme-sidebar-background' : ''
                                             }`}
                                             onClick={() => handleThemeChange(theme.id)}
                                         >

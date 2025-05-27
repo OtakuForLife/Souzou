@@ -13,7 +13,7 @@ export default function ContentFrame(){
     const hasOpenTabs = tabsState.openTabs.length > 0;
 
     return (
-        <div className="h-full w-full bg-skin-primary">
+        <div className="h-full w-full">
             {hasOpenTabs ? <TabContentGroup/>: <NoOpenNote/>}
         </div>
     )

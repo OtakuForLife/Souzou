@@ -6,43 +6,35 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
-    /* Default theme colors - matches database default theme */
-    --color-primary: #3b82f6;
-    --color-primary-hover: #2563eb;
-    --color-secondary: #64748b;
-    --color-background: #ffffff;
-    --color-surface: #f8fafc;
-    --color-surface-hover: #f1f5f9;
+    /* Default theme colors */
+    --color-sidebar-background: #111827;
+    --color-sidebar-text: #adadad;
+    --color-explorer-background: #1f2937;
+    --color-explorer-item-background-hover: #3a4657;
+    --color-explorer-item-text-default: #adadad;
+    --color-explorer-item-text-hover: #adadad;
+    --color-main-tabs-background: #1f2937;
+    --color-main-tab-background-default: #19202D;
+    --color-main-tab-text-default: #adadad;
+    --color-main-tab-active-text: #adadad;
+    --color-main-tab-active-background: #111827;
+    --color-main-tab-background-hover: #19202D;
+    --color-main-tab-text-hover: #adadad;
+    --color-main-content-background: #111827;
+    --color-main-content-text: #adadad;
 
-    /* Text colors */
-    --color-text-primary: #1f2937;
-    --color-text-secondary: #6b7280;
-    --color-text-muted: #9ca3af;
-    --color-text-on-primary: #ffffff;
-
-    /* Border colors */
-    --color-border-default: #e5e7eb;
-    --color-border-hover: #d1d5db;
-
-    /* Editor colors */
-    --color-editor-background: #ffffff;
-    --color-editor-text: #1f2937;
+    /* Editor theme colors */
+    --color-editor-background: #111827;
+    --color-editor-text: #adadad;
     --color-editor-selection: #3b82f620;
     --color-editor-cursor: #3b82f6;
-    --color-editor-line-number: #9ca3af;
-
-    /* Syntax highlighting */
-    --color-editor-syntax-keyword: #7c3aed;
-    --color-editor-syntax-string: #059669;
+    --color-editor-line-number: #6b7280;
+    --color-editor-syntax-keyword: #a78bfa;
+    --color-editor-syntax-string: #34d399;
     --color-editor-syntax-comment: #6b7280;
-    --color-editor-syntax-function: #dc2626;
-    --color-editor-syntax-variable: #1f2937;
-
-    /* Legacy support - map old variables to new ones */
-    --color-background-primary: var(--color-surface);
-    --color-background-secondary: var(--color-background);
-    --color-background-primary-hover: var(--color-surface-hover);
-    --caret-color: var(--color-editor-cursor);
+    --color-editor-syntax-function: #f87171;
+    --color-editor-syntax-variable: #adadad;
+    --caret-color: #3b82f6;
   }
 }
 
@@ -67,7 +59,8 @@
   .theme-explorer-item-text {
     color: var(--color-explorer-item-text-default);
   }
-  .theme-explorer-item-text:hover {
+
+  .theme-explorer-item-text-hover {
     color: var(--color-explorer-item-text-hover);
   }
 
@@ -85,7 +78,7 @@
   .theme-main-tab-text:not([data-state="active"]):hover {
     color: var(--color-main-tab-text-hover);
   }
-  
+
   .theme-main-tab-text[data-state="active"]  {
     color: var(--color-main-tab-active-text);
   }
@@ -93,7 +86,7 @@
   .theme-main-tab-background[data-state="active"] {
     background-color: var(--color-main-tab-active-background);
   }
-  
+
   .theme-main-tab-background:not([data-state="active"]):hover {
     background-color: var(--color-main-tab-background-hover);
   }
@@ -104,6 +97,15 @@
   }
   .theme-main-content-text {
     color: var(--color-main-content-text);
+  }
+
+  /* Editor theme utility classes */
+  .theme-editor-background {
+    background-color: var(--color-editor-background);
+  }
+
+  .theme-editor-text {
+    color: var(--color-editor-text);
   }
 
 }
