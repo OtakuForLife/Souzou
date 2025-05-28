@@ -76,6 +76,7 @@ function NoteTabContent({ objectID }: NoteTabContentProps) {
       <NoteEditor
         initialText={note ? note.content : ""}
         onContentChange={handleContentChange}
+        currentNoteId={objectID}
       />
     </ScrollArea>
   );

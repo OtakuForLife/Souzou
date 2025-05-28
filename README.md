@@ -32,7 +32,7 @@ With a self-hostable server that provides a REST API, you can easily trigger aut
  - [x] Simplle Markdown Editor with CRUD Operations for Notes
  - [x] Tab System
  - [x] Folders are Notes
- - [ ] Note Relationships
+ - [ ] Note Linking
  - [ ] Tags / Nested Tags
  - [ ] Calendar
  - [ ] External Calendar Integration

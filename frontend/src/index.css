@@ -34,6 +34,7 @@
     --color-editor-syntax-comment: #6b7280;
     --color-editor-syntax-function: #f87171;
     --color-editor-syntax-variable: #adadad;
+    --color-editor-syntax-link: #3746e7;
     --caret-color: #3b82f6;
   }
 }

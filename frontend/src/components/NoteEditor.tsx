@@ -1,28 +1,65 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, ViewUpdate } from "@codemirror/view";
 import { syntaxHighlighting } from "@codemirror/language";
+import { autocompletion } from "@codemirror/autocomplete";
+import { useSelector } from "react-redux";
 
 import { baseExtensions } from "@/editor/extensions";
 import { hideMarkdownSyntax } from "@/editor/plugins";
 import { markdownHighlightStyle, customTheme } from "@/editor/theme";
+import { createCombinedLinkCompletion } from "@/editor/linkCompletion";
+import { createLinkDecorations } from "@/editor/linkDecorations";
+import { RootState } from "@/store";
+import { useAppDispatch } from "@/hooks";
+import { openTab } from "@/store/slices/tabsSlice";
+import { ContentType } from "@/types/contentTypes";
+import { Note } from "@/models/Note";
 
 
 interface Props {
   initialText: string;
   onContentChange?: (content: string) => void;
+  currentNoteId?: string;
+  onLinkClick?: (noteId: string) => void;
 }
 
 
-const NoteEditor: React.FC<Props> = ({ initialText, onContentChange }) => {
+const NoteEditor: React.FC<Props> = ({
+  initialText,
+  onContentChange,
+  currentNoteId,
+  onLinkClick
+}) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onContentChangeRef = useRef(onContentChange);
+  const notesRef = useRef<Record<string, Note>>({});
+  const currentNoteIdRef = useRef<string | undefined>(currentNoteId);
 
-  // Keep the callback ref updated
+  // Get notes from Redux store
+  const notesState = useSelector((state: RootState) => state.notes);
+  const dispatch = useAppDispatch();
+
+  // Keep refs updated
   useEffect(() => {
     onContentChangeRef.current = onContentChange;
-  }, [onContentChange]);
+    notesRef.current = notesState.allNotes;
+    currentNoteIdRef.current = currentNoteId;
+  }, [onContentChange, notesState.allNotes, currentNoteId]);
+
+  // Handle link clicks - use stable function
+  const handleLinkClick = useCallback((noteId: string) => {
+    if (onLinkClick) {
+      onLinkClick(noteId);
+    } else {
+      // Default behavior: open note in new tab
+      dispatch(openTab({
+        objectType: ContentType.NOTE,
+        objectID: noteId
+      }));
+    }
+  }, [onLinkClick, dispatch]);
 
   // Create update listener extension (stable, doesn't change)
   const updateListener = EditorView.updateListener.of((update: ViewUpdate) => {
@@ -35,6 +72,14 @@ const NoteEditor: React.FC<Props> = ({ initialText, onContentChange }) => {
   useEffect(() => {
     if (!editorRef.current) return;
 
+    // Create link completion and decoration extensions that use refs
+    const getNotesData = () => ({
+      allNotes: notesRef.current,
+      currentNoteId: currentNoteIdRef.current
+    });
+    const linkCompletion = createCombinedLinkCompletion(getNotesData);
+    const linkDecorations = createLinkDecorations(() => notesRef.current, handleLinkClick);
+
     const state = EditorState.create({
       doc: initialText,
       extensions: [
@@ -43,6 +88,8 @@ const NoteEditor: React.FC<Props> = ({ initialText, onContentChange }) => {
         hideMarkdownSyntax,
         updateListener,
         customTheme,
+        linkDecorations, // Add link decorations
+        autocompletion({ override: [linkCompletion] }), // Add link completion
       ],
     });
 

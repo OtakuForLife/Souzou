@@ -53,7 +53,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
         value={uid}
       >
         <div>
-          <span className="pr-1" title={displayname}>{truncateText(displayname, 15)}</span>
+          <span className="pr-1" title={displayname}>{truncateText(displayname, 13)}</span>
           <span
             className="p-0"
             onMouseDown={(e: React.MouseEvent<HTMLElement>) => {

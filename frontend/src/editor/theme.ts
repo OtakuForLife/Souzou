@@ -13,6 +13,7 @@ const syntaxKeyword = computedStyle.getPropertyValue('--color-editor-syntax-keyw
 const syntaxString = computedStyle.getPropertyValue('--color-editor-syntax-string').trim() || '#34d399';
 const syntaxComment = computedStyle.getPropertyValue('--color-editor-syntax-comment').trim() || '#6b7280';
 const syntaxFunction = computedStyle.getPropertyValue('--color-editor-syntax-function').trim() || '#f87171';
+const syntaxLink = computedStyle.getPropertyValue('--color-editor-syntax-link').trim() || '#3746e7';
 
 // Create custom highlight style for markdown
 const markdownHighlightStyle = HighlightStyle.define([
@@ -40,8 +41,8 @@ const markdownHighlightStyle = HighlightStyle.define([
     },
 
     // Links
-    { tag: t.link, color: syntaxFunction, textDecoration: "underline" },
-    { tag: t.url, color: syntaxString },
+    { tag: t.link, color: syntaxLink, textDecoration: "underline" },
+    { tag: t.url, color: syntaxFunction },
 
     // Lists
     { tag: t.list, color: syntaxKeyword },
@@ -109,6 +110,106 @@ var customTheme = EditorView.theme({
     // Markdown-specific styling
     ".cm-line": {
         lineHeight: "1.6",
+    },
+
+    // Note link styling
+    ".cm-note-link": {
+        textDecoration: "underline",
+        cursor: "pointer",
+        borderRadius: "2px",
+        padding: "1px 2px",
+        transition: "all 0.2s ease",
+    },
+
+    ".cm-note-link-valid": {
+        color: "#0066cc",
+        backgroundColor: "rgba(0, 102, 204, 0.05)",
+    },
+
+    ".cm-note-link-valid:hover, .cm-note-link-valid.cm-note-link-hover": {
+        backgroundColor: "rgba(0, 102, 204, 0.15)",
+        textDecoration: "underline",
+    },
+
+    ".cm-note-link-broken": {
+        color: "#cc6600",
+        backgroundColor: "rgba(204, 102, 0, 0.05)",
+        textDecoration: "underline wavy",
+    },
+
+    ".cm-note-link-broken:hover, .cm-note-link-broken.cm-note-link-hover": {
+        backgroundColor: "rgba(204, 102, 0, 0.15)",
+    },
+
+    // Autocompletion popup styling
+    ".cm-tooltip-autocomplete": {
+        backgroundColor: editorBackground,
+        border: `1px solid ${editorText}30`,
+        borderRadius: "8px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        fontSize: "13px",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        maxHeight: "200px",
+        minWidth: "200px",
+    },
+
+    ".cm-tooltip-autocomplete > ul": {
+        margin: "0",
+        padding: "4px",
+        listStyle: "none",
+        maxHeight: "180px",
+        overflowY: "auto",
+    },
+
+    ".cm-tooltip-autocomplete > ul > li": {
+        padding: "6px 8px",
+        borderRadius: "4px",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        transition: "background-color 0.15s ease",
+    },
+
+    ".cm-tooltip-autocomplete > ul > li:hover": {
+        backgroundColor: `${editorText}15`,
+    },
+
+    ".cm-tooltip-autocomplete > ul > li[aria-selected]": {
+        backgroundColor: `${syntaxKeyword}20`,
+        color: editorText,
+    },
+
+    ".cm-tooltip-autocomplete .cm-completionLabel": {
+        color: editorText,
+        fontWeight: "500",
+        flex: "1",
+    },
+
+    ".cm-tooltip-autocomplete .cm-completionDetail": {
+        color: syntaxComment,
+        fontSize: "11px",
+        fontStyle: "italic",
+        marginLeft: "8px",
+    },
+
+    ".cm-tooltip-autocomplete .cm-completionInfo": {
+        backgroundColor: `${editorBackground}f0`,
+        border: `1px solid ${editorText}20`,
+        borderRadius: "6px",
+        padding: "8px",
+        fontSize: "12px",
+        color: syntaxComment,
+        maxWidth: "250px",
+    },
+
+    // Custom styling for note link suggestions
+    ".cm-tooltip-autocomplete .cm-completionLabel[data-type='note']": {
+        color: syntaxFunction,
+    },
+
+    ".cm-tooltip-autocomplete .cm-completionLabel[data-type='note-id']": {
+        color: syntaxString,
     },
 });
 

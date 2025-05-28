@@ -162,14 +162,14 @@ function Home() {
                         <>
                             {/* Note tree item drag overlay */}
                             {activeDrag.data.current?.type === "treeitem" && (
-                                <div className="w-[150px] p-1 truncate shadow-lg rounded">
+                                <div className="w-[150px] p-1 truncate rounded border border-lg border-black-100 theme-explorer-background theme-explorer-item-text opacity-70">
                                     <span>{notes[activeDrag.data.current?.note]?.title}</span>
                                 </div>
                             )}
 
                             {/* Tab drag overlay */}
                             {activeDrag.data.current?.type === "tab" && (
-                                <div className="border border-blue-500 rounded w-[150px] p-2 shadow-xl">
+                                <div className="truncate border border-blue-500 rounded w-[150px] p-2 theme-explorer-background theme-explorer-item-text opacity-70">
                                     <span className="text-sm font-medium">
                                         {activeDrag.data.current?.objectType === "note"
                                             ? notes[activeDrag.data.current?.objectID]?.title || "Unknown Note"
