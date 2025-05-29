@@ -32,15 +32,15 @@ export const fetchEntities = createAsyncThunk(
 );
 
 interface EntityState {
-  rootNotes: Entity[];
-  allNotes: { [id: string] : Entity; };
+  rootEntities: Entity[];
+  allEntities: { [id: string] : Entity; };
   loading: boolean;
   error: string | null;
 }
 
 const initialState: EntityState = {
-  rootNotes: [],
-  allNotes: {},
+  rootEntities: [],
+  allEntities: {},
   loading: false,
   error: null,
 }
@@ -56,19 +56,19 @@ export const entitySlice = createSlice({
       parent?: string | null;
     }>) => {
       const noteID: string = action.payload.noteID;
-      var entity: Entity = state.allNotes[noteID];
+      var entity: Entity = state.allEntities[noteID];
       if(entity){
         if (action.payload.title !== undefined) entity.title = action.payload.title;
         if (action.payload.content !== undefined) entity.content = action.payload.content;
         if (action.payload.parent !== undefined) entity.parent = action.payload.parent;
-        state.allNotes[noteID] = entity;
+        state.allEntities[noteID] = entity;
       }
     },
     changeEntityParent: (state, action: PayloadAction<{ noteID: string; newParent: string | null }>) => {
       // TODO: Implement entity parent change logic
       const { noteID, newParent } = action.payload;
-      if (state.allNotes[noteID]) {
-        state.allNotes[noteID].parent = newParent;
+      if (state.allEntities[noteID]) {
+        state.allEntities[noteID].parent = newParent;
       }
     }
   },
@@ -81,8 +81,8 @@ export const entitySlice = createSlice({
     .addCase(fetchEntities.fulfilled, (state, action)=>{
       state.loading = false;
       state.error = null;
-      state.rootNotes = action.payload.filter((entity:Entity)=> entity.parent === null);
-      state.allNotes = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
+      state.rootEntities = action.payload.filter((entity:Entity)=> entity.parent === null);
+      state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
     })
     .addCase(fetchEntities.rejected, (state, action) => {
       state.loading = false;
@@ -95,8 +95,8 @@ export const entitySlice = createSlice({
     .addCase(createEntity.fulfilled, (state, action)=>{
       state.loading = false;
       state.error = null;
-      state.rootNotes = action.payload.updatedNotes.filter((entity:Entity)=> entity.parent === null);
-      state.allNotes = Object.fromEntries(action.payload.updatedNotes.map((entity: Entity) => [entity.id, entity]));
+      state.rootEntities = action.payload.updatedNotes.filter((entity:Entity)=> entity.parent === null);
+      state.allEntities = Object.fromEntries(action.payload.updatedNotes.map((entity: Entity) => [entity.id, entity]));
     })
     .addCase(createEntity.rejected, (state, action) => {
       state.loading = false;
@@ -109,8 +109,8 @@ export const entitySlice = createSlice({
     .addCase(saveEntity.fulfilled, (state, action)=>{
       state.loading = false;
       state.error = null;
-      state.rootNotes = action.payload.updatedNotes.filter((entity:Entity)=> entity.parent === null);
-      state.allNotes = Object.fromEntries(action.payload.updatedNotes.map((entity: Entity) => [entity.id, entity]));
+      state.rootEntities = action.payload.updatedNotes.filter((entity:Entity)=> entity.parent === null);
+      state.allEntities = Object.fromEntries(action.payload.updatedNotes.map((entity: Entity) => [entity.id, entity]));
     })
     .addCase(saveEntity.rejected, (state, action) => {
       state.loading = false;
@@ -123,8 +123,8 @@ export const entitySlice = createSlice({
     .addCase(deleteEntity.fulfilled, (state, action)=>{
       state.loading = false;
       state.error = null;
-      state.rootNotes = action.payload.filter((entity:Entity)=> entity.parent === null);
-      state.allNotes = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
+      state.rootEntities = action.payload.filter((entity:Entity)=> entity.parent === null);
+      state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
     })
     .addCase(deleteEntity.rejected, (state, action) => {
       state.loading = false;

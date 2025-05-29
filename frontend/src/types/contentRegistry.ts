@@ -1,40 +1,41 @@
 import React from 'react';
-import { ContentType, ContentTypeRegistryEntry, ContentTypeMetadata, TabData } from './contentTypes';
 
 // Import tab and content components
-import NoteTab from '@/components/EntityTabTrigger';
-import NoteTabContent from '@/components/EntityTabContent';
+import { EntityType } from '@/models/Entity';
+import NoteRenderer from '@/components/render/note/NoteRenderer';
+import {EntityRendererProps} from '@/components/ContentRenderer'
 
 // Content type metadata
-const contentTypeMetadata: Record<ContentType, ContentTypeMetadata> = {
-  [ContentType.NOTE]: {
-    type: ContentType.NOTE,
-    displayName: 'Note',
-    icon: 'FileText',
-    defaultTitle: 'New Note'
+interface EntityTypeMetadata {
+  type: EntityType;
+  defaultCreationTitle: string;
+}
+
+interface ContentTypeRegistryEntry {
+  metadata: EntityTypeMetadata;
+  contentComponent: React.ComponentType<EntityRendererProps>;
+}
+
+
+const entityTypeMetadata: Record<EntityType, EntityTypeMetadata> = {
+  [EntityType.NOTE]: {
+    type: EntityType.NOTE,
+    defaultCreationTitle: 'New Note'
   }
 };
 
 // Content type registry
-const contentTypeRegistry: Record<ContentType, ContentTypeRegistryEntry> = {
-  [ContentType.NOTE]: {
-    metadata: contentTypeMetadata[ContentType.NOTE],
-    tabComponent: NoteTab,
-    contentComponent: NoteTabContent
+const contentTypeRegistry: Record<EntityType, ContentTypeRegistryEntry> = {
+  [EntityType.NOTE]: {
+    metadata: entityTypeMetadata[EntityType.NOTE],
+    contentComponent: NoteRenderer
   },
 };
 
 // Factory functions for creating content type components
 export class ContentTypeFactory {
-  static getTabComponent(contentType: ContentType): React.ComponentType<{ tabData: TabData }> {
-    const entry = contentTypeRegistry[contentType];
-    if (!entry) {
-      throw new Error(`Unknown content type: ${contentType}`);
-    }
-    return entry.tabComponent;
-  }
 
-  static getContentComponent(contentType: ContentType): React.ComponentType<{ objectID: string }> {
+  static getContentComponent(contentType: EntityType): React.ComponentType<EntityRendererProps> {
     const entry = contentTypeRegistry[contentType];
     if (!entry) {
       throw new Error(`Unknown content type: ${contentType}`);
@@ -42,22 +43,22 @@ export class ContentTypeFactory {
     return entry.contentComponent;
   }
 
-  static getMetadata(contentType: ContentType): ContentTypeMetadata {
-    const metadata = contentTypeMetadata[contentType];
+  static getMetadata(contentType: EntityType): EntityTypeMetadata {
+    const metadata = entityTypeMetadata[contentType];
     if (!metadata) {
       throw new Error(`Unknown content type: ${contentType}`);
     }
     return metadata;
   }
 
-  static getAllContentTypes(): ContentType[] {
-    return Object.values(ContentType);
+  static getAllContentTypes(): EntityType[] {
+    return Object.values(EntityType);
   }
 
-  static isValidContentType(type: string): type is ContentType {
-    return Object.values(ContentType).includes(type as ContentType);
+  static isValidContentType(type: string): type is EntityType {
+    return Object.values(EntityType).includes(type as EntityType);
   }
 }
 
 
-export { contentTypeRegistry, contentTypeMetadata };
+export { contentTypeRegistry, entityTypeMetadata };

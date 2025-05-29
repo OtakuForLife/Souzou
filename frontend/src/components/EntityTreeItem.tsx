@@ -17,9 +17,8 @@ import {NoteTreeItemContextMenu} from '@/components/EntityTreeContextMenu';
 
 
 import { useAppDispatch } from '@/hooks';
-import { EntityState, saveEntity } from '@/store/slices/entiySlice';
+import { EntityState, saveEntity } from '@/store/slices/entitySlice';
 import { openTab } from '@/store/slices/tabsSlice';
-import { ContentType } from '@/types/contentTypes';
 import { useSelector } from 'react-redux';
 import { Entity } from '@/models/Entity';
 import { RootState } from '@/store';
@@ -31,8 +30,8 @@ interface TreeItemDroppableProps {
 
 function TreeItemDroppable({noteID, children}: TreeItemDroppableProps){
   const dispatch = useAppDispatch();
-  const noteState: EntityState = useSelector((state: RootState) => state.notes);
-  const notes: { [id: string] : Entity; } = noteState.allNotes;
+  const noteState: EntityState = useSelector((state: RootState) => state.entities);
+  const notes: { [id: string] : Entity; } = noteState.allEntities;
 
   const onTreeItemDropped = (active: Active, over: Over) => {
     var startNoteID = active.data.current?.note;
@@ -112,15 +111,12 @@ interface NoteTreeItemProps {
 
 function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
   const depthSize = 4;
-  const noteState: EntityState = useSelector((state: RootState) => state.notes);
-  const note: Entity = noteState.allNotes[noteID];
+  const noteState: EntityState = useSelector((state: RootState) => state.entities);
+  const note: Entity = noteState.allEntities[noteID];
   const dispatch = useAppDispatch();
   const onClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
-    dispatch(openTab({
-      objectType: ContentType.NOTE,
-      objectID: note.id
-    }));
+    dispatch(openTab(note));
   }
   const [isOpen, setIsOpen] = useState(false);
   const onDragStart = (_active: Active) => {

@@ -1,21 +1,19 @@
 import { useAppDispatch } from "@/hooks";
 import { Entity } from "@/models/Entity";
 import { RootState } from "@/store";
-import { EntityState } from "@/store/slices/entiySlice";
+import { EntityState } from "@/store/slices/entitySlice";
 import { closeTab, moveTabByData } from "@/store/slices/tabsSlice";
 import React from "react";
 import { useSelector } from "react-redux";
 import TabBase from "./TabBase";
-import { TabData } from "@/types/contentTypes";
 
 
 interface noteTabProps {
-  tabData: TabData;
+  entity: Entity;
 }
 
-function NoteTab({ tabData }: noteTabProps) {
-  const noteState: EntityState = useSelector((state: RootState) => state.notes);
-  const note: Entity = noteState.allNotes[tabData.objectID];
+function EntityTabTrigger({ entity }: noteTabProps) {
+  const entityState: EntityState = useSelector((state: RootState) => state.entities);
   const dispatch = useAppDispatch();
 
   const onTabDropped = (active: any, over: any) => {
@@ -23,14 +21,8 @@ function NoteTab({ tabData }: noteTabProps) {
     const overData = over.data.current;
 
     if (activeData && overData) {
-      const activeTab: TabData = {
-        objectType: activeData.objectType,
-        objectID: activeData.objectID
-      };
-      const overTab: TabData = {
-        objectType: overData.objectType,
-        objectID: overData.objectID
-      };
+      const activeTab: Entity = entityState.allEntities[activeData.objectID];
+      const overTab: Entity = entityState.allEntities[overData.objectID];
 
       dispatch(moveTabByData({ activeTab, overTab }));
     }
@@ -41,31 +33,18 @@ function NoteTab({ tabData }: noteTabProps) {
     e.stopPropagation();
 
     // Only close in the unified tabs slice
-    dispatch(closeTab(tabData));
+    dispatch(closeTab(entity));
   };
-
-  // Fallback if note is not found
-  if (!note) {
-    return (
-      <TabBase
-        objectID={tabData.objectID}
-        objectType={tabData.objectType}
-        displayname="Unknown Note"
-        onClose={onTabClosed}
-        onDropped={onTabDropped}
-      />
-    );
-  }
 
   return (
     <TabBase
-      objectID={note.id}
-      objectType={tabData.objectType}
-      displayname={note.title}
+      objectID={entity.id}
+      objectType={entity.type}
+      displayname={entity.title}
       onClose={onTabClosed}
       onDropped={onTabDropped}
     />
   );
 }
 
-export default NoteTab;
+export default EntityTabTrigger;

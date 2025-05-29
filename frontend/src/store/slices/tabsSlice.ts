@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { TabData, ContentType } from '@/types/contentTypes';
+import { Entity } from '@/models/Entity';
 
 interface TabsState {
-  openTabs: TabData[];
-  currentTab: TabData | null;
+  openTabs: Entity[];
+  currentTab: Entity | null;
 }
 
 const initialState: TabsState = {
@@ -15,12 +15,12 @@ export const tabsSlice = createSlice({
   name: 'tabs',
   initialState,
   reducers: {
-    openTab: (state, action: PayloadAction<TabData>) => {
+    openTab: (state, action: PayloadAction<Entity>) => {
       const tab = action.payload;
 
       // Check if tab is already open
       const existingIndex = state.openTabs.findIndex(
-        (t) => t.objectType === tab.objectType && t.objectID === tab.objectID
+        (t) => t.type === tab.type && t.id === tab.id
       );
 
       if (existingIndex === -1) {
@@ -32,18 +32,18 @@ export const tabsSlice = createSlice({
       state.currentTab = tab;
     },
 
-    closeTab: (state, action: PayloadAction<TabData>) => {
+    closeTab: (state, action: PayloadAction<Entity>) => {
       const tab = action.payload;
       const tabIndex = state.openTabs.findIndex(
-        (t) => t.objectType === tab.objectType && t.objectID === tab.objectID
+        (t) => t.type === tab.type && t.id === tab.id
       );
 
       if (tabIndex >= 0) {
         state.openTabs.splice(tabIndex, 1);
 
         // If the closed tab was the current tab, set current to the last open tab
-        if (state.currentTab?.objectType === tab.objectType &&
-            state.currentTab?.objectID === tab.objectID) {
+        if (state.currentTab?.type === tab.type &&
+            state.currentTab?.id === tab.id) {
           if (state.openTabs.length > 0) {
             const newIndex = Math.max(0, tabIndex - 1);
             state.currentTab = state.openTabs[newIndex];
@@ -54,12 +54,12 @@ export const tabsSlice = createSlice({
       }
     },
 
-    setCurrentTab: (state, action: PayloadAction<TabData>) => {
+    setCurrentTab: (state, action: PayloadAction<Entity>) => {
       const tab = action.payload;
 
       // Verify the tab is actually open
       const isOpen = state.openTabs.some(
-        (t) => t.objectType === tab.objectType && t.objectID === tab.objectID
+        (t) => t.type === tab.type && t.id === tab.id
       );
 
       if (isOpen) {
@@ -78,14 +78,14 @@ export const tabsSlice = createSlice({
       }
     },
 
-    moveTabByData: (state, action: PayloadAction<{ activeTab: TabData; overTab: TabData }>) => {
+    moveTabByData: (state, action: PayloadAction<{ activeTab: Entity; overTab: Entity }>) => {
       const { activeTab, overTab } = action.payload;
 
       const fromIndex = state.openTabs.findIndex(
-        (t) => t.objectType === activeTab.objectType && t.objectID === activeTab.objectID
+        (t) => t.type === activeTab.type && t.id === activeTab.id
       );
       const toIndex = state.openTabs.findIndex(
-        (t) => t.objectType === overTab.objectType && t.objectID === overTab.objectID
+        (t) => t.type === overTab.type && t.id === overTab.id
       );
 
       if (fromIndex >= 0 && toIndex >= 0 && fromIndex !== toIndex) {
@@ -94,40 +94,35 @@ export const tabsSlice = createSlice({
       }
     },
 
-    // Sync tabs from external sources (notes, graphs)
+    /* // Sync tabs from external sources (notes, graphs)
     syncTabsFromSources: (state, action: PayloadAction<{
       openNotes: Array<{ id: string; title: string }>;
       currentNoteId: string | null;
       openGraphs: Array<{ id: string; title: string }>;
       currentGraphId: string | null;
     }>) => {
-      const { openNotes, currentNoteId, openGraphs, currentGraphId } = action.payload;
+      const { openNotes, currentNoteId } = action.payload;
 
       // Create tab data from sources
       const noteTabs: TabData[] = openNotes.map(note => ({
-        objectType: ContentType.NOTE,
-        objectID: note.id
-      }));
-
-      const graphTabs: TabData[] = openGraphs.map(graph => ({
-        objectType: ContentType.GRAPH,
-        objectID: graph.id
+        type: ContentType.NOTE,
+        id: note.id
       }));
 
       // Update open tabs, preserving order where possible
-      const newTabs = [...noteTabs, ...graphTabs];
+      const newTabs = [...noteTabs];
 
       // Filter out tabs that are no longer valid
       state.openTabs = state.openTabs.filter(tab =>
         newTabs.some(newTab =>
-          newTab.objectType === tab.objectType && newTab.objectID === tab.objectID
+          newTab.type === tab.type && newTab.id === tab.id
         )
       );
 
       // Add new tabs that aren't already open
       newTabs.forEach(newTab => {
         const exists = state.openTabs.some(tab =>
-          tab.objectType === newTab.objectType && tab.objectID === newTab.objectID
+          tab.type === newTab.type && tab.id === newTab.id
         );
         if (!exists) {
           state.openTabs.push(newTab);
@@ -137,14 +132,12 @@ export const tabsSlice = createSlice({
       // Update current tab based on sources
       let newCurrentTab: TabData | null = null;
       if (currentNoteId) {
-        newCurrentTab = { objectType: ContentType.NOTE, objectID: currentNoteId };
-      } else if (currentGraphId) {
-        newCurrentTab = { objectType: ContentType.GRAPH, objectID: currentGraphId };
+        newCurrentTab = { type: ContentType.NOTE, id: currentNoteId };
       }
 
       // Only update current tab if it's actually open
       if (newCurrentTab && state.openTabs.some(tab =>
-          tab.objectType === newCurrentTab!.objectType && tab.objectID === newCurrentTab!.objectID
+          tab.type === newCurrentTab!.type && tab.id === newCurrentTab!.id
         )) {
         state.currentTab = newCurrentTab;
       } else if (state.openTabs.length > 0) {
@@ -152,7 +145,7 @@ export const tabsSlice = createSlice({
       } else {
         state.currentTab = null;
       }
-    },
+    }, */
 
     clearAllTabs: (state) => {
       state.openTabs = [];
@@ -167,7 +160,6 @@ export const {
   setCurrentTab,
   moveTab,
   moveTabByData,
-  syncTabsFromSources,
   clearAllTabs
 } = tabsSlice.actions;
 

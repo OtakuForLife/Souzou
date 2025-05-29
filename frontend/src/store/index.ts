@@ -1,11 +1,11 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import themeReducer from './slices/themeSlice'
-import notesReducer from './slices/entiySlice'
+import entityReducer from './slices/entitySlice'
 import tabsReducer from './slices/tabsSlice'
 
 const rootReducer = combineReducers({
   themes: themeReducer,
-  notes: notesReducer,
+  entities: entityReducer,
   tabs: tabsReducer,
 })
 

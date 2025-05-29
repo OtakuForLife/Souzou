@@ -13,7 +13,6 @@ import { createLinkDecorations } from "@/editor/linkDecorations";
 import { RootState } from "@/store";
 import { useAppDispatch } from "@/hooks";
 import { openTab } from "@/store/slices/tabsSlice";
-import { ContentType } from "@/types/contentTypes";
 import { Entity } from "@/models/Entity";
 
 
@@ -38,15 +37,15 @@ const NoteEditor: React.FC<Props> = ({
   const currentNoteIdRef = useRef<string | undefined>(currentNoteId);
 
   // Get notes from Redux store
-  const notesState = useSelector((state: RootState) => state.notes);
+  const notesState = useSelector((state: RootState) => state.entities);
   const dispatch = useAppDispatch();
 
   // Keep refs updated
   useEffect(() => {
     onContentChangeRef.current = onContentChange;
-    notesRef.current = notesState.allNotes;
+    notesRef.current = notesState.allEntities;
     currentNoteIdRef.current = currentNoteId;
-  }, [onContentChange, notesState.allNotes, currentNoteId]);
+  }, [onContentChange, notesState.allEntities, currentNoteId]);
 
   // Handle link clicks - use stable function
   const handleLinkClick = useCallback((noteId: string) => {
@@ -54,10 +53,7 @@ const NoteEditor: React.FC<Props> = ({
       onLinkClick(noteId);
     } else {
       // Default behavior: open note in new tab
-      dispatch(openTab({
-        objectType: ContentType.NOTE,
-        objectID: noteId
-      }));
+      dispatch(openTab(notesRef.current[noteId]));
     }
   }, [onLinkClick, dispatch]);
 

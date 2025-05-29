@@ -1,9 +1,10 @@
 import { useSortable } from "@dnd-kit/sortable";
-import {CSS} from '@dnd-kit/utilities';
+import { CSS } from '@dnd-kit/utilities';
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { X } from "lucide-react";
 import React from "react";
 import { truncateText } from "@/utils/common";
+
 
 interface TabProps {
   objectID: string;
@@ -14,8 +15,7 @@ interface TabProps {
 }
 
 function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabProps) {
-    const uid = objectType + "-" + objectID;
-
+  const uid = objectID;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: uid,

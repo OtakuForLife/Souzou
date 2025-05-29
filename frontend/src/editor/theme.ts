@@ -86,7 +86,7 @@ var customTheme = EditorView.theme({
         backgroundColor: editorBackground,
     },
     ".cm-content": {
-        padding: "16px",
+        padding: "",
         caretColor: editorCursor,
         fontSize: "14px",
         lineHeight: "1.6",
@@ -109,6 +109,7 @@ var customTheme = EditorView.theme({
 
     // Markdown-specific styling
     ".cm-line": {
+        padding: "0 0 0 0",
         lineHeight: "1.6",
     },
 

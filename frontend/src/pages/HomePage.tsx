@@ -16,7 +16,7 @@ import {
 import {ImperativePanelHandle}  from "react-resizable-panels"
 import { SidebarInset, SidebarProvider } from "../components/ui/sidebar"
 
-import { fetchEntities, EntityState, createEntity } from "@/store/slices/entiySlice";
+import { fetchEntities, EntityState, createEntity } from "@/store/slices/entitySlice";
 import { NoteTree } from "../components/EntityTree";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import ContentFrame from "../components/ContentFrame";
@@ -27,15 +27,14 @@ import { useSelector } from "react-redux";
 import { Entity } from "@/models/Entity";
 
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
-import { ContentType } from "@/types/contentTypes";
 import { openTab } from "@/store/slices/tabsSlice";
 
 
 function Home() {
     const dispatch = useAppDispatch();
 
-    const noteState: EntityState = useSelector((state: RootState) => state.notes);
-    const notes: { [id: string]: Entity; } = noteState.allNotes;
+    const noteState: EntityState = useSelector((state: RootState) => state.entities);
+    const notes: { [id: string]: Entity; } = noteState.allEntities;
     const { error: notesError } = noteState;
 
     // Fetch notes on component mount
@@ -68,10 +67,7 @@ function Home() {
                 }));
 
                 if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                    dispatch(openTab({
-                        objectType: ContentType.NOTE,
-                        objectID: result.payload.newNoteData.id
-                    }));
+                    dispatch(openTab(result.payload.newNoteData));
                 }
             }
         },

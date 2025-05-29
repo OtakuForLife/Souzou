@@ -15,9 +15,8 @@ import {
 } from "./ui/sidebar";
 import SettingsDialog from "./SettingsDialog";
 import { useAppDispatch } from "@/hooks";
-import { createEntity } from "@/store/slices/entiySlice";
+import { createEntity } from "@/store/slices/entitySlice";
 import { openTab } from "@/store/slices/tabsSlice";
-import { ContentType } from "@/types/contentTypes";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 
 interface AppSidebarProps {
@@ -64,10 +63,7 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
 
                     // Open the newly created note in a tab
                     if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                      dispatch(openTab({
-                        objectType: ContentType.NOTE,
-                        objectID: result.payload.newNoteData.id
-                      }));
+                      dispatch(openTab(result.payload.newNoteData));
                     }
                   }}
                 >

@@ -6,32 +6,27 @@ import { TabsState, setCurrentTab } from "@/store/slices/tabsSlice";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 
-import { ContentRenderer } from "./ContentRenderer";
-import { TabData, ContentType } from "@/types/contentTypes";
+import { Entity } from "@/models/Entity";
+import EntityTabTrigger from "./EntityTabTrigger";
+import EntityTabContent from "./EntityTabContent";
 
 export default function TabContentGroup() {
   const dispatch = useAppDispatch();
   const tabsState: TabsState = useSelector((state: RootState) => state.tabs);
 
   const openTabIDs: string[] = tabsState.openTabs.map(
-    (t: TabData) => t.objectType + "-" + t.objectID,
+    (t: Entity) => t.id,
   );
 
   const onTabChange = (tabValue: string) => {
-    // More robust parsing: split only on the first dash
-    const dashIndex = tabValue.indexOf('-');
-    if (dashIndex === -1) return;
-
-    const objectType = tabValue.substring(0, dashIndex);
-    const objectID = tabValue.substring(dashIndex + 1);
-
-    const tabData: TabData = { objectType: objectType as ContentType, objectID };
-
-    // Update unified tabs state only
-    dispatch(setCurrentTab(tabData));
+    const tabData: Entity | undefined = tabsState.openTabs.find(
+      (e: Entity) => e.id === tabValue
+    );
+    if(tabData)
+      dispatch(setCurrentTab(tabData));
   };
 
-  const currentTabValue = tabsState.currentTab ? tabsState.currentTab.objectType + "-" + tabsState.currentTab.objectID : "";
+  const currentTabValue = tabsState.currentTab?.id;
 
   return (
     <Tabs
@@ -42,26 +37,19 @@ export default function TabContentGroup() {
     >
       <TabsList className="flex justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
         <SortableContext items={openTabIDs} strategy={rectSortingStrategy}>
-          {tabsState.openTabs.map((tab: TabData) => (
-            <ContentRenderer
-              key={tab.objectType + "-" + tab.objectID}
-              tabData={tab}
-              renderType="tab"
-            />
+          {tabsState.openTabs.map((tab: Entity) => (
+            <EntityTabTrigger key={tab.id} entity={tab}/>
           ))}
         </SortableContext>
       </TabsList>
       <div className="w-full h-full">
-        {tabsState.openTabs.map((tab: TabData) => (
+        {tabsState.openTabs.map((tab: Entity) => (
           <TabsContent
             className="w-full h-full p-4 theme-main-content-background theme-main-content-text outline-2 outline-black"
-            key={tab.objectType + "-" + tab.objectID}
-            value={tab.objectType + "-" + tab.objectID}
+            key={tab.id}
+            value={tab.id}
           >
-            <ContentRenderer
-              tabData={tab}
-              renderType="content"
-            />
+            <EntityTabContent entity={tab}/>
           </TabsContent>
         ))}
       </div>

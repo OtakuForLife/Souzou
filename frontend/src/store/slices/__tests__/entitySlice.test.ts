@@ -1,5 +1,5 @@
 import { expect, test, vi, afterEach, describe, beforeEach } from "vitest"
-import * as EntitySlice from "@/store/slices/entiySlice";
+import * as EntitySlice from "@/store/slices/entitySlice";
 import api from '@/lib/api';
 import { Entity, EntityType } from '@/models/Entity';
 import { InternalAxiosRequestConfig } from "axios";
@@ -70,8 +70,8 @@ describe('entitySlice', () => {
   test('should return the initial state', () => {
     const initialState = reducer(undefined, { type: '' });
     expect(initialState).toEqual({
-      rootNotes: [],
-      allNotes: {},
+      rootEntities: [],
+      allEntities: {},
       loading: false,
       error: null
     });
@@ -80,8 +80,8 @@ describe('entitySlice', () => {
   describe('reducers', () => {
     test('should handle updateEntity', () => {
       const previousState: EntityState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
+        rootEntities: [mockNote1, mockNote2],
+        allEntities: { '1': mockNote1, '2': mockNote2 },
         loading: false,
         error: null
       };
@@ -96,14 +96,14 @@ describe('entitySlice', () => {
         parent: ''
       }));
 
-      expect(nextState.allNotes['1'].title).toEqual(updatedTitle);
-      expect(nextState.allNotes['1'].content).toEqual(updatedContent);
+      expect(nextState.allEntities['1'].title).toEqual(updatedTitle);
+      expect(nextState.allEntities['1'].content).toEqual(updatedContent);
     });
 
     test('should handle changeEntityParent', () => {
       const previousState: EntityState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
+        rootEntities: [mockNote1, mockNote2],
+        allEntities: { '1': mockNote1, '2': mockNote2 },
         loading: false,
         error: null
       };
@@ -112,11 +112,11 @@ describe('entitySlice', () => {
       const nextState = reducer(previousState, changeEntityParent({ noteID: '1', newParent: '2' }));
 
       // The parent of note '1' should now be '2'
-      expect(nextState.allNotes['1'].parent).toEqual('2');
+      expect(nextState.allEntities['1'].parent).toEqual('2');
       // Other properties should remain unchanged
-      expect(nextState.allNotes['1'].title).toEqual(mockNote1.title);
-      expect(nextState.allNotes['1'].content).toEqual(mockNote1.content);
-      expect(nextState.allNotes['2']).toEqual(mockNote2);
+      expect(nextState.allEntities['1'].title).toEqual(mockNote1.title);
+      expect(nextState.allEntities['1'].content).toEqual(mockNote1.content);
+      expect(nextState.allEntities['2']).toEqual(mockNote2);
     });
   });
 
@@ -132,8 +132,8 @@ describe('entitySlice', () => {
       });
 
       const previousState: EntityState = {
-        rootNotes: [],
-        allNotes: {},
+        rootEntities: [],
+        allEntities: {},
         loading: false,
         error: null
       };
@@ -150,11 +150,11 @@ describe('entitySlice', () => {
       const action = { type: fetchEntities.fulfilled.type, payload: mockNotesWithNullParent };
       const nextState = reducer(previousState, action);
 
-      expect(nextState.rootNotes).toHaveLength(2); // Only notes with parent=null
-      expect(Object.keys(nextState.allNotes)).toHaveLength(3);
-      expect(nextState.allNotes['1']).toEqual({...mockNote1, parent: null});
-      expect(nextState.allNotes['2']).toEqual({...mockNote2, parent: null});
-      expect(nextState.allNotes['3']).toEqual(mockNote3);
+      expect(nextState.rootEntities).toHaveLength(2); // Only notes with parent=null
+      expect(Object.keys(nextState.allEntities)).toHaveLength(3);
+      expect(nextState.allEntities['1']).toEqual({...mockNote1, parent: null});
+      expect(nextState.allEntities['2']).toEqual({...mockNote2, parent: null});
+      expect(nextState.allEntities['3']).toEqual(mockNote3);
     });
 
     test('should handle createNote.fulfilled', async () => {
@@ -169,8 +169,8 @@ describe('entitySlice', () => {
       };
 
       const previousState: EntityState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2 },
+        rootEntities: [mockNote1, mockNote2],
+        allEntities: { '1': mockNote1, '2': mockNote2 },
         loading: false,
         error: null
       };
@@ -186,8 +186,8 @@ describe('entitySlice', () => {
 
       const nextState = reducer(previousState, action);
 
-      expect(Object.keys(nextState.allNotes)).toHaveLength(4);
-      expect(nextState.allNotes['4']).toEqual(newNoteData);
+      expect(Object.keys(nextState.allEntities)).toHaveLength(4);
+      expect(nextState.allEntities['4']).toEqual(newNoteData);
     });
 
     test('should handle saveNote.fulfilled', async () => {
@@ -198,8 +198,8 @@ describe('entitySlice', () => {
       ];
 
       const previousState: EntityState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
+        rootEntities: [mockNote1, mockNote2],
+        allEntities: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
         loading: false,
         error: null
       };
@@ -211,15 +211,15 @@ describe('entitySlice', () => {
 
       const nextState = reducer(previousState, action);
 
-      expect(nextState.allNotes['1'].title).toEqual('Updated Title');
+      expect(nextState.allEntities['1'].title).toEqual('Updated Title');
     });
 
     test('should handle deleteNote.fulfilled', async () => {
       const remainingNotes = [mockNote2, mockNote3];
 
       const previousState: EntityState = {
-        rootNotes: [mockNote1, mockNote2],
-        allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
+        rootEntities: [mockNote1, mockNote2],
+        allEntities: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
         loading: false,
         error: null
       };
@@ -231,8 +231,8 @@ describe('entitySlice', () => {
 
       const nextState = reducer(previousState, action);
 
-      expect(Object.keys(nextState.allNotes)).toHaveLength(2);
-      expect(nextState.allNotes['1']).toBeUndefined();
+      expect(Object.keys(nextState.allEntities)).toHaveLength(2);
+      expect(nextState.allEntities['1']).toBeUndefined();
     });
   });
 });
