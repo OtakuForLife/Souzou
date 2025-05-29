@@ -1,7 +1,6 @@
 import {
   StickyNote,
   PanelsTopLeft,
-  ChartNetwork,
 } from "lucide-react";
 import {
   Sidebar,
@@ -16,10 +15,8 @@ import {
 } from "./ui/sidebar";
 import SettingsDialog from "./SettingsDialog";
 import { useAppDispatch } from "@/hooks";
-import { createNote } from "@/store/slices/notesSlice";
-import { createGraph } from "@/store/slices/graphSlice";
+import { createEntity } from "@/store/slices/entiySlice";
 import { openTab } from "@/store/slices/tabsSlice";
-import { createSampleGraph } from "@/utils/testGraphData";
 import { ContentType } from "@/types/contentTypes";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 
@@ -58,7 +55,7 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
                   className="cursor-pointer p-1 m-0"
                   onClick={async () => {
                     const result = await dispatch(
-                      createNote({
+                      createEntity({
                         title: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_TITLE,
                         content: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_CONTENT,
                         parent: null,
@@ -66,7 +63,7 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
                     );
 
                     // Open the newly created note in a tab
-                    if (createNote.fulfilled.match(result) && result.payload.newNoteData) {
+                    if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
                       dispatch(openTab({
                         objectType: ContentType.NOTE,
                         objectID: result.payload.newNoteData.id
@@ -75,31 +72,6 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
                   }}
                 >
                   <StickyNote/>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <SidebarMenu>
-              <SidebarMenuItem className="">
-                <SidebarMenuButton
-                  asChild
-                  className="cursor-pointer p-1 m-0"
-                  onClick={async () => {
-                    const sampleGraph = createSampleGraph();
-                    sampleGraph.title = CONTENT_TYPE_CONFIG.GRAPH.DEFAULT_TITLE;
-
-                    // Add the graph to the store first
-                    const result = await dispatch(createGraph(sampleGraph));
-
-                    // Then open it in a tab using the new ID from the store
-                    if (createGraph.fulfilled.match(result) && result.payload) {
-                      dispatch(openTab({
-                        objectType: ContentType.GRAPH,
-                        objectID: result.payload.id
-                      }));
-                    }
-                  }}
-                >
-                  <ChartNetwork />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

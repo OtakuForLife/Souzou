@@ -16,8 +16,7 @@ export const API_CONFIG = {
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   ENDPOINTS: {
-    NOTES: '/api/notes/',
-    GRAPHS: '/api/graphs/',
+    ENTITIES: '/api/entities/',
     THEMES: '/api/themes/',
   },
 } as const;

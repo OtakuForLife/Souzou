@@ -1,12 +1,12 @@
-from .models import Note, Theme
-from .serializers import NoteSerializer, ThemeSerializer
+from .models import Entity, Theme
+from .serializers import EntitySerializer, ThemeSerializer
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-class NoteViewSet(viewsets.ModelViewSet):
-    serializer_class = NoteSerializer
-    queryset = Note.objects.all()
+class EntityViewSet(viewsets.ModelViewSet):
+    serializer_class = EntitySerializer
+    queryset = Entity.objects.all()
 
 
 class ThemeViewSet(viewsets.ModelViewSet):

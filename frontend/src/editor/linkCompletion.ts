@@ -3,14 +3,14 @@
  */
 
 import { CompletionContext, CompletionResult, CompletionSource } from "@codemirror/autocomplete";
-import { Note } from "@/models/Note";
+import { Entity } from "@/models/Entity";
 import { linkParsingService, NoteSuggestion } from "@/services/linkParsingService";
 
 /**
  * Interface for notes data provider
  */
 interface NotesDataProvider {
-  allNotes: Record<string, Note>;
+  allNotes: Record<string, Entity>;
   currentNoteId?: string;
 }
 

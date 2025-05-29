@@ -3,43 +3,43 @@
  */
 
 import api from '@/lib/api';
-import { Note } from '@/models/Note';
+import { Entity } from '@/models/Entity';
 import { API_CONFIG } from '@/config/constants';
 import { log } from '@/lib/logger';
 
-export interface CreateNoteRequest {
+export interface CreateEntityRequest {
   title: string;
   content: string;
   parent: string | null;
 }
 
-export interface UpdateNoteRequest {
+export interface UpdateEntityRequest {
   noteID: string;
   title?: string;
   content?: string;
   parent?: string | null;
 }
 
-export interface CreateNoteResponse {
+export interface CreateEntityResponse {
   parent: string | null;
-  newNoteData: Note;
-  updatedNotes: Note[];
+  newNoteData: Entity;
+  updatedNotes: Entity[];
 }
 
-export interface SaveNoteResponse {
-  updatedNotes: Note[];
+export interface SaveEntityResponse {
+  updatedNotes: Entity[];
 }
 
-class NoteService {
-  private readonly endpoint = API_CONFIG.ENDPOINTS.NOTES;
+class EntityService {
+  private readonly endpoint = API_CONFIG.ENDPOINTS.ENTITIES;
 
   /**
    * Fetch all notes
    */
-  async fetchNotes(): Promise<Note[]> {
+  async fetchEntities(): Promise<Entity[]> {
     try {
       log.info('Fetching notes');
-      const response = await api.get<Note[]>(this.endpoint);
+      const response = await api.get<Entity[]>(this.endpoint);
       log.info('Notes fetched successfully', { count: response.data.length });
       return response.data;
     } catch (error) {
@@ -51,11 +51,11 @@ class NoteService {
   /**
    * Create a new note
    */
-  async createNote(noteData: CreateNoteRequest): Promise<CreateNoteResponse> {
+  async createEntity(noteData: CreateEntityRequest): Promise<CreateEntityResponse> {
     try {
       log.info('Creating note', { title: noteData.title, parent: noteData.parent });
       
-      const createResponse = await api.post<Note>(this.endpoint, noteData);
+      const createResponse = await api.post<Entity>(this.endpoint, noteData);
       
       if (createResponse.status !== 201) {
         throw new Error(`Failed to create note: ${createResponse.status}`);
@@ -65,7 +65,7 @@ class NoteService {
       log.info('Note created successfully', { id: newNoteData.id, title: newNoteData.title });
 
       // Fetch updated notes list
-      const updatedNotes = await this.fetchNotes();
+      const updatedNotes = await this.fetchEntities();
 
       return {
         parent: noteData.parent,
@@ -81,11 +81,11 @@ class NoteService {
   /**
    * Save/update an existing note
    */
-  async saveNote(note: Note): Promise<SaveNoteResponse> {
+  async saveEntity(note: Entity): Promise<SaveEntityResponse> {
     try {
       log.info('Saving note', { id: note.id, title: note.title });
       
-      const response = await api.put<Note>(`${this.endpoint}${note.id}/`, note);
+      const response = await api.put<Entity>(`${this.endpoint}${note.id}/`, note);
       
       if (response.status !== 200) {
         throw new Error(`Failed to save note: ${response.status}`);
@@ -94,7 +94,7 @@ class NoteService {
       log.info('Note saved successfully', { id: note.id });
 
       // Fetch updated notes list
-      const updatedNotes = await this.fetchNotes();
+      const updatedNotes = await this.fetchEntities();
 
       return { updatedNotes };
     } catch (error) {
@@ -106,7 +106,7 @@ class NoteService {
   /**
    * Delete a note
    */
-  async deleteNote(noteId: string): Promise<Note[]> {
+  async deleteEntity(noteId: string): Promise<Entity[]> {
     try {
       log.info('Deleting note', { id: noteId });
       
@@ -119,7 +119,7 @@ class NoteService {
       log.info('Note deleted successfully', { id: noteId });
 
       // Fetch updated notes list
-      const updatedNotes = await this.fetchNotes();
+      const updatedNotes = await this.fetchEntities();
       return updatedNotes;
     } catch (error) {
       log.error('Failed to delete note', error as Error, { noteId });
@@ -130,11 +130,11 @@ class NoteService {
   /**
    * Update note metadata (title, parent, etc.)
    */
-  async updateNote(updateData: UpdateNoteRequest): Promise<Note> {
+  async updateEntity(updateData: UpdateEntityRequest): Promise<Entity> {
     try {
       log.info('Updating note', { id: updateData.noteID });
       
-      const response = await api.patch<Note>(`${this.endpoint}${updateData.noteID}/`, updateData);
+      const response = await api.patch<Entity>(`${this.endpoint}${updateData.noteID}/`, updateData);
       
       if (response.status !== 200) {
         throw new Error(`Failed to update note: ${response.status}`);
@@ -148,25 +148,6 @@ class NoteService {
     }
   }
 
-  /**
-   * Search notes by title or content
-   */
-  async searchNotes(query: string): Promise<Note[]> {
-    try {
-      log.info('Searching notes', { query });
-      
-      const response = await api.get<Note[]>(`${this.endpoint}search/`, {
-        params: { q: query },
-      });
-
-      log.info('Notes search completed', { query, count: response.data.length });
-      return response.data;
-    } catch (error) {
-      log.error('Failed to search notes', error as Error, { query });
-      throw error;
-    }
-  }
 }
-
 // Export singleton instance
-export const noteService = new NoteService();
+export const entityService = new EntityService();

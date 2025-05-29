@@ -2,7 +2,7 @@
  * Service for parsing and managing note links in markdown content
  */
 
-import { Note } from '@/models/Note';
+import { Entity } from '@/models/Entity';
 
 export interface ParsedLink {
   from: number;
@@ -28,7 +28,7 @@ class LinkParsingService {
   /**
    * Parse all links in content and resolve them against available notes
    */
-  parseLinks(content: string, allNotes: Record<string, Note>): LinkParseResult {
+  parseLinks(content: string, allNotes: Record<string, Entity>): LinkParseResult {
     const links: ParsedLink[] = [];
     const brokenLinks: ParsedLink[] = [];
 
@@ -53,7 +53,7 @@ class LinkParsingService {
   /**
    * Parse [[Note Title]] style links
    */
-  private parseWikiLinks(content: string, allNotes: Record<string, Note>): ParsedLink[] {
+  private parseWikiLinks(content: string, allNotes: Record<string, Entity>): ParsedLink[] {
     const links: ParsedLink[] = [];
     const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
     let match;
@@ -82,7 +82,7 @@ class LinkParsingService {
   /**
    * Parse [Display](target) style links
    */
-  private parseMarkdownLinks(content: string, allNotes: Record<string, Note>): ParsedLink[] {
+  private parseMarkdownLinks(content: string, allNotes: Record<string, Entity>): ParsedLink[] {
     const links: ParsedLink[] = [];
     const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
     let match;
@@ -101,7 +101,7 @@ class LinkParsingService {
       // and doesn't match any note title, treat it as an ID
       const looksLikeId = /^[a-z0-9\-_]+$/i.test(target) && !target.includes(' ');
 
-      let targetNote: Note | null = null;
+      let targetNote: Entity | null = null;
       let linkType: 'markdown-id' | 'markdown-title' = 'markdown-title';
 
       if (isUUID || isSimpleId) {
@@ -135,7 +135,7 @@ class LinkParsingService {
   /**
    * Find note by title with exact and fuzzy matching
    */
-  findNoteByTitle(title: string, allNotes: Record<string, Note>): Note | null {
+  findNoteByTitle(title: string, allNotes: Record<string, Entity>): Entity | null {
     const normalizedTitle = title.toLowerCase().trim();
 
     // Exact match first
@@ -158,7 +158,7 @@ class LinkParsingService {
    */
   searchNotesForSuggestions(
     query: string,
-    allNotes: Record<string, Note>,
+    allNotes: Record<string, Entity>,
     excludeNoteId?: string
   ): NoteSuggestion[] {
     if (query.length < 1) return [];
@@ -192,7 +192,7 @@ class LinkParsingService {
   /**
    * Get all outgoing links from a note
    */
-  getOutgoingLinks(noteId: string, allNotes: Record<string, Note>): ParsedLink[] {
+  getOutgoingLinks(noteId: string, allNotes: Record<string, Entity>): ParsedLink[] {
     const note = allNotes[noteId];
     if (!note) return [];
 
@@ -202,11 +202,11 @@ class LinkParsingService {
   /**
    * Get all incoming links to a note (backlinks)
    */
-  getIncomingLinks(targetNoteId: string, allNotes: Record<string, Note>): Array<{
-    sourceNote: Note;
+  getIncomingLinks(targetNoteId: string, allNotes: Record<string, Entity>): Array<{
+    sourceNote: Entity;
     links: ParsedLink[];
   }> {
-    const backlinks: Array<{ sourceNote: Note; links: ParsedLink[] }> = [];
+    const backlinks: Array<{ sourceNote: Entity; links: ParsedLink[] }> = [];
 
     Object.values(allNotes).forEach(sourceNote => {
       if (sourceNote.id === targetNoteId) return; // Skip self
@@ -228,7 +228,7 @@ class LinkParsingService {
   /**
    * Resolve note title from ID for display purposes
    */
-  resolveNoteTitle(noteId: string, allNotes: Record<string, Note>): string {
+  resolveNoteTitle(noteId: string, allNotes: Record<string, Entity>): string {
     const note = allNotes[noteId];
     return note ? note.title : 'Unknown Note';
   }

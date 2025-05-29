@@ -1,13 +1,11 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import themeReducer from './slices/themeSlice'
-import notesReducer from './slices/notesSlice'
-import graphReducer from './slices/graphSlice'
+import notesReducer from './slices/entiySlice'
 import tabsReducer from './slices/tabsSlice'
 
 const rootReducer = combineReducers({
   themes: themeReducer,
   notes: notesReducer,
-  graphs: graphReducer,
   tabs: tabsReducer,
 })
 

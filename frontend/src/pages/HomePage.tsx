@@ -16,33 +16,31 @@ import {
 import {ImperativePanelHandle}  from "react-resizable-panels"
 import { SidebarInset, SidebarProvider } from "../components/ui/sidebar"
 
-import { fetchNotes, NoteState } from "@/store/slices/notesSlice";
-import { GraphState } from "@/store/slices/graphSlice";
-import { NoteTree } from "../components/NoteTree";
+import { fetchEntities, EntityState, createEntity } from "@/store/slices/entiySlice";
+import { NoteTree } from "../components/EntityTree";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import ContentFrame from "../components/ContentFrame";
 import AppSidebar from "../components/Sidebar";
 import { useAppDispatch, useKeyboardShortcuts } from "@/hooks";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
-import { Note } from "@/models/Note";
+import { Entity } from "@/models/Entity";
 
-import { createNote } from "@/store/slices/notesSlice";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
-import { ContentType, GraphContentData } from "@/types/contentTypes";
+import { ContentType } from "@/types/contentTypes";
 import { openTab } from "@/store/slices/tabsSlice";
 
 
 function Home() {
     const dispatch = useAppDispatch();
 
-    const noteState: NoteState = useSelector((state: RootState) => state.notes);
-    const notes: { [id: string]: Note; } = noteState.allNotes;
+    const noteState: EntityState = useSelector((state: RootState) => state.notes);
+    const notes: { [id: string]: Entity; } = noteState.allNotes;
     const { error: notesError } = noteState;
 
     // Fetch notes on component mount
     useEffect(()=> {
-        dispatch(fetchNotes());
+        dispatch(fetchEntities());
     }, [dispatch]);
 
     // Show toast notification for notes errors
@@ -52,8 +50,6 @@ function Home() {
         }
     }, [notesError, dispatch]);
 
-    const graphState: GraphState = useSelector((state: RootState) => state.graphs);
-    const graphs: { [id: string]: GraphContentData; } = graphState.allGraphs;
     const [activeDrag, setActiveDrag] = useState<Active|null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const navigationRef = useRef<ImperativePanelHandle>(null);
@@ -65,13 +61,13 @@ function Home() {
             ctrlKey: true,
             callback: async () => {
                 // Create new note with Ctrl+N
-                const result = await dispatch(createNote({
+                const result = await dispatch(createEntity({
                     title: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_TITLE,
                     content: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_CONTENT,
                     parent: null
                 }));
 
-                if (createNote.fulfilled.match(result) && result.payload.newNoteData) {
+                if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
                     dispatch(openTab({
                         objectType: ContentType.NOTE,
                         objectID: result.payload.newNoteData.id
@@ -84,7 +80,7 @@ function Home() {
             ctrlKey: true,
             callback: () => {
                 // Refresh notes with Ctrl+R
-                dispatch(fetchNotes());
+                dispatch(fetchEntities());
             }
         }
     ]);
@@ -173,8 +169,6 @@ function Home() {
                                     <span className="text-sm font-medium">
                                         {activeDrag.data.current?.objectType === "note"
                                             ? notes[activeDrag.data.current?.objectID]?.title || "Unknown Note"
-                                            : activeDrag.data.current?.objectType === "graph"
-                                            ? graphs[activeDrag.data.current?.objectID]?.title || "Unknown Graph"
                                             : "Unknown Tab"
                                         }
                                     </span>

@@ -1,14 +1,14 @@
 from rest_framework import serializers
-from .models import Note, Theme
+from .models import Entity, Theme
 
 
 
-class NoteSerializer(serializers.ModelSerializer):
+class EntitySerializer(serializers.ModelSerializer):
 
     #children = RecursiveNoteSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Note
+        model = Entity
         fields = ["id", "type", "title", "content", "created_at", "parent", "children"]
         extra_kwargs = {"parent": {"required": False}, "children": {"required": False}}
 

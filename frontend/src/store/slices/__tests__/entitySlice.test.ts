@@ -1,7 +1,8 @@
 import { expect, test, vi, afterEach, describe, beforeEach } from "vitest"
-import * as NotesSlice from "@/store/slices/notesSlice";
+import * as EntitySlice from "@/store/slices/entiySlice";
 import api from '@/lib/api';
-import { Note } from '@/models/Note';
+import { Entity, EntityType } from '@/models/Entity';
+import { InternalAxiosRequestConfig } from "axios";
 
 // Mock the API
 vi.mock('@/lib/api', () => ({
@@ -13,39 +14,42 @@ vi.mock('@/lib/api', () => ({
   }
 }));
 
-const reducer = NotesSlice.default;
+const reducer = EntitySlice.default;
 const {
-  updateNote,
-  changeNoteParent,
-  fetchNotes,
-  createNote,
-  saveNote,
-  deleteNote
-} = NotesSlice;
-type NoteState = NotesSlice.NoteState;
+  updateEntity,
+  changeEntityParent,
+  fetchEntities,
+  createEntity,
+  saveEntity,
+  deleteEntity
+} = EntitySlice;
+type EntityState = EntitySlice.EntityState;
 
 // Sample note data for testing
-const mockNote1: Note = {
+const mockNote1: Entity = {
   id: '1',
   title: 'Test Note 1',
+  type: EntityType.NOTE,
   content: 'Test content 1',
   created_at: '2023-01-01T00:00:00Z',
   parent: '',
   children: []
 };
 
-const mockNote2: Note = {
+const mockNote2: Entity = {
   id: '2',
   title: 'Test Note 2',
+  type: EntityType.NOTE,
   content: 'Test content 2',
   created_at: '2023-01-02T00:00:00Z',
   parent: '',
   children: []
 };
 
-const mockNote3: Note = {
+const mockNote3: Entity = {
   id: '3',
   title: 'Test Note 3',
+  type: EntityType.NOTE,
   content: 'Test content 3',
   created_at: '2023-01-03T00:00:00Z',
   parent: '1',
@@ -54,7 +58,7 @@ const mockNote3: Note = {
 
 const mockNotes = [mockNote1, mockNote2, mockNote3];
 
-describe('notesSlice', () => {
+describe('entitySlice', () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -74,8 +78,8 @@ describe('notesSlice', () => {
   });
 
   describe('reducers', () => {
-    test('should handle updateNote', () => {
-      const previousState: NoteState = {
+    test('should handle updateEntity', () => {
+      const previousState: EntityState = {
         rootNotes: [mockNote1, mockNote2],
         allNotes: { '1': mockNote1, '2': mockNote2 },
         loading: false,
@@ -85,7 +89,7 @@ describe('notesSlice', () => {
       const updatedTitle = 'Updated Title';
       const updatedContent = 'Updated Content';
 
-      const nextState = reducer(previousState, updateNote({
+      const nextState = reducer(previousState, updateEntity({
         noteID: '1',
         title: updatedTitle,
         content: updatedContent,
@@ -96,16 +100,16 @@ describe('notesSlice', () => {
       expect(nextState.allNotes['1'].content).toEqual(updatedContent);
     });
 
-    test('should handle changeNoteParent', () => {
-      const previousState: NoteState = {
+    test('should handle changeEntityParent', () => {
+      const previousState: EntityState = {
         rootNotes: [mockNote1, mockNote2],
         allNotes: { '1': mockNote1, '2': mockNote2 },
         loading: false,
         error: null
       };
 
-      // Test that changeNoteParent actually changes the parent
-      const nextState = reducer(previousState, changeNoteParent({ noteID: '1', newParent: '2' }));
+      // Test that changeEntityParent actually changes the parent
+      const nextState = reducer(previousState, changeEntityParent({ noteID: '1', newParent: '2' }));
 
       // The parent of note '1' should now be '2'
       expect(nextState.allNotes['1'].parent).toEqual('2');
@@ -119,9 +123,15 @@ describe('notesSlice', () => {
   describe('async thunks', () => {
     test('should handle fetchNotes.fulfilled', async () => {
       // Mock API response
-      vi.mocked(api.get).mockResolvedValueOnce({ data: mockNotes });
+      vi.mocked(api.get).mockResolvedValueOnce({
+        data: mockNotes,
+        status: 0,
+        statusText: "",
+        headers: {},
+        config: {} as InternalAxiosRequestConfig<any>
+      });
 
-      const previousState: NoteState = {
+      const previousState: EntityState = {
         rootNotes: [],
         allNotes: {},
         loading: false,
@@ -137,7 +147,7 @@ describe('notesSlice', () => {
         mockNote3
       ];
 
-      const action = { type: fetchNotes.fulfilled.type, payload: mockNotesWithNullParent };
+      const action = { type: fetchEntities.fulfilled.type, payload: mockNotesWithNullParent };
       const nextState = reducer(previousState, action);
 
       expect(nextState.rootNotes).toHaveLength(2); // Only notes with parent=null
@@ -148,16 +158,17 @@ describe('notesSlice', () => {
     });
 
     test('should handle createNote.fulfilled', async () => {
-      const newNoteData: Note = {
+      const newNoteData: Entity = {
         id: '4',
         title: 'New Note',
+        type: EntityType.NOTE,
         content: 'New content',
         created_at: '2023-01-04T00:00:00Z',
         parent: '',
         children: []
       };
 
-      const previousState: NoteState = {
+      const previousState: EntityState = {
         rootNotes: [mockNote1, mockNote2],
         allNotes: { '1': mockNote1, '2': mockNote2 },
         loading: false,
@@ -165,7 +176,7 @@ describe('notesSlice', () => {
       };
 
       const action = {
-        type: createNote.fulfilled.type,
+        type: createEntity.fulfilled.type,
         payload: {
           parent: '',
           newNoteData: newNoteData,
@@ -186,7 +197,7 @@ describe('notesSlice', () => {
         mockNote3
       ];
 
-      const previousState: NoteState = {
+      const previousState: EntityState = {
         rootNotes: [mockNote1, mockNote2],
         allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
         loading: false,
@@ -194,7 +205,7 @@ describe('notesSlice', () => {
       };
 
       const action = {
-        type: saveNote.fulfilled.type,
+        type: saveEntity.fulfilled.type,
         payload: { updatedNotes }
       };
 
@@ -206,7 +217,7 @@ describe('notesSlice', () => {
     test('should handle deleteNote.fulfilled', async () => {
       const remainingNotes = [mockNote2, mockNote3];
 
-      const previousState: NoteState = {
+      const previousState: EntityState = {
         rootNotes: [mockNote1, mockNote2],
         allNotes: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
         loading: false,
@@ -214,7 +225,7 @@ describe('notesSlice', () => {
       };
 
       const action = {
-        type: deleteNote.fulfilled.type,
+        type: deleteEntity.fulfilled.type,
         payload: remainingNotes
       };
 

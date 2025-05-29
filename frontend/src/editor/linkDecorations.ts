@@ -3,14 +3,14 @@
  */
 
 import { ViewPlugin, DecorationSet, EditorView, ViewUpdate, Decoration } from "@codemirror/view";
-import { Note } from "@/models/Note";
+import { Entity } from "@/models/Entity";
 import { linkParsingService } from "@/services/linkParsingService";
 
 /**
  * Create link decorations extension
  */
 export function createLinkDecorations(
-  getNotesData: () => Record<string, Note>,
+  getNotesData: () => Record<string, Entity>,
   onLinkClick: (noteId: string) => void
 ) {
   return ViewPlugin.fromClass(class {
@@ -119,7 +119,7 @@ export function createLinkDecorations(
  * Useful if you want to handle styling via CSS only
  */
 export function createLinkClickHandler(
-  getNotesData: () => Record<string, Note>,
+  getNotesData: () => Record<string, Entity>,
   onLinkClick: (noteId: string) => void
 ) {
   return ViewPlugin.fromClass(class {

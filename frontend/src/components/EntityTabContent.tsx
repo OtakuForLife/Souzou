@@ -1,7 +1,7 @@
 import { useAppDispatch } from "@/hooks";
-import { Note } from "@/models/Note";
+import { Entity } from "@/models/Entity";
 import { RootState } from "@/store";
-import { NoteState, saveNote, updateNote } from "@/store/slices/notesSlice";
+import { EntityState, saveEntity, updateEntity } from "@/store/slices/entiySlice";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Save } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -15,8 +15,8 @@ interface NoteTabContentProps {
 }
 
 function NoteTabContent({ objectID }: NoteTabContentProps) {
-  const noteState: NoteState = useSelector((state: RootState) => state.notes);
-  const note: Note = noteState.allNotes[objectID];
+  const noteState: EntityState = useSelector((state: RootState) => state.notes);
+  const note: Entity = noteState.allNotes[objectID];
   const dispatch = useAppDispatch();
   const [titleError, setTitleError] = useState<string | undefined>();
 
@@ -24,7 +24,7 @@ function NoteTabContent({ objectID }: NoteTabContentProps) {
   const handleContentChange = (newContent: string) => {
     // Update note in store immediately for UI responsiveness
     dispatch(
-      updateNote({
+      updateEntity({
         noteID: note?.id,
         content: newContent,
       }),
@@ -37,7 +37,7 @@ function NoteTabContent({ objectID }: NoteTabContentProps) {
         onClick={(e: React.MouseEvent<HTMLElement>) => {
           e.preventDefault();
           if (note) {
-            dispatch(saveNote(note));
+            dispatch(saveEntity(note));
           }
         }}
       >
@@ -59,7 +59,7 @@ function NoteTabContent({ objectID }: NoteTabContentProps) {
 
           // Update note in store immediately for UI responsiveness
           dispatch(
-            updateNote({
+            updateEntity({
               noteID: note?.id,
               title: newTitle,
               content: note?.content,

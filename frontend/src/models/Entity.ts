@@ -1,6 +1,11 @@
 
-interface Note {
+enum EntityType {
+    NOTE = "note",
+}
+
+interface Entity {
     id: string;
+    type: EntityType;
     title: string;
     content: string;
     created_at: string;
@@ -8,4 +13,5 @@ interface Note {
     children: string[];
 }
 
-export type { Note };
+export type { Entity };
+export { EntityType };

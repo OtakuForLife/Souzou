@@ -2,7 +2,6 @@
 
 export enum ContentType {
   NOTE = 'note',
-  GRAPH = 'graph'
 }
 
 // Status enums for better state management
@@ -34,17 +33,8 @@ export interface NoteContentData extends BaseContentData {
   children: string[];
 }
 
-// Graph-specific content data
-export interface GraphContentData extends BaseContentData {
-  type: ContentType.GRAPH;
-  elements: any; // Cytoscape elements
-  layout?: any; // Cytoscape layout
-  style?: any; // Cytoscape style
-  cytoscapeOptions?: any; // Additional Cytoscape options
-}
-
 // Union type for all content data types
-export type ContentData = NoteContentData | GraphContentData;
+export type ContentData = NoteContentData;
 
 // Tab data interface with improved type safety
 export interface TabData {

@@ -10,8 +10,6 @@ import {
     dropCursor, 
     rectangularSelection, 
     crosshairCursor, 
-    highlightActiveLine, 
-    highlightActiveLineGutter, 
     keymap } from "@codemirror/view";
 import { 
     autocompletion, 
@@ -38,7 +36,7 @@ const baseExtensions = [
   // Show a drop cursor when dragging over the editor
   dropCursor(),
   // Allow multiple cursors/selections
-  EditorState.allowMultipleSelections.of(true),
+  EditorState.allowMultipleSelections.of(false),
   // Re-indent lines when typing specific input
   indentOnInput(),
   // Highlight matching brackets near cursor
@@ -52,9 +50,9 @@ const baseExtensions = [
   // Change the cursor to a crosshair when holding alt
   crosshairCursor(),
   // Style the current line specially
-  highlightActiveLine(),
+  //highlightActiveLine(),
   // Style the gutter for current line specially
-  highlightActiveLineGutter(),
+  //highlightActiveLineGutter(),
   // Highlight text that matches the selected text
   highlightSelectionMatches(),
   keymap.of([

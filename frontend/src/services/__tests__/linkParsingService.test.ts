@@ -4,13 +4,14 @@
 
 import { describe, it, expect } from 'vitest';
 import { linkParsingService } from '../linkParsingService';
-import { Note } from '@/models/Note';
+import { Entity, EntityType } from '@/models/Entity';
 
 // Mock notes for testing
-const mockNotes: Record<string, Note> = {
+const mockNotes: Record<string, Entity> = {
   'note-1': {
     id: 'note-1',
     title: 'First Note',
+    type: EntityType.NOTE,
     content: 'This is the first note',
     created_at: '2023-01-01T00:00:00Z',
     parent: null,
@@ -19,6 +20,7 @@ const mockNotes: Record<string, Note> = {
   'note-2': {
     id: 'note-2',
     title: 'Second Note',
+    type: EntityType.NOTE,
     content: 'This is the second note',
     created_at: '2023-01-02T00:00:00Z',
     parent: null,
@@ -27,6 +29,7 @@ const mockNotes: Record<string, Note> = {
   'note-3': {
     id: 'note-3',
     title: 'Project Ideas',
+    type: EntityType.NOTE,
     content: 'Various project ideas',
     created_at: '2023-01-03T00:00:00Z',
     parent: null,
@@ -159,9 +162,10 @@ describe('LinkParsingService', () => {
   describe('getOutgoingLinks', () => {
     it('should return outgoing links from a note', () => {
       // Add a note with links
-      const noteWithLinks: Note = {
+      const noteWithLinks: Entity = {
         id: 'note-with-links',
         title: 'Note with Links',
+        type: EntityType.NOTE,
         content: 'See [[First Note]] and [Second](note-2) for more.',
         created_at: '2023-01-04T00:00:00Z',
         parent: null,
@@ -180,18 +184,20 @@ describe('LinkParsingService', () => {
   describe('getIncomingLinks', () => {
     it('should return incoming links to a note', () => {
       // Add notes with links pointing to note-1
-      const noteWithLinks1: Note = {
+      const noteWithLinks1: Entity = {
         id: 'note-with-links-1',
         title: 'Note with Links 1',
+        type: EntityType.NOTE,
         content: 'See [[First Note]] for details.',
         created_at: '2023-01-04T00:00:00Z',
         parent: null,
         children: []
       };
       
-      const noteWithLinks2: Note = {
+      const noteWithLinks2: Entity = {
         id: 'note-with-links-2',
         title: 'Note with Links 2',
+        type: EntityType.NOTE,
         content: 'Check [this](note-1) out.',
         created_at: '2023-01-05T00:00:00Z',
         parent: null,

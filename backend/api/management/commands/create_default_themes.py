@@ -16,7 +16,6 @@ class Command(BaseCommand):
             name='Test',
             type=ThemeType.PREDEFINED,
             defaults={
-                'is_default': False,
                 'colors': {
                     "sidebar": {
                         "background": "#0051FF",
@@ -133,7 +132,6 @@ class Command(BaseCommand):
             name='Dark',
             type=ThemeType.PREDEFINED,
             defaults={
-                'is_default': True,
                 'colors': {
                     "sidebar": {
                         "background": "#111827",

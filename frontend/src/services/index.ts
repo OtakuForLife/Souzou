@@ -2,18 +2,13 @@
  * Service layer exports
  */
 
-export { noteService } from './noteService';
-export { graphService } from './graphService';
+export { entityService } from './entityService';
 export { themeService } from './themeService';
 
 export type {
-  CreateNoteRequest,
-  UpdateNoteRequest,
-  CreateNoteResponse,
-  SaveNoteResponse,
-} from './noteService';
+  CreateEntityRequest,
+  UpdateEntityRequest,
+  CreateEntityResponse,
+  SaveEntityResponse,
+} from './entityService';
 
-export type {
-  CreateGraphRequest,
-  UpdateGraphRequest,
-} from './graphService';

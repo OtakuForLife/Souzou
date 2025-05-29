@@ -1,7 +1,7 @@
 import { useAppDispatch } from "@/hooks";
-import { Note } from "@/models/Note";
+import { Entity } from "@/models/Entity";
 import { RootState } from "@/store";
-import { NoteState } from "@/store/slices/notesSlice";
+import { EntityState } from "@/store/slices/entiySlice";
 import { closeTab, moveTabByData } from "@/store/slices/tabsSlice";
 import React from "react";
 import { useSelector } from "react-redux";
@@ -14,8 +14,8 @@ interface noteTabProps {
 }
 
 function NoteTab({ tabData }: noteTabProps) {
-  const noteState: NoteState = useSelector((state: RootState) => state.notes);
-  const note: Note = noteState.allNotes[tabData.objectID];
+  const noteState: EntityState = useSelector((state: RootState) => state.notes);
+  const note: Entity = noteState.allNotes[tabData.objectID];
   const dispatch = useAppDispatch();
 
   const onTabDropped = (active: any, over: any) => {

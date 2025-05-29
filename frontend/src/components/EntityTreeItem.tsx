@@ -1,10 +1,10 @@
 import { ChevronDown, ChevronRight, StickyNote } from 'lucide-react';
-import { Button } from "../components/ui/button";
+import { Button } from "./ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "../components/ui/collapsible"
+} from "./ui/collapsible"
 import React, { JSX, useState } from 'react';
 import {
   useDraggable,
@@ -13,15 +13,15 @@ import {
 import {Active, Over} from '@dnd-kit/core/dist/store/types';
 
 
-import {NoteTreeItemContextMenu} from '../components/NoteTreeContextMenu';
+import {NoteTreeItemContextMenu} from '@/components/EntityTreeContextMenu';
 
 
 import { useAppDispatch } from '@/hooks';
-import { NoteState, saveNote } from '@/store/slices/notesSlice';
+import { EntityState, saveEntity } from '@/store/slices/entiySlice';
 import { openTab } from '@/store/slices/tabsSlice';
 import { ContentType } from '@/types/contentTypes';
 import { useSelector } from 'react-redux';
-import { Note } from '@/models/Note';
+import { Entity } from '@/models/Entity';
 import { RootState } from '@/store';
 
 interface TreeItemDroppableProps {
@@ -31,17 +31,17 @@ interface TreeItemDroppableProps {
 
 function TreeItemDroppable({noteID, children}: TreeItemDroppableProps){
   const dispatch = useAppDispatch();
-  const noteState: NoteState = useSelector((state: RootState) => state.notes);
-  const notes: { [id: string] : Note; } = noteState.allNotes;
+  const noteState: EntityState = useSelector((state: RootState) => state.notes);
+  const notes: { [id: string] : Entity; } = noteState.allNotes;
 
   const onTreeItemDropped = (active: Active, over: Over) => {
     var startNoteID = active.data.current?.note;
     var endNoteID = over.data.current?.note;
 
     const note = notes[startNoteID];
-    var updatedNote: Note = {...note};
+    var updatedNote: Entity = {...note};
     updatedNote.parent = endNoteID;
-    dispatch(saveNote(updatedNote));
+    dispatch(saveEntity(updatedNote));
   }
 
   const {setNodeRef} = useDroppable({
@@ -112,8 +112,8 @@ interface NoteTreeItemProps {
 
 function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
   const depthSize = 4;
-  const noteState: NoteState = useSelector((state: RootState) => state.notes);
-  const note: Note = noteState.allNotes[noteID];
+  const noteState: EntityState = useSelector((state: RootState) => state.notes);
+  const note: Entity = noteState.allNotes[noteID];
   const dispatch = useAppDispatch();
   const onClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();

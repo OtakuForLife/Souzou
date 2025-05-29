@@ -2,10 +2,8 @@ import React from 'react';
 import { ContentType, ContentTypeRegistryEntry, ContentTypeMetadata, TabData } from './contentTypes';
 
 // Import tab and content components
-import NoteTab from '@/components/NoteTab';
-import NoteTabContent from '@/components/NoteTabContent';
-import GraphTab from '@/components/GraphTab';
-import GraphTabContent from '@/components/GraphTabContent';
+import NoteTab from '@/components/EntityTabTrigger';
+import NoteTabContent from '@/components/EntityTabContent';
 
 // Content type metadata
 const contentTypeMetadata: Record<ContentType, ContentTypeMetadata> = {
@@ -14,12 +12,6 @@ const contentTypeMetadata: Record<ContentType, ContentTypeMetadata> = {
     displayName: 'Note',
     icon: 'FileText',
     defaultTitle: 'New Note'
-  },
-  [ContentType.GRAPH]: {
-    type: ContentType.GRAPH,
-    displayName: 'Graph',
-    icon: 'Network',
-    defaultTitle: 'New Graph'
   }
 };
 
@@ -30,11 +22,6 @@ const contentTypeRegistry: Record<ContentType, ContentTypeRegistryEntry> = {
     tabComponent: NoteTab,
     contentComponent: NoteTabContent
   },
-  [ContentType.GRAPH]: {
-    metadata: contentTypeMetadata[ContentType.GRAPH],
-    tabComponent: GraphTab,
-    contentComponent: GraphTabContent
-  }
 };
 
 // Factory functions for creating content type components

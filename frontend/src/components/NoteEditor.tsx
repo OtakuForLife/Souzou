@@ -14,7 +14,7 @@ import { RootState } from "@/store";
 import { useAppDispatch } from "@/hooks";
 import { openTab } from "@/store/slices/tabsSlice";
 import { ContentType } from "@/types/contentTypes";
-import { Note } from "@/models/Note";
+import { Entity } from "@/models/Entity";
 
 
 interface Props {
@@ -34,7 +34,7 @@ const NoteEditor: React.FC<Props> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onContentChangeRef = useRef(onContentChange);
-  const notesRef = useRef<Record<string, Note>>({});
+  const notesRef = useRef<Record<string, Entity>>({});
   const currentNoteIdRef = useRef<string | undefined>(currentNoteId);
 
   // Get notes from Redux store
