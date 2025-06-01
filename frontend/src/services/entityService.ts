@@ -3,7 +3,7 @@
  */
 
 import api from '@/lib/api';
-import { Entity } from '@/models/Entity';
+import { Entity, EntityType } from '@/models/Entity';
 import { API_CONFIG } from '@/config/constants';
 import { log } from '@/lib/logger';
 
@@ -11,6 +11,7 @@ export interface CreateEntityRequest {
   title: string;
   content: string;
   parent: string | null;
+  type?: EntityType;
 }
 
 export interface UpdateEntityRequest {
@@ -54,9 +55,9 @@ class EntityService {
   async createEntity(noteData: CreateEntityRequest): Promise<CreateEntityResponse> {
     try {
       log.info('Creating note', { title: noteData.title, parent: noteData.parent });
-      
+
       const createResponse = await api.post<Entity>(this.endpoint, noteData);
-      
+
       if (createResponse.status !== 201) {
         throw new Error(`Failed to create note: ${createResponse.status}`);
       }
@@ -84,9 +85,9 @@ class EntityService {
   async saveEntity(note: Entity): Promise<SaveEntityResponse> {
     try {
       log.info('Saving note', { id: note.id, title: note.title });
-      
+
       const response = await api.put<Entity>(`${this.endpoint}${note.id}/`, note);
-      
+
       if (response.status !== 200) {
         throw new Error(`Failed to save note: ${response.status}`);
       }
@@ -109,9 +110,9 @@ class EntityService {
   async deleteEntity(noteId: string): Promise<Entity[]> {
     try {
       log.info('Deleting note', { id: noteId });
-      
+
       const response = await api.delete(`${this.endpoint}${noteId}/`);
-      
+
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Failed to delete note: ${response.status}`);
       }
@@ -133,9 +134,9 @@ class EntityService {
   async updateEntity(updateData: UpdateEntityRequest): Promise<Entity> {
     try {
       log.info('Updating note', { id: updateData.noteID });
-      
+
       const response = await api.patch<Entity>(`${this.endpoint}${updateData.noteID}/`, updateData);
-      
+
       if (response.status !== 200) {
         throw new Error(`Failed to update note: ${response.status}`);
       }

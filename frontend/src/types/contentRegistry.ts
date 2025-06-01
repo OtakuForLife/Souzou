@@ -3,6 +3,7 @@ import React from 'react';
 // Import tab and content components
 import { EntityType } from '@/models/Entity';
 import NoteRenderer from '@/components/render/note/NoteRenderer';
+import ViewRenderer from '@/components/render/view/ViewRenderer';
 import {EntityRendererProps} from '@/components/ContentRenderer'
 
 // Content type metadata
@@ -21,6 +22,10 @@ const entityTypeMetadata: Record<EntityType, EntityTypeMetadata> = {
   [EntityType.NOTE]: {
     type: EntityType.NOTE,
     defaultCreationTitle: 'New Note'
+  },
+  [EntityType.VIEW]: {
+    type: EntityType.VIEW,
+    defaultCreationTitle: 'New Dashboard'
   }
 };
 
@@ -29,6 +34,10 @@ const contentTypeRegistry: Record<EntityType, ContentTypeRegistryEntry> = {
   [EntityType.NOTE]: {
     metadata: entityTypeMetadata[EntityType.NOTE],
     contentComponent: NoteRenderer
+  },
+  [EntityType.VIEW]: {
+    metadata: entityTypeMetadata[EntityType.VIEW],
+    contentComponent: ViewRenderer
   },
 };
 

@@ -22,7 +22,7 @@ export default function TabContentGroup() {
     const tabData: Entity | undefined = tabsState.openTabs.find(
       (e: Entity) => e.id === tabValue
     );
-    if(tabData)
+    if (tabData)
       dispatch(setCurrentTab(tabData));
   };
 
@@ -30,7 +30,7 @@ export default function TabContentGroup() {
 
   return (
     <Tabs
-      className="flex h-full w-full gap-0 p-0"
+      className="flex flex-col h-full w-full gap-0 p-0"
       value={currentTabValue}
       onValueChange={onTabChange}
       activationMode="manual"
@@ -38,18 +38,18 @@ export default function TabContentGroup() {
       <TabsList className="flex justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
         <SortableContext items={openTabIDs} strategy={rectSortingStrategy}>
           {tabsState.openTabs.map((tab: Entity) => (
-            <EntityTabTrigger key={tab.id} entity={tab}/>
+            <EntityTabTrigger key={tab.id} entityID={tab.id} />
           ))}
         </SortableContext>
       </TabsList>
-      <div className="w-full h-full">
+      <div className="theme-main-content-background theme-main-content-text h-full">
         {tabsState.openTabs.map((tab: Entity) => (
           <TabsContent
-            className="w-full h-full p-4 theme-main-content-background theme-main-content-text outline-2 outline-black"
+            className="outline-2 outline-black data-[state=active]:flex data-[state=active]:flex-col h-full max-h-full"
             key={tab.id}
             value={tab.id}
           >
-            <EntityTabContent entity={tab}/>
+            <EntityTabContent entity={tab} />
           </TabsContent>
         ))}
       </div>

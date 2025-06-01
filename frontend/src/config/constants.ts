@@ -44,6 +44,11 @@ export const CONTENT_TYPE_CONFIG = {
     DEFAULT_CONTENT: '',
     ICON: 'FileText',
   },
+  VIEW: {
+    DEFAULT_TITLE: 'New Dashboard',
+    DEFAULT_CONTENT: '',
+    ICON: 'LayoutDashboard',
+  },
   GRAPH: {
     DEFAULT_TITLE: 'Graph View',
     ICON: 'Network',

@@ -5,20 +5,22 @@ import { EntityState } from "@/store/slices/entitySlice";
 import { closeTab, moveTabByData } from "@/store/slices/tabsSlice";
 import React from "react";
 import { useSelector } from "react-redux";
+import {Active, Over} from '@dnd-kit/core/dist/store/types';
 import TabBase from "./TabBase";
 
 
 interface noteTabProps {
-  entity: Entity;
+  entityID: string;
 }
 
-function EntityTabTrigger({ entity }: noteTabProps) {
+function EntityTabTrigger({ entityID }: noteTabProps) {
   const entityState: EntityState = useSelector((state: RootState) => state.entities);
+  const entity: Entity = entityState.allEntities[entityID];
   const dispatch = useAppDispatch();
 
-  const onTabDropped = (active: any, over: any) => {
+  const onTabDropped = (active: Active, over: Over | null) => {
     const activeData = active.data.current;
-    const overData = over.data.current;
+    const overData = over? over.data.current: null;
 
     if (activeData && overData) {
       const activeTab: Entity = entityState.allEntities[activeData.objectID];

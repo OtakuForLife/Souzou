@@ -86,7 +86,7 @@ var customTheme = EditorView.theme({
         backgroundColor: editorBackground,
     },
     ".cm-content": {
-        padding: "",
+        padding: "0",
         caretColor: editorCursor,
         fontSize: "14px",
         lineHeight: "1.6",

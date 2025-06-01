@@ -1,20 +1,20 @@
 import { markdown } from "@codemirror/lang-markdown";
-import { 
-    indentOnInput, 
-    bracketMatching, 
+import {
+    indentOnInput,
+    bracketMatching,
     foldKeymap } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
-import { 
-    highlightSpecialChars, 
-    drawSelection, 
-    dropCursor, 
-    rectangularSelection, 
-    crosshairCursor, 
+import {
+    highlightSpecialChars,
+    drawSelection,
+    dropCursor,
+    rectangularSelection,
+    crosshairCursor,
     keymap } from "@codemirror/view";
-import { 
-    autocompletion, 
-    completionKeymap, 
-    closeBrackets, 
+import {
+    autocompletion,
+    completionKeymap,
+    closeBrackets,
     closeBracketsKeymap } from "@codemirror/autocomplete"
 import { lintKeymap } from "@codemirror/lint"
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search"
@@ -70,7 +70,7 @@ const baseExtensions = [
     ...completionKeymap,
     // Keys related to the linter system
     ...lintKeymap
-  ])
+  ]),
 ];
 
 export { baseExtensions };

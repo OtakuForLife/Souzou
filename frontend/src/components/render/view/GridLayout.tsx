@@ -1,0 +1,138 @@
+/**
+ * GridLayout - Main grid container component using react-grid-layout
+ */
+
+import React, { useState, useCallback } from 'react';
+import RGL, { WidthProvider, Layout } from 'react-grid-layout';
+import { ViewContent, WidgetConfig} from '@/types/widgetTypes';
+import WidgetContainer from '@/components/widgets/WidgetContainer';
+
+// Import react-grid-layout CSS
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+const ReactGridLayout = WidthProvider(RGL);
+
+interface GridLayoutProps {
+  viewContent: ViewContent;
+  onLayoutChange?: (widgets: WidgetConfig[]) => void;
+  onWidgetUpdate?: (widgetId: string, updates: Partial<WidgetConfig>) => void;
+  onWidgetDelete?: (widgetId: string) => void;
+  isEditable?: boolean;
+}
+
+const GridLayout: React.FC<GridLayoutProps> = ({
+  viewContent,
+  onLayoutChange,
+  onWidgetUpdate,
+  onWidgetDelete,
+  isEditable = true,
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Convert widget configs to react-grid-layout format
+  const layoutItems: Layout[] = viewContent.widgets.map(widget => ({
+    i: widget.id,
+    x: widget.position.x,
+    y: widget.position.y,
+    w: widget.position.w,
+    h: widget.position.h,
+    minW: widget.position.minW,
+    minH: widget.position.minH,
+    maxW: widget.position.maxW,
+    maxH: widget.position.maxH,
+  }));
+
+  const handleLayoutChange = useCallback((layout: Layout[]) => {
+    if (!onLayoutChange || isDragging) return;
+
+    // Update widget positions based on layout changes
+    const updatedWidgets = viewContent.widgets.map(widget => {
+      const layoutItem = layout.find(item => item.i === widget.id);
+      if (layoutItem) {
+        return {
+          ...widget,
+          position: {
+            ...widget.position,
+            x: layoutItem.x,
+            y: layoutItem.y,
+            w: layoutItem.w,
+            h: layoutItem.h,
+          },
+        };
+      }
+      return widget;
+    });
+
+    onLayoutChange(updatedWidgets);
+  }, [viewContent.widgets, onLayoutChange, isDragging]);
+
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  const handleDragStop = useCallback((layout: Layout[]) => {
+    setIsDragging(false);
+    handleLayoutChange(layout);
+  }, [handleLayoutChange]);
+
+  const handleResizeStop = useCallback((layout: Layout[]) => {
+    handleLayoutChange(layout);
+  }, [handleLayoutChange]);
+
+  if (viewContent.widgets.length === 0) {
+    return (
+      <div className="min-h-full h-full w-full flex items-center justify-center">
+        <div className="text-center p-2">
+          <h3 className="text-lg font-semibold mb-2">No widgets yet</h3>
+          <p className="mb-4">
+            {isEditable
+              ? "Switch to config mode and use the 'Add Widget' button to start building your dashboard"
+              : "This dashboard is empty"
+            }
+          </p>
+          {!isEditable && (
+            <p className="text-sm text-gray-400">
+              Switch to config mode to add widgets
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-full p-0">
+      <ReactGridLayout
+        className="layout"
+        layout={layoutItems}
+        cols={viewContent.layout.cols}
+        rowHeight={viewContent.layout.rowHeight}
+        margin={viewContent.layout.margin}
+        containerPadding={viewContent.layout.containerPadding}
+        onLayoutChange={handleLayoutChange}
+        onDragStart={handleDragStart}
+        onDragStop={handleDragStop}
+        onResizeStop={handleResizeStop}
+        isDraggable={isEditable}
+        isResizable={isEditable}
+        useCSSTransforms={true}
+        preventCollision={false}
+        compactType="vertical"
+      >
+        {viewContent.widgets.map(widget => (
+          <div key={widget.id} className="widget-grid-item">
+            <WidgetContainer
+              widget={widget}
+              onUpdate={onWidgetUpdate}
+              onDelete={onWidgetDelete}
+              isEditable={isEditable}
+            />
+          </div>
+        ))}
+      </ReactGridLayout>
+    </div>
+  );
+};
+
+export default GridLayout;

@@ -4,28 +4,34 @@ import { TabsTrigger } from "@radix-ui/react-tabs";
 import { X } from "lucide-react";
 import React from "react";
 import { truncateText } from "@/utils/common";
+import { DragType, EntityDragData } from "@/types/contentTypes";
+import { EntityType } from "@/models/Entity";
+import { Active, Over } from "@dnd-kit/core";
 
 
 interface TabProps {
   objectID: string;
-  objectType: string;
+  objectType: EntityType;
   displayname: string;
   onClose: (e: React.MouseEvent<HTMLElement>) => void;
-  onDropped: (active: any, over: any) => void;
+  onDropped: (active: Active, over: Over | null) => void;
 }
 
 function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabProps) {
   const uid = objectID;
+
+  const data: EntityDragData = {
+    objectID: objectID,
+    objectType: objectType,
+    type: DragType.TAB,
+    accepts: ["tab"],
+    onDragEnd: onDropped
+  }
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: uid,
-      data: {
-        objectID: objectID,
-        objectType: objectType,
-        type: "tab",
-        accepts: ["tab"],
-        onDragEnd: onDropped
-      },
+      data: data,
     });
 
   const style = {

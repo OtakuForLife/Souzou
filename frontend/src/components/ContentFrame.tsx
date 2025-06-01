@@ -12,10 +12,9 @@ export default function ContentFrame(){
     // Show TabContentGroup if there are any open tabs
     const hasOpenTabs = tabsState.openTabs.length > 0;
 
-    return (
-        <div className="h-full w-full">
-            {hasOpenTabs ? <TabContentGroup/>: <NoOpenNote/>}
-        </div>
-    )
+    if(hasOpenTabs)
+        return <TabContentGroup/>;
+    else
+        return <NoOpenNote/>;
 
 }

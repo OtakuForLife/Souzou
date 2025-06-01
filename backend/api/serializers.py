@@ -16,13 +16,11 @@ class EntitySerializer(serializers.ModelSerializer):
 class ThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Theme
-        fields = ["id", "name", "type", "is_default", "colors", "created_at", "updated_at"]
-        extra_kwargs = {
-            "is_default": {"read_only": True},  # Only admin can set default themes
-        }
+        fields = ["id", "name", "type", "colors", "created_at", "updated_at"]
 
     def validate_colors(self, value):
-        """Validate that colors field has the required structure"""
+        """
+        #Validate that colors field has the required structure
         required_fields = [
             'primary', 'primaryHover', 'secondary', 'background', 'surface', 'surfaceHover'
         ]
@@ -39,5 +37,5 @@ class ThemeSerializer(serializers.ModelSerializer):
         for field in text_fields:
             if field not in value['text']:
                 raise serializers.ValidationError(f"Missing required text color field: text.{field}")
-
+        """
         return value

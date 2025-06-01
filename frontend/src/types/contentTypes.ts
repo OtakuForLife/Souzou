@@ -2,7 +2,7 @@
 
 import { EntityType } from "@/models/Entity";
 
-export interface SortableEntityDragData {
+export interface EntityDragData {
   objectType: EntityType;
   objectID: string;
   type: DragType;
@@ -11,7 +11,8 @@ export interface SortableEntityDragData {
 }
 
 export enum DragType {
-  TAB = 'tab'
+  TAB = 'tab',
+  TREEITEM = 'treeitem'
 }
 
 // Status enums for better state management

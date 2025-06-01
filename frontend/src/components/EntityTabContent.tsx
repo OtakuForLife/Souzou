@@ -1,15 +1,16 @@
 import { Entity } from "@/models/Entity";
-import NoteRenderer from "./render/note/NoteRenderer";
+import { ContentRenderer } from "./ContentRenderer";
 
-interface NoteTabContentProps {
+interface EntityTabContentProps {
   entity: Entity;
 }
 
-function NoteTabContent({ entity }: NoteTabContentProps) {
-  return ( 
-    <NoteRenderer entityID={entity.id}/>
+// In EntityTabContent.tsx:
+function EntityTabContent({ entity }: EntityTabContentProps) {
+  return (
+      <ContentRenderer entityID={entity.id}/>
   );
 }
 
-export default NoteTabContent;
+export default EntityTabContent;
 

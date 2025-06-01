@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useCallback } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, ViewUpdate } from "@codemirror/view";
@@ -91,7 +92,7 @@ const NoteEditor: React.FC<Props> = ({
 
     const view = new EditorView({
       state,
-      parent: editorRef.current
+      parent: editorRef.current,
     });
 
     viewRef.current = view;
@@ -117,7 +118,10 @@ const NoteEditor: React.FC<Props> = ({
   }, [initialText]);
 
   return (
-    <div className="" ref={editorRef} />
+    <div
+      className="px-4"
+      ref={editorRef}
+    />
   );
 };
 

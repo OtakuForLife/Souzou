@@ -85,7 +85,6 @@ class Command(BaseCommand):
             name='Light',
             type=ThemeType.PREDEFINED,
             defaults={
-                'is_default': False,
                 'colors': {
                     "primary": "#3b82f6",
                     "primaryHover": "#2563eb",

@@ -1,0 +1,212 @@
+/**
+ * GraphWidgetConfig - Configuration modal for Graph Widget
+ */
+
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { GraphWidgetConfig } from '@/types/widgetTypes';
+import { RootState } from '@/store';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+
+interface GraphWidgetConfigProps {
+  widget: GraphWidgetConfig;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (updates: Partial<GraphWidgetConfig>) => void;
+}
+
+const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
+  widget,
+  isOpen,
+  onClose,
+  onSave,
+}) => {
+  const allEntities = useSelector((state: RootState) => state.entities.allEntities);
+  const rootEntities = useSelector((state: RootState) => state.entities.rootEntities);
+
+  // Helper function to get safe config values
+  const getSafeConfigValue = (key: keyof typeof widget.config, defaultValue: any) => {
+    const value = widget.config?.[key];
+    return value !== undefined && value !== null ? value : defaultValue;
+  };
+
+  // Local state for form values
+  const [formData, setFormData] = useState({
+    title: widget.title || '',
+    rootEntityId: getSafeConfigValue('rootEntityId', ''),
+    maxDepth: getSafeConfigValue('maxDepth', 2),
+    layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
+    showLabels: getSafeConfigValue('showLabels', true),
+    nodeSize: getSafeConfigValue('nodeSize', 30),
+    edgeWidth: getSafeConfigValue('edgeWidth', 2),
+  });
+
+  // Reset form data when widget changes
+  useEffect(() => {
+    setFormData({
+      title: widget.title || '',
+      rootEntityId: getSafeConfigValue('rootEntityId', ''),
+      maxDepth: getSafeConfigValue('maxDepth', 2),
+      layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
+      showLabels: getSafeConfigValue('showLabels', true),
+      nodeSize: getSafeConfigValue('nodeSize', 30),
+      edgeWidth: getSafeConfigValue('edgeWidth', 2),
+    });
+  }, [widget]);
+
+  const handleSave = () => {
+    const updates: Partial<GraphWidgetConfig> = {
+      title: formData.title,
+      config: {
+        ...widget.config,
+        rootEntityId: formData.rootEntityId || undefined,
+        maxDepth: formData.maxDepth,
+        layoutAlgorithm: formData.layoutAlgorithm,
+        showLabels: formData.showLabels,
+        nodeSize: formData.nodeSize,
+        edgeWidth: formData.edgeWidth,
+      },
+    };
+    onSave(updates);
+    onClose();
+  };
+
+  const handleCancel = () => {
+    // Reset form data to original values
+    setFormData({
+      title: widget.title || '',
+      rootEntityId: getSafeConfigValue('rootEntityId', ''),
+      maxDepth: getSafeConfigValue('maxDepth', 2),
+      layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
+      showLabels: getSafeConfigValue('showLabels', true),
+      nodeSize: getSafeConfigValue('nodeSize', 30),
+      edgeWidth: getSafeConfigValue('edgeWidth', 2),
+    });
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md theme-explorer-background theme-explorer-item-text">
+        <DialogHeader>
+          <DialogTitle>Configure Graph Widget</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Widget Title */}
+          <div className="space-y-2">
+            <Label htmlFor="title">Widget Title</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="Enter widget title"
+            />
+          </div>
+
+          {/* Root Entity Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="rootEntity">Root Entity (Optional)</Label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={formData.rootEntityId || ""}
+              onChange={(e) => setFormData({ ...formData, rootEntityId: e.target.value })}
+            >
+              <option value="">All Root Entities</option>
+              {Object.values(allEntities).map((entity) => (
+                <option key={entity.id} value={entity.id}>
+                  {entity.title} ({entity.type})
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500">
+              Leave empty to show links from all root entities
+            </p>
+          </div>
+
+          {/* Max Depth */}
+          <div className="space-y-2">
+            <Label htmlFor="maxDepth">Maximum Depth</Label>
+            <Input
+              id="maxDepth"
+              type="number"
+              min="1"
+              max="5"
+              value={formData.maxDepth}
+              onChange={(e) => setFormData({ ...formData, maxDepth: parseInt(e.target.value) || 1 })}
+            />
+            <p className="text-xs text-gray-500">
+              How many levels deep to traverse relationships
+            </p>
+          </div>
+
+          {/* Layout Algorithm */}
+          <div className="space-y-2">
+            <Label htmlFor="layout">Layout Algorithm</Label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={formData.layoutAlgorithm || "circle"}
+              onChange={(e) => setFormData({ ...formData, layoutAlgorithm: e.target.value as any })}
+            >
+              <option value="circle">Circle</option>
+              <option value="grid">Grid</option>
+              <option value="breadthfirst">Breadth First</option>
+              <option value="cose">COSE</option>
+            </select>
+          </div>
+
+          {/* Show Labels */}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="showLabels"
+              checked={formData.showLabels}
+              onCheckedChange={(checked) => setFormData({ ...formData, showLabels: checked })}
+            />
+            <Label htmlFor="showLabels">Show Node Labels</Label>
+          </div>
+
+          {/* Node Size */}
+          <div className="space-y-2">
+            <Label htmlFor="nodeSize">Node Size</Label>
+            <Input
+              id="nodeSize"
+              type="number"
+              min="10"
+              max="100"
+              value={formData.nodeSize}
+              onChange={(e) => setFormData({ ...formData, nodeSize: parseInt(e.target.value) || 30 })}
+            />
+          </div>
+
+          {/* Edge Width */}
+          <div className="space-y-2">
+            <Label htmlFor="edgeWidth">Edge Width</Label>
+            <Input
+              id="edgeWidth"
+              type="number"
+              min="1"
+              max="10"
+              value={formData.edgeWidth}
+              onChange={(e) => setFormData({ ...formData, edgeWidth: parseInt(e.target.value) || 2 })}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default GraphWidgetConfigDialog;

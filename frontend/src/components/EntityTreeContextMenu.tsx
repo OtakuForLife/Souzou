@@ -10,7 +10,7 @@ import {
     ContextMenuSubTrigger,
     ContextMenuTrigger,
   } from "../components/ui/context-menu";
-import { Entity } from "@/models/Entity";
+import { Entity, EntityType } from "@/models/Entity";
 import { createEntity, deleteEntity } from "@/store/slices/entitySlice";
 import { openTab, closeTab } from "@/store/slices/tabsSlice";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
@@ -46,8 +46,22 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                             Note
                             <ContextMenuShortcut>⌘[</ContextMenuShortcut>
                         </ContextMenuItem>
-                        <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text">Template</ContextMenuItem>
-                        <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text">Script</ContextMenuItem>
+                        <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text" onSelect={async ()=>{
+                            const result = await dispatch(createEntity({
+                                title: CONTENT_TYPE_CONFIG.VIEW.DEFAULT_TITLE,
+                                content: CONTENT_TYPE_CONFIG.VIEW.DEFAULT_CONTENT,
+                                parent: note.id,
+                                type: EntityType.VIEW
+                            }));
+
+                            // Open the newly created note in a tab
+                            if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
+                              dispatch(openTab(result.payload.newNoteData));
+                            }
+                        }}>
+                            View
+                            <ContextMenuShortcut>⌘[</ContextMenuShortcut>
+                        </ContextMenuItem>
                         <ContextMenuSeparator />
                         <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text">Upload Media</ContextMenuItem>
                     </ContextMenuSubContent>

@@ -1,6 +1,7 @@
 import {
   StickyNote,
-  PanelsTopLeft,
+  Menu,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -18,12 +19,15 @@ import { useAppDispatch } from "@/hooks";
 import { createEntity } from "@/store/slices/entitySlice";
 import { openTab } from "@/store/slices/tabsSlice";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
+import { EntityType } from "@/models/Entity";
+import { createDefaultViewContent } from "@/types/widgetTypes";
 
 interface AppSidebarProps {
   onIconOneClick: () => void;
+  isNoteTreeCollapsed: boolean;
 }
 
-export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
+export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppSidebarProps) {
   const dispatch = useAppDispatch();
 
   return (
@@ -39,7 +43,7 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
               className="cursor-pointer p-1 m-0"
               onClick={onIconOneClick}
             >
-              <PanelsTopLeft className="" />
+              {isNoteTreeCollapsed ? <Menu className="rotate-90" />: <Menu className="" />}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -68,6 +72,26 @@ export default function AppSidebar({ onIconOneClick }: AppSidebarProps) {
                   }}
                 >
                   <StickyNote/>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="">
+                <SidebarMenuButton
+                  asChild
+                  className="cursor-pointer p-1 m-0"
+                  onClick={async () => {
+                    const result = await dispatch(createEntity({
+                        title: CONTENT_TYPE_CONFIG.VIEW.DEFAULT_TITLE,
+                        content: JSON.stringify(createDefaultViewContent()),
+                        parent: null,
+                        type: EntityType.VIEW
+                    }));
+    
+                    if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
+                        dispatch(openTab(result.payload.newNoteData));
+                    }
+                  }}
+                >
+                  <LayoutDashboard/>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

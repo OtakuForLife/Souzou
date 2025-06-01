@@ -28,21 +28,23 @@ import { Entity } from "@/models/Entity";
 
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 import { openTab } from "@/store/slices/tabsSlice";
+import { EntityType } from "@/models/Entity";
+import { createDefaultViewContent } from "@/types/widgetTypes";
 
 
 function Home() {
     const dispatch = useAppDispatch();
 
-    const noteState: EntityState = useSelector((state: RootState) => state.entities);
-    const notes: { [id: string]: Entity; } = noteState.allEntities;
-    const { error: notesError } = noteState;
+    const entityState: EntityState = useSelector((state: RootState) => state.entities);
+    const entities: { [id: string]: Entity; } = entityState.allEntities;
+    const { error: notesError } = entityState;
 
-    // Fetch notes on component mount
+    // Fetch entities on component mount
     useEffect(()=> {
         dispatch(fetchEntities());
     }, [dispatch]);
 
-    // Show toast notification for notes errors
+    // Show toast notification for entities errors
     useEffect(() => {
         if (notesError) {
             //TODO display error
@@ -72,10 +74,27 @@ function Home() {
             }
         },
         {
+            key: 'd',
+            ctrlKey: true,
+            callback: async () => {
+                // Create new dashboard view with Ctrl+D
+                const result = await dispatch(createEntity({
+                    title: CONTENT_TYPE_CONFIG.VIEW.DEFAULT_TITLE,
+                    content: JSON.stringify(createDefaultViewContent()),
+                    parent: null,
+                    type: EntityType.VIEW
+                }));
+
+                if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
+                    dispatch(openTab(result.payload.newNoteData));
+                }
+            }
+        },
+        {
             key: 'r',
             ctrlKey: true,
             callback: () => {
-                // Refresh notes with Ctrl+R
+                // Refresh entities with Ctrl+R
                 dispatch(fetchEntities());
             }
         }
@@ -125,10 +144,10 @@ function Home() {
     };
 
     return (
-        <div className="flex h-full w-full">
+        <div className="flex h-full w-full min-h-screen min-w-screen max-h-screen max-w-screen">
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]} sensors={sensors}>
                 <SidebarProvider>
-                    <AppSidebar onIconOneClick={toggleNavigationBar}/>
+                    <AppSidebar onIconOneClick={toggleNavigationBar} isNoteTreeCollapsed={isCollapsed}/>
                     <SidebarInset>
                         <ResizablePanelGroup direction="horizontal" tagName="div" className="h-full w-full">
                             <ResizablePanel ref={navigationRef}
@@ -143,7 +162,7 @@ function Home() {
                                 <NoteTree/>
                             </ResizablePanel>
                             <ResizableHandle className="w-1 theme-explorer-background"/>
-                            <ResizablePanel className="h-full overflow-hidden">
+                            <ResizablePanel className="theme-main-content-background">
                                 <ContentFrame/>
                             </ResizablePanel>
                         </ResizablePanelGroup>
@@ -155,7 +174,7 @@ function Home() {
                             {/* Note tree item drag overlay */}
                             {activeDrag.data.current?.type === "treeitem" && (
                                 <div className="w-[150px] p-1 truncate rounded border border-lg border-black-100 theme-explorer-background theme-explorer-item-text opacity-70">
-                                    <span>{notes[activeDrag.data.current?.note]?.title}</span>
+                                    <span>{entities[activeDrag.data.current?.note]?.title}</span>
                                 </div>
                             )}
 
@@ -163,8 +182,8 @@ function Home() {
                             {activeDrag.data.current?.type === "tab" && (
                                 <div className="truncate border border-blue-500 rounded w-[150px] p-2 theme-explorer-background theme-explorer-item-text opacity-70">
                                     <span className="text-sm font-medium">
-                                        {activeDrag.data.current?.objectType === "note"
-                                            ? notes[activeDrag.data.current?.objectID]?.title || "Unknown Note"
+                                        {[EntityType.NOTE, EntityType.VIEW].includes(activeDrag.data.current?.objectType)
+                                            ? entities[activeDrag.data.current?.objectID]?.title
                                             : "Unknown Tab"
                                         }
                                     </span>

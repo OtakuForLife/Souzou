@@ -1,6 +1,7 @@
 
 enum EntityType {
     NOTE = "note",
+    VIEW = "view",
 }
 
 interface Entity {

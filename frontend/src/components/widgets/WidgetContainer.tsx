@@ -1,0 +1,118 @@
+/**
+ * WidgetContainer - Wrapper component for individual widgets with header and controls
+ */
+
+import React, { useState } from 'react';
+import { Settings, X} from 'lucide-react';
+import { WidgetConfig, WidgetType } from '@/types/widgetTypes';
+import { Button } from '@/components/ui/button';
+import WidgetRenderer from './WidgetRenderer';
+import GraphWidgetConfigDialog from './graph/GraphWidgetConfigDialog';
+
+interface WidgetContainerProps {
+  widget: WidgetConfig;
+  onUpdate?: (widgetId: string, updates: Partial<WidgetConfig>) => void;
+  onDelete?: (widgetId: string) => void;
+  isEditable?: boolean;
+}
+
+const WidgetContainer: React.FC<WidgetContainerProps> = ({
+  widget,
+  onUpdate,
+  onDelete,
+  isEditable = true,
+}) => {
+  const [showControls, setShowControls] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+
+  const handleTitleChange = (newTitle: string) => {
+    if (onUpdate) {
+      onUpdate(widget.id, { title: newTitle });
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete && window.confirm(`Delete widget "${widget.title}"?`)) {
+      onDelete(widget.id);
+    }
+  };
+
+  const handleSettings = () => {
+    setShowConfigModal(true);
+  };
+
+  const handleConfigSave = (updates: Partial<WidgetConfig>) => {
+    if (onUpdate) {
+      onUpdate(widget.id, updates);
+    }
+  };
+
+  return (
+    <div
+      className="h-full w-full border rounded-lg shadow-sm flex flex-col overflow-hidden"
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      {/* Widget Header */}
+      <div className="flex items-center justify-between p-3 border-b min-h-[48px]">
+        <div className="flex-1 min-w-0">
+          {isEditable ? (
+            <input
+              type="text"
+              value={widget.title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              className="w-full bg-transparent border-none outline-none font-medium text-sm truncate"
+              placeholder="Widget title"
+            />
+          ) : (
+            <h3 className="font-medium text-sm truncate">{widget.title}</h3>
+          )}
+        </div>
+
+        {/* Widget Controls */}
+        {isEditable && (
+          <div className={`flex items-center gap-1 transition-opacity duration-200 ${
+            showControls ? 'opacity-100' : 'opacity-0'
+          }`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSettings}
+              className="h-6 w-6 p-0"
+              title="Widget Settings"
+            >
+              <Settings className="h-3 w-3" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+              title="Delete Widget"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Widget Content */}
+      <div className="flex-1 overflow-hidden">
+        <WidgetRenderer widget={widget} />
+      </div>
+
+      {/* Configuration Modal */}
+      {widget.type === WidgetType.GRAPH && (
+        <GraphWidgetConfigDialog
+          widget={widget as any}
+          isOpen={showConfigModal}
+          onClose={() => setShowConfigModal(false)}
+          onSave={handleConfigSave}
+        />
+      )}
+    </div>
+  );
+};
+
+export default WidgetContainer;
