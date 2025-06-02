@@ -176,7 +176,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 theme-explorer-background theme-explorer-item-text">
             {/* Add Widget Button (only in config mode) */}
             {mode === 'config' && (
               <DropdownMenu>
@@ -186,7 +186,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
                     Add Widget
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className='theme-explorer-background theme-explorer-item-text'>
                   <DropdownMenuItem onClick={() => handleAddWidget(WidgetType.GRAPH)}>
                     <Settings className="h-4 w-4 mr-2" />
                     Graph Widget
@@ -227,6 +227,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
             onWidgetUpdate={handleWidgetUpdate}
             onWidgetDelete={handleWidgetDelete}
             isEditable={mode === 'config'}
+            mode={mode}
           />
         </div>
       </div>

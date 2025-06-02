@@ -22,6 +22,7 @@ export interface BaseWidgetConfig {
   type: WidgetType;
   title: string;
   position: GridPosition;
+  showHeaderInViewMode?: boolean; // New setting for header visibility in view mode
 }
 
 export interface GraphWidgetConfig extends BaseWidgetConfig {
@@ -112,6 +113,7 @@ export function createDefaultWidget(
       ...position,
       ...constraints,
     },
+    showHeaderInViewMode: true, // Default to showing header in view mode
   };
 
   switch (type) {

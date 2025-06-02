@@ -37,6 +37,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   // Local state for form values
   const [formData, setFormData] = useState({
     title: widget.title || '',
+    showHeaderInViewMode: widget.showHeaderInViewMode ?? true,
     rootEntityId: getSafeConfigValue('rootEntityId', ''),
     maxDepth: getSafeConfigValue('maxDepth', 2),
     layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
@@ -49,6 +50,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   useEffect(() => {
     setFormData({
       title: widget.title || '',
+      showHeaderInViewMode: widget.showHeaderInViewMode ?? true,
       rootEntityId: getSafeConfigValue('rootEntityId', ''),
       maxDepth: getSafeConfigValue('maxDepth', 2),
       layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
@@ -61,6 +63,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   const handleSave = () => {
     const updates: Partial<GraphWidgetConfig> = {
       title: formData.title,
+      showHeaderInViewMode: formData.showHeaderInViewMode,
       config: {
         ...widget.config,
         rootEntityId: formData.rootEntityId || undefined,
@@ -79,6 +82,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
     // Reset form data to original values
     setFormData({
       title: widget.title || '',
+      showHeaderInViewMode: widget.showHeaderInViewMode ?? true,
       rootEntityId: getSafeConfigValue('rootEntityId', ''),
       maxDepth: getSafeConfigValue('maxDepth', 2),
       layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
@@ -108,6 +112,18 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
             />
           </div>
 
+          {/* Header Visibility in View Mode */}
+          <div className="flex flex-row items-center justify-start space-x-2">
+            <input
+              type="checkbox"
+              className=''
+              id="showHeaderInViewMode"
+              checked={formData.showHeaderInViewMode}
+              onChange={(e) => setFormData({ ...formData, showHeaderInViewMode: e.target.checked })}
+            />
+            <Label htmlFor="showHeaderInViewMode">Show Header in View Mode</Label>
+          </div>
+
           {/* Root Entity Selection */}
           <div className="space-y-2">
             <Label htmlFor="rootEntity">Root Entity (Optional)</Label>
@@ -123,7 +139,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs">
               Leave empty to show links from all root entities
             </p>
           </div>
@@ -139,7 +155,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
               value={formData.maxDepth}
               onChange={(e) => setFormData({ ...formData, maxDepth: parseInt(e.target.value) || 1 })}
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs">
               How many levels deep to traverse relationships
             </p>
           </div>
@@ -160,11 +176,12 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
           </div>
 
           {/* Show Labels */}
-          <div className="flex items-center space-x-2">
-            <Switch
+          <div className="flex flex-row items-center justify-start space-x-2">
+            <input
+              type='checkbox'
               id="showLabels"
               checked={formData.showLabels}
-              onCheckedChange={(checked) => setFormData({ ...formData, showLabels: checked })}
+              onChange={(e) => setFormData({ ...formData, showLabels: e.target.checked })}
             />
             <Label htmlFor="showLabels">Show Node Labels</Label>
           </div>

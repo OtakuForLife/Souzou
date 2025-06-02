@@ -8,10 +8,70 @@ import ReactCytoscape from '@/components/Cytoscape';
 import { GraphWidgetConfig } from '@/types/widgetTypes';
 import { RootState } from '@/store';
 import { linkParsingService } from '@/services/linkParsingService';
+import { Entity } from '@/models/Entity';
+
+// Link types for graph edges
+enum LinkType {
+  MARKDOWN = 'markdown',
+  CHILD_TO_PARENT = 'child-to-parent'
+}
+
+// Traversal context for recursive graph building
+interface TraversalContext {
+  visitedEntities: Set<string>;
+  nodes: Map<string, any>;
+  edges: Map<string, any>;
+  maxDepth: number;
+}
+
+// Entity with depth information for hierarchy-based traversal
+interface EntityWithDepth {
+  entity: Entity;
+  depth: number;
+}
 
 interface GraphWidgetProps {
   widget: GraphWidgetConfig;
 }
+
+// Helper function to get all children of an entity
+const getChildEntities = (entityId: string, allEntities: Record<string, Entity>): Entity[] => {
+  return Object.values(allEntities).filter(entity => entity.parent === entityId);
+};
+
+// Helper function to create edge ID
+const createEdgeId = (sourceId: string, targetId: string, linkType: LinkType): string => {
+  return `${sourceId}-${targetId}-${linkType}`;
+};
+
+// Helper function to add node to context
+const addNodeToContext = (entity: Entity, depth: number, context: TraversalContext): void => {
+  if (!context.nodes.has(entity.id)) {
+    context.nodes.set(entity.id, {
+      data: {
+        id: entity.id,
+        label: entity.title,
+        type: entity.type,
+        depth: depth,
+      }
+    });
+  }
+};
+
+// Helper function to add edge to context
+const addEdgeToContext = (sourceId: string, targetId: string, linkType: LinkType, context: TraversalContext): void => {
+  const edgeId = createEdgeId(sourceId, targetId, linkType);
+  if (!context.edges.has(edgeId)) {
+    context.edges.set(edgeId, {
+      data: {
+        id: edgeId,
+        source: sourceId,
+        target: targetId,
+        type: linkType,
+      }
+    });
+  }
+};
 
 const GraphWidget: React.FC<GraphWidgetProps> = ({ widget }) => {
   const allEntities = useSelector((state: RootState) => state.entities.allEntities);
@@ -22,148 +82,87 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ widget }) => {
   useEffect(() => {
     const generateGraphElements = () => {
       const { rootEntityId, maxDepth } = widget.config;
+      const effectiveMaxDepth = maxDepth || 2;
 
-      if (!rootEntityId || !allEntities[rootEntityId]) {
-        // If no specific root entity is configured, show links from all root entities
-        if (rootEntities.length === 0) {
-          // Show message if no entities exist at all
-          return [];
-        }
+      // Initialize traversal context
+      const context: TraversalContext = {
+        visitedEntities: new Set(),
+        nodes: new Map(),
+        edges: new Map(),
+        maxDepth: effectiveMaxDepth,
+      };
 
-        const nodes: any[] = [];
-        const edges: any[] = [];
-        const processedEntities = new Set<string>();
+      // Determine starting entities (root entities or specific entity)
+      const startingEntities: EntityWithDepth[] = rootEntityId && allEntities[rootEntityId]
+        ? [{ entity: allEntities[rootEntityId], depth: 0 }]
+        : rootEntities.map(entity => ({ entity, depth: 0 }));
 
-        // Process all root entities and their links
-        rootEntities.forEach(rootEntity => {
-          if (processedEntities.has(rootEntity.id)) return;
-
-          processedEntities.add(rootEntity.id);
-
-          // Add root entity node
-          nodes.push({
-            data: {
-              id: rootEntity.id,
-              label: rootEntity.title,
-              type: rootEntity.type,
-            }
-          });
-
-          // Parse links from root entity content
-          if (rootEntity.content) {
-            const linkResult = linkParsingService.parseLinks(rootEntity.content, allEntities);
-
-            linkResult.links.forEach(link => {
-              if (link.targetNoteId && allEntities[link.targetNoteId]) {
-                const targetEntity = allEntities[link.targetNoteId];
-
-                // Add target node if not already added
-                if (!processedEntities.has(link.targetNoteId)) {
-                  processedEntities.add(link.targetNoteId);
-                  nodes.push({
-                    data: {
-                      id: link.targetNoteId,
-                      label: targetEntity.title,
-                      type: targetEntity.type,
-                    }
-                  });
-                }
-
-                // Add edge
-                edges.push({
-                  data: {
-                    id: `${rootEntity.id}-${link.targetNoteId}`,
-                    source: rootEntity.id,
-                    target: link.targetNoteId,
-                    type: link.type,
-                  }
-                });
-              }
-            });
-          }
-        });
-
-        return [...nodes, ...edges];
+      if (startingEntities.length === 0) {
+        return [];
       }
 
-      const nodes: any[] = [];
-      const edges: any[] = [];
-      const processedEntities = new Set<string>();
-      const entityQueue: Array<{ id: string; depth: number }> = [{ id: rootEntityId, depth: 0 }];
+      // Process entities level by level (breadth-first for proper depth control)
+      const entityQueue: EntityWithDepth[] = [...startingEntities];
 
       while (entityQueue.length > 0) {
-        const { id: entityId, depth } = entityQueue.shift()!;
+        const { entity, depth } = entityQueue.shift()!;
 
-        if (processedEntities.has(entityId) || depth > maxDepth) {
+        // Skip if already processed or depth exceeded
+        if (context.visitedEntities.has(entity.id) || depth > effectiveMaxDepth) {
           continue;
         }
 
-        const entity = allEntities[entityId];
-        if (!entity) continue;
+        // Mark as visited and add node
+        context.visitedEntities.add(entity.id);
+        addNodeToContext(entity, depth, context);
 
-        processedEntities.add(entityId);
-
-        // Add node
-        nodes.push({
-          data: {
-            id: entityId,
-            label: entity.title,
-            type: entity.type,
-          }
-        });
-
-        // Parse links from entity content and add edges
+        // Process markdown links from entity content
         if (entity.content) {
           const linkResult = linkParsingService.parseLinks(entity.content, allEntities);
 
           linkResult.links.forEach(link => {
-            if (link.targetNoteId && !processedEntities.has(link.targetNoteId)) {
-              // Add target entity to queue for processing
-              entityQueue.push({ id: link.targetNoteId, depth: depth + 1 });
+            if (link.targetNoteId && allEntities[link.targetNoteId]) {
+              const targetEntity = allEntities[link.targetNoteId];
 
-              // Add edge
-              edges.push({
-                data: {
-                  id: `${entityId}-${link.targetNoteId}`,
-                  source: entityId,
-                  target: link.targetNoteId,
-                  type: link.type,
-                }
-              });
-            }
-          });
-        }
+              // Add markdown link edge
+              addEdgeToContext(entity.id, link.targetNoteId, LinkType.MARKDOWN, context);
 
-        // Add parent-child relationships
-        if (entity.parent && !processedEntities.has(entity.parent)) {
-          entityQueue.push({ id: entity.parent, depth: depth + 1 });
-          edges.push({
-            data: {
-              id: `${entity.parent}-${entityId}`,
-              source: entity.parent,
-              target: entityId,
-              type: 'parent-child',
-            }
-          });
-        }
-
-        // Add children relationships
-        entity.children?.forEach(childId => {
-          if (!processedEntities.has(childId)) {
-            entityQueue.push({ id: childId, depth: depth + 1 });
-            edges.push({
-              data: {
-                id: `${entityId}-${childId}`,
-                source: entityId,
-                target: childId,
-                type: 'parent-child',
+              // Queue target entity for next level if not visited
+              if (!context.visitedEntities.has(link.targetNoteId) && depth < effectiveMaxDepth) {
+                entityQueue.push({ entity: targetEntity, depth: depth + 1 });
               }
-            });
+            }
+          });
+        }
+
+        // Process parent relationship (child → parent)
+        if (entity.parent && allEntities[entity.parent]) {
+          const parentEntity = allEntities[entity.parent];
+
+          // Add child-to-parent edge
+          addEdgeToContext(entity.id, entity.parent, LinkType.CHILD_TO_PARENT, context);
+
+          // Queue parent entity for next level if not visited
+          if (!context.visitedEntities.has(entity.parent) && depth < effectiveMaxDepth) {
+            entityQueue.push({ entity: parentEntity, depth: depth + 1 });
+          }
+        }
+
+        // Process children relationships (discover all children)
+        const childEntities = getChildEntities(entity.id, allEntities);
+        childEntities.forEach(childEntity => {
+          // Add child-to-parent edge (child → parent)
+          addEdgeToContext(childEntity.id, entity.id, LinkType.CHILD_TO_PARENT, context);
+
+          // Queue child entity for next level if not visited
+          if (!context.visitedEntities.has(childEntity.id) && depth < effectiveMaxDepth) {
+            entityQueue.push({ entity: childEntity, depth: depth + 1 });
           }
         });
       }
 
-      return [...nodes, ...edges];
+      // Convert Maps to arrays for Cytoscape
+      return [...Array.from(context.nodes.values()), ...Array.from(context.edges.values())];
     };
 
     setGraphElements(generateGraphElements());
@@ -216,10 +215,19 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ widget }) => {
       }
     },
     {
-      selector: 'edge[type="parent-child"]',
+      selector: 'edge[type="markdown"]',
       style: {
-        'line-color': '#f59e0b',
-        'target-arrow-color': '#f59e0b',
+        'line-color': '#3b82f6',
+        'target-arrow-color': '#3b82f6',
+        'line-style': 'solid',
+      }
+    },
+    {
+      selector: 'edge[type="child-to-parent"]',
+      style: {
+        'line-color': '#10b981',
+        'target-arrow-color': '#10b981',
+        'line-style': 'dashed',
       }
     }
   ], [widget.config]);

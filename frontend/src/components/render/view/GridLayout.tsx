@@ -19,6 +19,7 @@ interface GridLayoutProps {
   onWidgetUpdate?: (widgetId: string, updates: Partial<WidgetConfig>) => void;
   onWidgetDelete?: (widgetId: string) => void;
   isEditable?: boolean;
+  mode?: 'config' | 'render';
 }
 
 const GridLayout: React.FC<GridLayoutProps> = ({
@@ -27,8 +28,26 @@ const GridLayout: React.FC<GridLayoutProps> = ({
   onWidgetUpdate,
   onWidgetDelete,
   isEditable = true,
+  mode = 'render',
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [widgetsWithOpenModals, setWidgetsWithOpenModals] = useState<Set<string>>(new Set());
+
+  // Handle config modal state changes
+  const handleConfigModalChange = useCallback((widgetId: string, isOpen: boolean) => {
+    setWidgetsWithOpenModals(prev => {
+      const newSet = new Set(prev);
+      if (isOpen) {
+        newSet.add(widgetId);
+      } else {
+        newSet.delete(widgetId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Check if any widget has an open modal
+  const hasOpenModal = widgetsWithOpenModals.size > 0;
 
   // Convert widget configs to react-grid-layout format
   const layoutItems: Layout[] = viewContent.widgets.map(widget => ({
@@ -114,8 +133,8 @@ const GridLayout: React.FC<GridLayoutProps> = ({
         onDragStart={handleDragStart}
         onDragStop={handleDragStop}
         onResizeStop={handleResizeStop}
-        isDraggable={isEditable}
-        isResizable={isEditable}
+        isDraggable={isEditable && !hasOpenModal}
+        isResizable={isEditable && !hasOpenModal}
         useCSSTransforms={true}
         preventCollision={false}
         compactType="vertical"
@@ -127,6 +146,8 @@ const GridLayout: React.FC<GridLayoutProps> = ({
               onUpdate={onWidgetUpdate}
               onDelete={onWidgetDelete}
               isEditable={isEditable}
+              mode={mode}
+              onConfigModalChange={handleConfigModalChange}
             />
           </div>
         ))}
