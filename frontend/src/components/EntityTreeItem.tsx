@@ -92,7 +92,7 @@ function VerticalLine({depth, maxDepth, lineSize, depthSize, children}: Vertical
   if(maxDepth>0){
       return (
         <div className='pl-3'>
-          <div className='border-l-skin-navigation-tree' style={{borderLeftColor: 'var(--color-text-primary)', borderLeftWidth: lineSize, paddingLeft: `${depthSize}px` }}>
+          <div className='border-l-skin-navigation-tree' style={{borderLeftColor: 'var(--color-explorer-item-text-default)', borderLeftWidth: lineSize, paddingLeft: `${depthSize}px` }}>
             {depth>=maxDepth-1? children: <VerticalLine depth={depth+1} maxDepth={maxDepth} lineSize={lineSize} depthSize={depthSize}>{children}</VerticalLine>}
           </div>
         </div>
