@@ -4,21 +4,19 @@
 
 import React, { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Settings, Eye, Plus, Save } from 'lucide-react';
+import { Settings, Eye, Save } from 'lucide-react';
 import { RootState } from '@/store';
 import { Entity } from '@/models/Entity';
-import { ViewContent, WidgetConfig, WidgetType, createDefaultViewContent, createDefaultWidget } from '@/types/widgetTypes';
+import { ViewContent, WidgetConfig, createDefaultViewContent } from '@/types/widgetTypes';
 import { parseAndValidateViewContent, formatValidationError } from '@/types/widgetValidation';
 import { EntityRendererProps } from '@/components/ContentRenderer';
 import { saveEntity, updateEntity } from '@/store/slices/entitySlice';
 import GridLayout from '@/components/render/view/GridLayout';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { AddWidgetButton } from '@/components/render/view/widgets/AddWidgetButton';
+
+// Import widget registry to ensure widgets are registered
+import '@/components/render/view/widgets';
 import { Input } from '@/components/Input';
 import { validateNoteTitle } from '@/utils/common';
 import { useAppDispatch } from '@/hooks';
@@ -122,27 +120,17 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
     }));
   }, [dispatch, entityID, viewContent]);
 
-  const handleAddWidget = useCallback((widgetType: WidgetType) => {
-    // Find a good position for the new widget
-    const existingPositions = viewContent.widgets.map(w => w.position);
-    let newY = 0;
-    let newX = 0;
+  const handleAddWidget = useCallback((widget: WidgetConfig) => {
+    const updatedViewContent = {
+      ...viewContent,
+      widgets: [...viewContent.widgets, widget],
+    };
 
-    // Simple placement algorithm - find the first available spot
-    if (existingPositions.length > 0) {
-      const maxY = Math.max(...existingPositions.map(p => p.y + p.h));
-      newY = maxY;
-    }
-
-    const newWidget = createDefaultWidget(widgetType, {
-      x: newX,
-      y: newY,
-      w: 6, // Default width
-      h: 4, // Default height
-    });
-
-    handleWidgetAdd(newWidget);
-  }, [viewContent.widgets, handleWidgetAdd]);
+    dispatch(updateEntity({
+      noteID: entityID,
+      content: JSON.stringify(updatedViewContent)
+    }));
+  }, [dispatch, entityID, viewContent]);
 
   return (
     <div className="h-full w-full overflow-y-auto">
@@ -195,20 +183,10 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
           <div className="flex items-center gap-2 theme-explorer-background theme-explorer-item-text">
             {/* Add Widget Button (only in config mode) */}
             {mode === ViewMode.CONFIG && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Widget
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className='theme-explorer-background theme-explorer-item-text'>
-                  <DropdownMenuItem onClick={() => handleAddWidget(WidgetType.GRAPH)}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Graph Widget
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <AddWidgetButton
+                onAddWidget={handleAddWidget}
+                className="theme-explorer-background theme-explorer-item-text"
+              />
             )}
 
             {/* Mode Switch */}

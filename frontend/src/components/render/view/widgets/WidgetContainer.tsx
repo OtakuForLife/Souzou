@@ -7,7 +7,10 @@ import { Settings, X} from 'lucide-react';
 import { WidgetConfig, WidgetType, isWidgetOfType } from '@/types/widgetTypes';
 import { Button } from '@/components/ui/button';
 import WidgetRenderer from './WidgetRenderer';
-import GraphWidgetConfigDialog from './graph/GraphWidgetConfigDialog';
+import { WidgetRegistry } from './WidgetRegistry';
+
+// Import widget registrations to ensure they're loaded
+import './index';
 
 interface WidgetContainerProps {
   widget: WidgetConfig;
@@ -55,9 +58,9 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     }
   };
 
-  const handleConfigSave = (updates: Partial<WidgetConfig>) => {
+  const handleConfigSave = (config: any) => {
     if (onUpdate) {
-      onUpdate(widget.id, updates);
+      onUpdate(widget.id, { config });
     }
     // Don't call handleConfigClose here - let the modal handle its own closing
     setShowConfigModal(false);
@@ -82,14 +85,18 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
         </div>
 
         {/* Configuration Modal */}
-        {isWidgetOfType(widget, WidgetType.GRAPH) && (
-          <GraphWidgetConfigDialog
-            widget={widget}
-            isOpen={showConfigModal}
-            onClose={() => setShowConfigModal(false)}
-            onSave={handleConfigSave}
-          />
-        )}
+        {showConfigModal && (() => {
+          const ConfigComponent = WidgetRegistry.getConfigComponent(widget.type);
+          if (!ConfigComponent) return null;
+
+          return (
+            <ConfigComponent
+              widget={widget}
+              onSave={handleConfigSave}
+              onCancel={() => setShowConfigModal(false)}
+            />
+          );
+        })()}
       </div>
     );
   }
@@ -160,14 +167,18 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
       </div>
 
       {/* Configuration Modal */}
-      {isWidgetOfType(widget, WidgetType.GRAPH) && (
-        <GraphWidgetConfigDialog
-          widget={widget}
-          isOpen={showConfigModal}
-          onClose={handleConfigClose}
-          onSave={handleConfigSave}
-        />
-      )}
+      {showConfigModal && (() => {
+        const ConfigComponent = WidgetRegistry.getConfigComponent(widget.type);
+        if (!ConfigComponent) return null;
+
+        return (
+          <ConfigComponent
+            widget={widget}
+            onSave={handleConfigSave}
+            onCancel={handleConfigClose}
+          />
+        );
+      })()}
     </div>
   );
 };

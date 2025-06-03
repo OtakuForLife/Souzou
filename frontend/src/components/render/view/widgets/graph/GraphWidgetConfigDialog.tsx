@@ -14,16 +14,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 
 interface GraphWidgetConfigProps {
   widget: GraphWidgetConfig;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (updates: Partial<GraphWidgetConfig>) => void;
+  onSave: (config: GraphWidgetConfig['config']) => void;
+  onCancel: () => void;
+  // Legacy props for backward compatibility
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   widget,
-  isOpen,
-  onClose,
   onSave,
+  onCancel,
+  isOpen = true,
+  onClose,
 }) => {
   const allEntities = useSelector((state: RootState) => state.entities.allEntities);
   const rootEntities = useSelector((state: RootState) => state.entities.rootEntities);
@@ -61,24 +64,20 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   }, [widget]);
 
   const handleSave = () => {
-    const updates: Partial<GraphWidgetConfig> = {
-      title: formData.title,
-      showHeaderInViewMode: formData.showHeaderInViewMode,
-      config: {
-        ...widget.config,
-        rootEntityId: formData.rootEntityId || undefined,
-        maxDepth: formData.maxDepth,
-        layoutAlgorithm: formData.layoutAlgorithm,
-        showLabels: formData.showLabels,
-        nodeSize: formData.nodeSize,
-        edgeWidth: formData.edgeWidth,
-      },
+    const config: GraphWidgetConfig['config'] = {
+      ...widget.config,
+      rootEntityId: formData.rootEntityId || undefined,
+      maxDepth: formData.maxDepth,
+      layoutAlgorithm: formData.layoutAlgorithm,
+      showLabels: formData.showLabels,
+      nodeSize: formData.nodeSize,
+      edgeWidth: formData.edgeWidth,
     };
-    onSave(updates);
-    onClose();
+    onSave(config);
+    if (onClose) onClose();
   };
 
-  const handleCancel = () => {
+  const handleCancelClick = () => {
     // Reset form data to original values
     setFormData({
       title: widget.title || '',
@@ -90,11 +89,12 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
       nodeSize: getSafeConfigValue('nodeSize', 30),
       edgeWidth: getSafeConfigValue('edgeWidth', 2),
     });
-    onClose();
+    onCancel();
+    if (onClose) onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose || onCancel}>
       <DialogContent className="max-w-md theme-explorer-background theme-explorer-item-text">
         <DialogHeader>
           <DialogTitle>Configure Graph Widget</DialogTitle>
@@ -214,7 +214,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={handleCancelClick}>
             Cancel
           </Button>
           <Button onClick={handleSave}>

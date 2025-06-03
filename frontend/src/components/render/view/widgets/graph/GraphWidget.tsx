@@ -9,6 +9,7 @@ import { GraphWidgetConfig } from '@/types/widgetTypes';
 import { RootState } from '@/store';
 import { linkParsingService } from '@/services/linkParsingService';
 import { Entity } from '@/models/Entity';
+import { useWidgetData } from '@/hooks/useWidgetData';
 
 // Link types for graph edges
 enum LinkType {
@@ -32,6 +33,9 @@ interface EntityWithDepth {
 
 interface GraphWidgetProps {
   widget: GraphWidgetConfig;
+  mode?: 'render' | 'config';
+  onUpdate?: (updates: Partial<GraphWidgetConfig>) => void;
+  onDelete?: () => void;
 }
 
 // Helper function to get all children of an entity
@@ -73,7 +77,12 @@ const addEdgeToContext = (sourceId: string, targetId: string, linkType: LinkType
   }
 };
 
-const GraphWidget: React.FC<GraphWidgetProps> = ({ widget }) => {
+const GraphWidget: React.FC<GraphWidgetProps> = ({
+  widget,
+  mode = 'render',
+  onUpdate,
+  onDelete
+}) => {
   const allEntities = useSelector((state: RootState) => state.entities.allEntities);
   const rootEntities = useSelector((state: RootState) => state.entities.rootEntities);
   const [graphElements, setGraphElements] = useState<any[]>([]);

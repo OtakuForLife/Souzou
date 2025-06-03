@@ -214,3 +214,23 @@ export function isWidgetOfType<T extends WidgetType>(
 export function isValidWidgetType(type: string): type is WidgetType {
   return Object.values(WidgetType).includes(type as WidgetType);
 }
+
+/**
+ * Widget component props interface
+ */
+export interface WidgetProps<T extends WidgetType> {
+  widget: WidgetConfigForType<T>;
+  mode?: 'render' | 'config';
+  onUpdate?: (updates: Partial<WidgetConfigForType<T>>) => void;
+  onDelete?: () => void;
+}
+
+/**
+ * Widget configuration component props interface
+ */
+export interface WidgetConfigProps<T extends WidgetType> {
+  widget: WidgetConfigForType<T>;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (config: WidgetConfigForType<T>['config']) => void;
+}
