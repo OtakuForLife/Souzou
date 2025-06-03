@@ -103,7 +103,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     >
       {/* Widget Header - Always visible */}
       {shouldShowHeader && (
-        <div className="flex items-center justify-between p-3 border-b min-h-[48px] bg-white">
+        <div className="flex items-center justify-between p-3 border-b min-h-[48px]">
           <div className="flex-1 min-w-0">
             {(isEditable && mode === 'config') ? (
               <input

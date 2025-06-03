@@ -26,12 +26,15 @@ interface ViewRendererProps extends EntityRendererProps {
   entityID: string;
 }
 
-type ViewMode = 'render' | 'config';
+export enum ViewMode {
+  RENDER = 'render',
+  CONFIG = 'config',
+}
 
 const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
   const dispatch = useAppDispatch();
   const entity: Entity = useSelector((state: RootState) => state.entities.allEntities[entityID]);
-  const [mode, setMode] = useState<ViewMode>('render');
+  const [mode, setMode] = useState<ViewMode>(ViewMode.RENDER);
   const [titleError, setTitleError] = useState<string | undefined>();
 
   if (!entity) {
@@ -178,7 +181,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
 
           <div className="flex items-center gap-2 theme-explorer-background theme-explorer-item-text">
             {/* Add Widget Button (only in config mode) */}
-            {mode === 'config' && (
+            {mode === ViewMode.CONFIG && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -198,18 +201,18 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
             {/* Mode Switch */}
             <div className="flex items-center border rounded-md">
               <Button
-                variant={mode === 'render' ? 'default' : 'ghost'}
+                variant={mode === ViewMode.RENDER ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setMode('render')}
+                onClick={() => setMode(ViewMode.RENDER)}
                 className="rounded-r-none"
               >
                 <Eye className="h-4 w-4 mr-2" />
                 View
               </Button>
               <Button
-                variant={mode === 'config' ? 'default' : 'ghost'}
+                variant={mode === ViewMode.CONFIG ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setMode('config')}
+                onClick={() => setMode(ViewMode.CONFIG)}
                 className="rounded-l-none border-l"
               >
                 <Settings className="h-4 w-4 mr-2" />
@@ -226,7 +229,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
             onLayoutChange={handleLayoutChange}
             onWidgetUpdate={handleWidgetUpdate}
             onWidgetDelete={handleWidgetDelete}
-            isEditable={mode === 'config'}
+            isEditable={mode === ViewMode.CONFIG}
             mode={mode}
           />
         </div>

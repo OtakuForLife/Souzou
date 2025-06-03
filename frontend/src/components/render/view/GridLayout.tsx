@@ -5,11 +5,12 @@
 import React, { useState, useCallback } from 'react';
 import RGL, { WidthProvider, Layout } from 'react-grid-layout';
 import { ViewContent, WidgetConfig} from '@/types/widgetTypes';
-import WidgetContainer from '@/components/widgets/WidgetContainer';
+import WidgetContainer from '@/components/render/view/widgets/WidgetContainer';
 
 // Import react-grid-layout CSS
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { ViewMode } from './ViewRenderer';
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -19,7 +20,7 @@ interface GridLayoutProps {
   onWidgetUpdate?: (widgetId: string, updates: Partial<WidgetConfig>) => void;
   onWidgetDelete?: (widgetId: string) => void;
   isEditable?: boolean;
-  mode?: 'config' | 'render';
+  mode?: ViewMode;
 }
 
 const GridLayout: React.FC<GridLayoutProps> = ({
@@ -28,7 +29,7 @@ const GridLayout: React.FC<GridLayoutProps> = ({
   onWidgetUpdate,
   onWidgetDelete,
   isEditable = true,
-  mode = 'render',
+  mode = ViewMode.RENDER,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [widgetsWithOpenModals, setWidgetsWithOpenModals] = useState<Set<string>>(new Set());

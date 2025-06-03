@@ -246,24 +246,6 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ widget }) => {
     width: '100%'
   }), []);
 
-  if (graphElements.length === 0) {
-    return (
-      <div className="h-full w-full flex items-center justify-center p-4">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold mb-2">No Graph Data</h3>
-          <p className="text-gray-500 text-sm">
-            {widget.config.rootEntityId
-              ? 'No connections found for the selected entity'
-              : rootEntities.length === 0
-                ? 'No entities available to display'
-                : 'No links found between root entities'
-            }
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full w-full">
       <ReactCytoscape
