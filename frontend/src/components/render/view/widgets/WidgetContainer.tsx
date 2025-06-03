@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 import { Settings, X} from 'lucide-react';
-import { WidgetConfig, WidgetType } from '@/types/widgetTypes';
+import { WidgetConfig, WidgetType, isWidgetOfType } from '@/types/widgetTypes';
 import { Button } from '@/components/ui/button';
 import WidgetRenderer from './WidgetRenderer';
 import GraphWidgetConfigDialog from './graph/GraphWidgetConfigDialog';
@@ -82,9 +82,9 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
         </div>
 
         {/* Configuration Modal */}
-        {widget.type === WidgetType.GRAPH && (
+        {isWidgetOfType(widget, WidgetType.GRAPH) && (
           <GraphWidgetConfigDialog
-            widget={widget as any}
+            widget={widget}
             isOpen={showConfigModal}
             onClose={() => setShowConfigModal(false)}
             onSave={handleConfigSave}
@@ -160,9 +160,9 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
       </div>
 
       {/* Configuration Modal */}
-      {widget.type === WidgetType.GRAPH && (
+      {isWidgetOfType(widget, WidgetType.GRAPH) && (
         <GraphWidgetConfigDialog
-          widget={widget as any}
+          widget={widget}
           isOpen={showConfigModal}
           onClose={handleConfigClose}
           onSave={handleConfigSave}

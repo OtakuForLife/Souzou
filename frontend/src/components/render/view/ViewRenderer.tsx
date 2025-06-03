@@ -8,6 +8,7 @@ import { Settings, Eye, Plus, Save } from 'lucide-react';
 import { RootState } from '@/store';
 import { Entity } from '@/models/Entity';
 import { ViewContent, WidgetConfig, WidgetType, createDefaultViewContent, createDefaultWidget } from '@/types/widgetTypes';
+import { parseAndValidateViewContent, formatValidationError } from '@/types/widgetValidation';
 import { EntityRendererProps } from '@/components/ContentRenderer';
 import { saveEntity, updateEntity } from '@/store/slices/entitySlice';
 import GridLayout from '@/components/render/view/GridLayout';
@@ -45,11 +46,23 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
     );
   }
 
+  // Parse and validate view content with proper error handling
   let viewContent: ViewContent;
-  try {
-    viewContent = entity.content ? JSON.parse(entity.content) : createDefaultViewContent();
-  } catch (error) {
-    console.error('Error parsing view content:', error);
+  let contentError: string | null = null;
+
+  if (entity.content) {
+    const validationResult = parseAndValidateViewContent(entity.content);
+    if (validationResult.success) {
+      viewContent = validationResult.data!;
+    } else {
+      console.error('View content validation failed:', validationResult.error);
+      if (validationResult.issues) {
+        console.error('Validation issues:', formatValidationError(validationResult.issues));
+      }
+      contentError = validationResult.error || 'Invalid view content format';
+      viewContent = createDefaultViewContent();
+    }
+  } else {
     viewContent = createDefaultViewContent();
   }
 
@@ -221,6 +234,18 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
             </div>
           </div>
         </div>
+
+        {/* Content Error Display */}
+        {contentError && (
+          <div className="mx-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="text-red-800 text-sm">
+              <strong>Content Error:</strong> {contentError}
+            </div>
+            <div className="text-red-600 text-xs mt-1">
+              Using default configuration. Please check the view content format.
+            </div>
+          </div>
+        )}
 
         {/* Grid Layout Container */}
         <div className="px-4">
