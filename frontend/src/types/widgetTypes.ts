@@ -11,6 +11,7 @@
  */
 export enum WidgetType {
   GRAPH = 'graph',
+  NOTE = 'note',
 }
 
 /**
@@ -34,9 +35,7 @@ export interface GridPosition {
 export interface BaseWidgetConfig<T extends WidgetType = WidgetType> {
   id: string;
   type: T;
-  title: string;
   position: GridPosition;
-  showHeaderInViewMode?: boolean;
 }
 
 /**
@@ -55,11 +54,23 @@ export interface GraphWidgetConfig extends BaseWidgetConfig<WidgetType.GRAPH> {
 }
 
 /**
+ * Note widget specific configuration
+ */
+export interface NoteWidgetConfig extends BaseWidgetConfig<WidgetType.NOTE> {
+  type: WidgetType.NOTE;
+  config: {
+    noteId?: string;
+    isEditable: boolean;
+  };
+}
+
+/**
  * Type-safe mapping of widget types to their configurations
  * This enables proper type inference and eliminates the need for type assertions
  */
 export interface WidgetConfigMap {
   [WidgetType.GRAPH]: GraphWidgetConfig;
+  [WidgetType.NOTE]: NoteWidgetConfig;
 }
 
 /**
@@ -88,6 +99,9 @@ export const DEFAULT_WIDGET_CONFIGS: {
     nodeSize: 30,
     edgeWidth: 2,
   },
+  [WidgetType.NOTE]: {
+    isEditable: false,
+  },
 } as const;
 
 /**
@@ -102,6 +116,12 @@ export const WIDGET_CONSTRAINTS: {
     minH: 3,
     maxW: 12,
     maxH: 8,
+  },
+  [WidgetType.NOTE]: {
+    minW: 3,
+    minH: 4,
+    maxW: 12,
+    maxH: 12,
   },
 } as const;
 
@@ -155,42 +175,48 @@ export function createDefaultViewContent(): ViewContent {
 }
 
 /**
+ * Generate a unique widget ID
+ * @returns Unique widget identifier
+ */
+export function generateWidgetId(): string {
+  return `widget-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
  * Creates a new widget with default configuration
  * @template T - The widget type
  * @param type - The widget type to create
- * @param position - Grid position (without constraints)
- * @param title - Optional custom title
+ * @param options - Configuration options
+ * @param options.position - Grid position (without constraints). If not provided, uses default position
  * @returns Type-safe widget configuration
  */
 export function createDefaultWidget<T extends WidgetType>(
   type: T,
-  position: Omit<GridPosition, 'minW' | 'minH' | 'maxW' | 'maxH'>,
-  title?: string
+  options: {
+    position?: Omit<GridPosition, 'minW' | 'minH' | 'maxW' | 'maxH'>;
+  } = {}
 ): WidgetConfigForType<T> {
+  const {
+    position = { x: 0, y: 0, w: 4, h: 3 },
+  } = options;
+
   const constraints = WIDGET_CONSTRAINTS[type];
+
   const baseConfig: BaseWidgetConfig<T> = {
-    id: `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: generateWidgetId(),
     type,
-    title: title || `${type.charAt(0).toUpperCase() + type.slice(1)} Widget`,
     position: {
       ...position,
       ...constraints,
     },
-    showHeaderInViewMode: true,
   };
-
-  switch (type) {
-    case WidgetType.GRAPH:
-      return {
-        ...baseConfig,
-        type: WidgetType.GRAPH,
-        config: DEFAULT_WIDGET_CONFIGS[WidgetType.GRAPH],
-      } as WidgetConfigForType<T>;
-
-    default:
-      throw new Error(`Unknown widget type: ${type}`);
-  }
+  return {
+    ...baseConfig,
+    type: type,
+    config: DEFAULT_WIDGET_CONFIGS[type],
+  } as WidgetConfigForType<T>;
 }
+
 
 /**
  * Type guard to check if a widget configuration is of a specific type

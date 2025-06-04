@@ -4,20 +4,21 @@
 
 import React, { useState } from 'react';
 import { Settings, X} from 'lucide-react';
-import { WidgetConfig, WidgetType, isWidgetOfType } from '@/types/widgetTypes';
+import { WidgetConfig} from '@/types/widgetTypes';
 import { Button } from '@/components/ui/button';
 import WidgetRenderer from './WidgetRenderer';
 import { WidgetRegistry } from './WidgetRegistry';
 
 // Import widget registrations to ensure they're loaded
 import './index';
+import { ViewMode } from '../ViewRenderer';
 
 interface WidgetContainerProps {
   widget: WidgetConfig;
   onUpdate?: (widgetId: string, updates: Partial<WidgetConfig>) => void;
   onDelete?: (widgetId: string) => void;
   isEditable?: boolean;
-  mode?: 'config' | 'render'; // Add mode prop to distinguish between config and render modes
+  mode?: ViewMode; // Add mode prop to distinguish between config and render modes
   onConfigModalChange?: (widgetId: string, isOpen: boolean) => void; // Callback for config modal state
 }
 
@@ -26,20 +27,13 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   onUpdate,
   onDelete,
   isEditable = true,
-  mode = 'render',
+  mode = ViewMode.RENDER,
   onConfigModalChange,
 }) => {
-  const [showControls, setShowControls] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
 
-  const handleTitleChange = (newTitle: string) => {
-    if (onUpdate) {
-      onUpdate(widget.id, { title: newTitle });
-    }
-  };
-
   const handleDelete = () => {
-    if (onDelete && window.confirm(`Delete widget "${widget.title}"?`)) {
+    if (onDelete && window.confirm('Delete this widget?')) {
       onDelete(widget.id);
     }
   };
@@ -69,16 +63,10 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     }
   };
 
-  // Determine header visibility based on mode and widget setting
-  const shouldShowHeader = mode === 'config' || (widget.showHeaderInViewMode ?? true);
-  const shouldShowHeaderAsOverlay = mode === 'render' && !(widget.showHeaderInViewMode ?? true);
-
-  if (shouldShowHeaderAsOverlay) {
-    // Render mode with header disabled: Full-size content with hover overlay header
+  if (mode === ViewMode.RENDER) {
+    // View mode: Full-size content with no header
     return (
-      <div
-        className="h-full w-full relative border rounded-lg shadow-sm overflow-hidden"
-      >
+      <div className="h-full w-full border rounded-lg shadow-sm overflow-hidden">
         {/* Widget Content - Takes full space */}
         <div className="h-full w-full overflow-hidden">
           <WidgetRenderer widget={widget} />
@@ -101,35 +89,15 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     );
   }
 
-  // Default: Traditional layout with always-visible header
+  // Config mode: Show header with controls
   return (
     <div
       className="h-full w-full border rounded-lg shadow-sm flex flex-col overflow-hidden"
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
     >
-      {/* Widget Header - Always visible */}
-      {shouldShowHeader && (
-        <div className="flex items-center justify-between p-3 border-b min-h-[48px]">
-          <div className="flex-1 min-w-0">
-            {(isEditable && mode === 'config') ? (
-              <input
-                type="text"
-                value={widget.title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                className="w-full bg-transparent border-none outline-none font-medium text-sm truncate"
-                placeholder="Widget title"
-              />
-            ) : (
-              <h3 className="font-medium text-sm truncate">{widget.title}</h3>
-            )}
-          </div>
-
+        <div className="flex items-center justify-end p-3 border-b min-h-[48px]">
           {/* Widget Controls */}
           {isEditable && (
-            <div className={`flex items-center gap-1 transition-opacity duration-200 ${
-              showControls ? 'opacity-100' : 'opacity-0'
-            }`}>
+            <div className="flex items-center gap-1 transition-opacity duration-200">
               <Button
                 variant="ghost"
                 size="sm"
@@ -140,30 +108,24 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
                 <Settings className="h-3 w-3" />
               </Button>
 
-              {mode === 'config' && ( // Only show delete button in config mode
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                  title="Delete Widget"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                title="Delete Widget"
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </div>
           )}
         </div>
-      )}
 
       {/* Widget Content */}
       <div className="flex-1 overflow-hidden relative">
         <WidgetRenderer widget={widget} />
-
         {/* Overlay to disable interaction in config mode */}
-        {mode === 'config' && (
-          <div className="absolute inset-0 bg-transparent pointer-events-auto cursor-not-allowed z-10" />
-        )}
+        <div className="absolute inset-0 bg-transparent pointer-events-auto cursor-not-allowed z-10" />
       </div>
 
       {/* Configuration Modal */}

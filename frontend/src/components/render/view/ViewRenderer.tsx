@@ -78,7 +78,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
 
   const handleWidgetUpdate = useCallback((widgetId: string, updates: Partial<WidgetConfig>) => {
     const updatedWidgets = viewContent.widgets.map(widget =>
-      widget.id === widgetId ? { ...widget, ...updates } : widget
+      widget.id === widgetId ? { ...widget, ...updates } as WidgetConfig : widget
     );
 
     const updatedViewContent: ViewContent = {
@@ -106,19 +106,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
     }));
   }, [dispatch, entityID, viewContent]);
 
-  const handleWidgetAdd = useCallback((widget: WidgetConfig) => {
-    const updatedWidgets = [...viewContent.widgets, widget];
 
-    const updatedViewContent: ViewContent = {
-      ...viewContent,
-      widgets: updatedWidgets,
-    };
-
-    dispatch(updateEntity({
-      noteID: entityID,
-      content: JSON.stringify(updatedViewContent),
-    }));
-  }, [dispatch, entityID, viewContent]);
 
   const handleAddWidget = useCallback((widget: WidgetConfig) => {
     const updatedViewContent = {

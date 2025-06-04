@@ -15,11 +15,14 @@ import { WidgetRegistry } from './WidgetRegistry';
 // Import widget components
 import GraphWidget from './graph/GraphWidget';
 import GraphWidgetConfigDialog from './graph/GraphWidgetConfigDialog';
+import NoteWidget from './note/NoteWidget';
+import NoteWidgetConfigDialog from './note/NoteWidgetConfigDialog';
 
 // Widget icons (using lucide-react icons)
-import { Network } from 'lucide-react';
+import { Network, FileText } from 'lucide-react';
 
 const GraphIcon = Network;
+const NoteIcon = FileText;
 
 /**
  * Register all widgets here
@@ -41,9 +44,20 @@ WidgetRegistry.register({
   displayName: 'Graph Widget',
   description: 'Visualize entity relationships and connections',
   icon: GraphIcon,
-  component: GraphWidget,
-  configComponent: GraphWidgetConfigDialog,
+  component: GraphWidget as any,
+  configComponent: GraphWidgetConfigDialog as any,
   defaultConfig: DEFAULT_WIDGET_CONFIGS[WidgetType.GRAPH],
+});
+
+// Register Note Widget
+WidgetRegistry.register({
+  type: WidgetType.NOTE,
+  displayName: 'Note Widget',
+  description: 'Display the content of a specific note',
+  icon: NoteIcon,
+  component: NoteWidget as any,
+  configComponent: NoteWidgetConfigDialog as any,
+  defaultConfig: DEFAULT_WIDGET_CONFIGS[WidgetType.NOTE],
 });
 
 // Future widgets can be added here with the same simple pattern:

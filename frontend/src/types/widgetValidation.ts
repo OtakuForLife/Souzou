@@ -49,10 +49,22 @@ export const GraphWidgetConfigSchema = BaseWidgetConfigSchema.extend({
 });
 
 /**
+ * Note widget configuration schema
+ */
+export const NoteWidgetConfigSchema = BaseWidgetConfigSchema.extend({
+  type: z.literal(WidgetType.NOTE),
+  config: z.object({
+    noteId: z.string().optional(),
+    isEditable: z.boolean(),
+  }),
+});
+
+/**
  * Discriminated union schema for all widget types
  */
 export const WidgetConfigSchema = z.discriminatedUnion('type', [
   GraphWidgetConfigSchema,
+  NoteWidgetConfigSchema,
 ]);
 
 /**

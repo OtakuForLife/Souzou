@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { WidgetType, WidgetConfig, DEFAULT_WIDGET_CONFIGS } from '@/types/widgetTypes';
+import { WidgetType, WidgetConfig, createDefaultWidget } from '@/types/widgetTypes';
 import { WidgetRegistry } from './WidgetRegistry';
 
 interface AddWidgetButtonProps {
@@ -23,50 +23,7 @@ interface AddWidgetButtonProps {
   className?: string;
 }
 
-/**
- * Generate a unique widget ID
- */
-const generateWidgetId = (): string => {
-  return `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
 
-/**
- * Create a new widget configuration
- */
-const createNewWidget = (type: WidgetType): WidgetConfig => {
-  const defaultConfig = DEFAULT_WIDGET_CONFIGS[type];
-  const constraints = WidgetRegistry.getConstraints(type);
-  
-  const baseWidget = {
-    id: generateWidgetId(),
-    type,
-    title: `New ${WidgetRegistry.get(type)?.displayName || 'Widget'}`,
-    position: {
-      x: 0,
-      y: 0,
-      w: constraints.minW || 4,
-      h: constraints.minH || 3,
-      minW: constraints.minW,
-      minH: constraints.minH,
-      maxW: constraints.maxW,
-      maxH: constraints.maxH,
-    },
-    showHeaderInViewMode: true,
-  };
-
-  // Type-safe widget creation based on widget type
-  switch (type) {
-    case WidgetType.GRAPH:
-      return {
-        ...baseWidget,
-        type: WidgetType.GRAPH,
-        config: defaultConfig,
-      } as WidgetConfig;
-    
-    default:
-      throw new Error(`Unknown widget type: ${type}`);
-  }
-};
 
 export const AddWidgetButton: React.FC<AddWidgetButtonProps> = ({ 
   onAddWidget, 
@@ -77,7 +34,7 @@ export const AddWidgetButton: React.FC<AddWidgetButtonProps> = ({
 
   const handleAddWidget = (type: WidgetType) => {
     try {
-      const newWidget = createNewWidget(type);
+      const newWidget = createDefaultWidget(type);
       onAddWidget(newWidget);
       setIsOpen(false);
     } catch (error) {

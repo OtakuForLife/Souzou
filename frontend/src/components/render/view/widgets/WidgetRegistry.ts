@@ -7,12 +7,13 @@
 
 import React from 'react';
 import { WidgetType, WidgetConfigForType, GridPosition, WIDGET_CONSTRAINTS } from '@/types/widgetTypes';
+import { ViewMode } from '../ViewRenderer';
 
 /**
  * Minimal widget definition - everything needed to register a widget
  */
 export interface WidgetDefinition<T extends WidgetType> {
-  type: T;
+  type: WidgetType;
   displayName: string;
   description?: string;
   icon?: React.ComponentType<{ className?: string }>;
@@ -27,7 +28,7 @@ export interface WidgetDefinition<T extends WidgetType> {
  */
 export interface WidgetProps<T extends WidgetType> {
   widget: WidgetConfigForType<T>;
-  mode?: 'render' | 'config';
+  mode?: ViewMode;
   onUpdate?: (updates: Partial<WidgetConfigForType<T>>) => void;
   onDelete?: () => void;
 }
@@ -162,12 +163,16 @@ export class WidgetRegistry {
     description: string;
     icon: React.ComponentType<{ className?: string }>;
   }> {
-    return this.getAll().map(definition => ({
-      type: definition.type,
-      displayName: definition.displayName,
-      description: definition.description || '',
-      icon: definition.icon
-    }));
+    return this.getAll()
+      .filter((definition): definition is WidgetDefinition<any> & { icon: React.ComponentType<{ className?: string }> } =>
+        !!definition.icon
+      )
+      .map(definition => ({
+        type: definition.type,
+        displayName: definition.displayName,
+        description: definition.description || '',
+        icon: definition.icon
+      }));
   }
 
   /**
@@ -218,3 +223,4 @@ export function getWidget<T extends WidgetType>(type: T): WidgetDefinition<T> | 
 export function isWidgetAvailable(type: WidgetType): boolean {
   return WidgetRegistry.isRegistered(type);
 }
+

@@ -39,8 +39,6 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
 
   // Local state for form values
   const [formData, setFormData] = useState({
-    title: widget.title || '',
-    showHeaderInViewMode: widget.showHeaderInViewMode ?? true,
     rootEntityId: getSafeConfigValue('rootEntityId', ''),
     maxDepth: getSafeConfigValue('maxDepth', 2),
     layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
@@ -52,8 +50,6 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   // Reset form data when widget changes
   useEffect(() => {
     setFormData({
-      title: widget.title || '',
-      showHeaderInViewMode: widget.showHeaderInViewMode ?? true,
       rootEntityId: getSafeConfigValue('rootEntityId', ''),
       maxDepth: getSafeConfigValue('maxDepth', 2),
       layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
@@ -80,8 +76,6 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   const handleCancelClick = () => {
     // Reset form data to original values
     setFormData({
-      title: widget.title || '',
-      showHeaderInViewMode: widget.showHeaderInViewMode ?? true,
       rootEntityId: getSafeConfigValue('rootEntityId', ''),
       maxDepth: getSafeConfigValue('maxDepth', 2),
       layoutAlgorithm: getSafeConfigValue('layoutAlgorithm', 'circle'),
@@ -101,29 +95,6 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Widget Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Widget Title</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Enter widget title"
-            />
-          </div>
-
-          {/* Header Visibility in View Mode */}
-          <div className="flex flex-row items-center justify-start space-x-2">
-            <input
-              type="checkbox"
-              className=''
-              id="showHeaderInViewMode"
-              checked={formData.showHeaderInViewMode}
-              onChange={(e) => setFormData({ ...formData, showHeaderInViewMode: e.target.checked })}
-            />
-            <Label htmlFor="showHeaderInViewMode">Show Header in View Mode</Label>
-          </div>
-
           {/* Root Entity Selection */}
           <div className="space-y-2">
             <Label htmlFor="rootEntity">Root Entity (Optional)</Label>
