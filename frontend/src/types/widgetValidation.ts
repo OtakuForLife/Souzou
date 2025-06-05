@@ -28,9 +28,7 @@ export const GridPositionSchema = z.object({
 export const BaseWidgetConfigSchema = z.object({
   id: z.string().min(1),
   type: z.nativeEnum(WidgetType),
-  title: z.string().min(1),
   position: GridPositionSchema,
-  showHeaderInViewMode: z.boolean().optional(),
 });
 
 /**
