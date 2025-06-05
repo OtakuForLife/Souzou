@@ -116,14 +116,57 @@ class ReactCytoscape extends Component<Props> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    // Only rebuild if props that affect the graph have actually changed
-    const shouldRebuild =
-      prevProps.elements !== this.props.elements ||
-      prevProps.style !== this.props.style ||
-      prevProps.layout !== this.props.layout ||
-      prevProps.cytoscapeOptions !== this.props.cytoscapeOptions;
+    if (!this.cy || this.cy.destroyed()) {
+      // If instance is missing or destroyed, rebuild completely
+      this.build();
+      return;
+    }
 
-    if (shouldRebuild) {
+    // Handle elements update without rebuilding
+    if (prevProps.elements !== this.props.elements) {
+      try {
+        // Remove all existing elements
+        this.cy.elements().remove();
+        // Add new elements
+        if (this.props.elements && this.props.elements.length > 0) {
+          this.cy.add(this.props.elements);
+        }
+        // Re-run layout
+        this.cy.layout(this.layout()).run();
+      } catch (error) {
+        console.warn('Error updating Cytoscape elements, rebuilding:', error);
+        this.clean();
+        this.build();
+        return;
+      }
+    }
+
+    // Handle style update without rebuilding
+    if (prevProps.style !== this.props.style) {
+      try {
+        this.cy.style(this.style());
+      } catch (error) {
+        console.warn('Error updating Cytoscape style, rebuilding:', error);
+        this.clean();
+        this.build();
+        return;
+      }
+    }
+
+    // Handle layout update without rebuilding
+    if (prevProps.layout !== this.props.layout) {
+      try {
+        this.cy.layout(this.layout()).run();
+      } catch (error) {
+        console.warn('Error updating Cytoscape layout, rebuilding:', error);
+        this.clean();
+        this.build();
+        return;
+      }
+    }
+
+    // Only rebuild for core options that require it
+    if (prevProps.cytoscapeOptions !== this.props.cytoscapeOptions) {
       this.clean();
       this.build();
     }
@@ -150,8 +193,19 @@ class ReactCytoscape extends Component<Props> {
   clean() {
     if (this.cy) {
       try {
-        // Remove all event listeners first to prevent dangling references
+        // Disable user interaction first to prevent new events
+        this.cy.userPanningEnabled(false);
+        this.cy.userZoomingEnabled(false);
+        this.cy.boxSelectionEnabled(false);
+
+        // Remove all event listeners
         this.cy.removeAllListeners();
+
+        // Clear the container content to remove any lingering DOM elements
+        const container = this.getContainer();
+        if (container) {
+          container.innerHTML = '';
+        }
 
         // Check if the instance is still valid before destroying
         if (!this.cy.destroyed()) {
