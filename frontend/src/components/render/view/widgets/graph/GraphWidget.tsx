@@ -61,8 +61,13 @@ const addNodeToContext = (entity: Entity, depth: number, context: TraversalConte
   }
 };
 
-// Helper function to add edge to context
+// Helper function to add edge to context (only if both nodes exist)
 const addEdgeToContext = (sourceId: string, targetId: string, linkType: LinkType, context: TraversalContext): void => {
+  // Only add edge if both source and target nodes exist in the graph
+  if (!context.nodes.has(sourceId) || !context.nodes.has(targetId)) {
+    return;
+  }
+
   const edgeId = createEdgeId(sourceId, targetId, linkType);
   if (!context.edges.has(edgeId)) {
     context.edges.set(edgeId, {
@@ -129,13 +134,14 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
             if (link.targetNoteId && allEntities[link.targetNoteId]) {
               const targetEntity = allEntities[link.targetNoteId];
 
-              // Add markdown link edge
-              addEdgeToContext(entity.id, link.targetNoteId, LinkType.MARKDOWN, context);
-
-              // Queue target entity for next level if not visited
+              // Add target node if not already added and within depth limit
               if (!context.visitedEntities.has(link.targetNoteId) && depth < effectiveMaxDepth) {
+                addNodeToContext(targetEntity, depth + 1, context);
                 entityQueue.push({ entity: targetEntity, depth: depth + 1 });
               }
+
+              // Add markdown link edge (now both nodes should exist)
+              addEdgeToContext(entity.id, link.targetNoteId, LinkType.MARKDOWN, context);
             }
           });
         }
@@ -144,25 +150,27 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
         if (entity.parent && allEntities[entity.parent]) {
           const parentEntity = allEntities[entity.parent];
 
-          // Add child-to-parent edge
-          addEdgeToContext(entity.id, entity.parent, LinkType.CHILD_TO_PARENT, context);
-
-          // Queue parent entity for next level if not visited
+          // Add parent node if not already added and within depth limit
           if (!context.visitedEntities.has(entity.parent) && depth < effectiveMaxDepth) {
+            addNodeToContext(parentEntity, depth + 1, context);
             entityQueue.push({ entity: parentEntity, depth: depth + 1 });
           }
+
+          // Add child-to-parent edge (now both nodes should exist)
+          addEdgeToContext(entity.id, entity.parent, LinkType.CHILD_TO_PARENT, context);
         }
 
         // Process children relationships (discover all children)
         const childEntities = getChildEntities(entity.id, allEntities);
         childEntities.forEach(childEntity => {
-          // Add child-to-parent edge (child → parent)
-          addEdgeToContext(childEntity.id, entity.id, LinkType.CHILD_TO_PARENT, context);
-
-          // Queue child entity for next level if not visited
+          // Add child node if not already added and within depth limit
           if (!context.visitedEntities.has(childEntity.id) && depth < effectiveMaxDepth) {
+            addNodeToContext(childEntity, depth + 1, context);
             entityQueue.push({ entity: childEntity, depth: depth + 1 });
           }
+
+          // Add child-to-parent edge (child → parent, now both nodes should exist)
+          addEdgeToContext(childEntity.id, entity.id, LinkType.CHILD_TO_PARENT, context);
         });
       }
 

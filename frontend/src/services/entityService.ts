@@ -24,11 +24,10 @@ export interface UpdateEntityRequest {
 export interface CreateEntityResponse {
   parent: string | null;
   newNoteData: Entity;
-  updatedNotes: Entity[];
 }
 
 export interface SaveEntityResponse {
-  updatedNotes: Entity[];
+  savedEntity: Entity;
 }
 
 class EntityService {
@@ -65,13 +64,9 @@ class EntityService {
       const newNoteData = createResponse.data;
       log.info('Note created successfully', { id: newNoteData.id, title: newNoteData.title });
 
-      // Fetch updated notes list
-      const updatedNotes = await this.fetchEntities();
-
       return {
         parent: noteData.parent,
         newNoteData,
-        updatedNotes,
       };
     } catch (error) {
       log.error('Failed to create note', error as Error, { noteData });
@@ -92,12 +87,10 @@ class EntityService {
         throw new Error(`Failed to save note: ${response.status}`);
       }
 
-      log.info('Note saved successfully', { id: note.id });
+      const savedEntity = response.data;
+      log.info('Note saved successfully', { id: savedEntity.id });
 
-      // Fetch updated notes list
-      const updatedNotes = await this.fetchEntities();
-
-      return { updatedNotes };
+      return { savedEntity };
     } catch (error) {
       log.error('Failed to save note', error as Error, { noteId: note.id });
       throw error;

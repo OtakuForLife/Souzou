@@ -95,8 +95,23 @@ export const entitySlice = createSlice({
     .addCase(createEntity.fulfilled, (state, action)=>{
       state.loading = false;
       state.error = null;
-      state.rootEntities = action.payload.updatedNotes.filter((entity:Entity)=> entity.parent === null);
-      state.allEntities = Object.fromEntries(action.payload.updatedNotes.map((entity: Entity) => [entity.id, entity]));
+      const newEntity = action.payload.newNoteData;
+
+      // Add the new entity to allEntities
+      state.allEntities[newEntity.id] = newEntity;
+
+      // If it's a root entity (no parent), add it to rootEntities
+      if (newEntity.parent === null) {
+        state.rootEntities.push(newEntity);
+      } else {
+        const parent = state.allEntities[newEntity.parent];
+        if(parent){
+          if(!parent.children.includes(newEntity.id)){
+            parent.children.push(newEntity.id);
+          }
+          state.allEntities[newEntity.parent] = parent;
+        }
+      }
     })
     .addCase(createEntity.rejected, (state, action) => {
       state.loading = false;
@@ -109,8 +124,59 @@ export const entitySlice = createSlice({
     .addCase(saveEntity.fulfilled, (state, action)=>{
       state.loading = false;
       state.error = null;
-      state.rootEntities = action.payload.updatedNotes.filter((entity:Entity)=> entity.parent === null);
-      state.allEntities = Object.fromEntries(action.payload.updatedNotes.map((entity: Entity) => [entity.id, entity]));
+      const savedEntity = action.payload.savedEntity;
+      const oldEntity = state.allEntities[savedEntity.id] || {parent: null};
+
+      if(oldEntity.parent === savedEntity.parent){
+        // Entity's parent didn't change - update in place
+        state.allEntities[savedEntity.id] = savedEntity;
+
+        // Also update in rootEntities if it's a root entity
+        if(savedEntity.parent === null){
+          const rootIndex = state.rootEntities.findIndex(entity => entity.id === savedEntity.id);
+          if(rootIndex !== -1){
+            state.rootEntities[rootIndex] = savedEntity;
+          }
+        }
+
+        console.log("Entity's parent didn't change - update in place");
+        return;
+      } else {
+        console.log("Entity's parent changed");
+        if(savedEntity.parent === null){
+          console.log("Entity is now root");
+          // Entity is now root - add to rootEntities
+          if(!state.rootEntities.includes(savedEntity)){
+            state.rootEntities.push(savedEntity);
+          }
+        } else {
+          console.log("Entity has a new parent");
+          // Entity has a new parent - add to new parent's children
+          const newParent = state.allEntities[savedEntity.parent];
+          if(newParent && !newParent.children.includes(savedEntity.id)){
+              newParent.children.push(savedEntity.id);
+              state.allEntities[newParent.id] = newParent;
+          }
+        }
+        if(oldEntity.parent !== null){
+          console.log("Entity had a parent before");
+          // Entity had a parent before - remove from old parent's children
+          const oldParent = state.allEntities[oldEntity.parent];
+          if(oldParent){
+            oldParent.children = oldParent.children.filter(child => child !== savedEntity.id);
+            state.allEntities[oldParent.id] = oldParent;
+          }
+        } else {
+          console.log("Entity was root before");
+          // Entity was root before - remove from rootEntities
+          if(state.rootEntities.some(entity => entity.id === savedEntity.id)){
+            console.log("Removing from rootEntities");
+            state.rootEntities = state.rootEntities.filter(entity => entity.id !== savedEntity.id);
+          }
+        }
+        state.allEntities[savedEntity.id] = savedEntity;
+      }
+      
     })
     .addCase(saveEntity.rejected, (state, action) => {
       state.loading = false;

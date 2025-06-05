@@ -164,7 +164,7 @@ describe('entitySlice', () => {
         type: EntityType.NOTE,
         content: 'New content',
         created_at: '2023-01-04T00:00:00Z',
-        parent: '',
+        parent: null,
         children: []
       };
 
@@ -178,40 +178,80 @@ describe('entitySlice', () => {
       const action = {
         type: createEntity.fulfilled.type,
         payload: {
-          parent: '',
-          newNoteData: newNoteData,
-          updatedNotes: [...mockNotes, newNoteData]
+          parent: null,
+          newNoteData: newNoteData
         }
       };
 
       const nextState = reducer(previousState, action);
 
-      expect(Object.keys(nextState.allEntities)).toHaveLength(4);
+      expect(Object.keys(nextState.allEntities)).toHaveLength(3);
       expect(nextState.allEntities['4']).toEqual(newNoteData);
+      expect(nextState.rootEntities).toHaveLength(3);
+      expect(nextState.rootEntities.some(entity => entity.id === '4')).toBe(true);
     });
 
-    test('should handle saveNote.fulfilled', async () => {
-      const updatedNotes = [
-        { ...mockNote1, title: 'Updated Title' },
-        mockNote2,
-        mockNote3
-      ];
+    test('should handle saveEntity.fulfilled', async () => {
+      // Create mock entities with null parent for root entities
+      const mockRootNote1 = { ...mockNote1, parent: null };
+      const mockRootNote2 = { ...mockNote2, parent: null };
+      const savedEntity = { ...mockRootNote1, title: 'Updated Title' };
 
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
-        allEntities: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
+        rootEntities: [mockRootNote1, mockRootNote2],
+        allEntities: { '1': mockRootNote1, '2': mockRootNote2, '3': mockNote3 },
         loading: false,
         error: null
       };
 
       const action = {
         type: saveEntity.fulfilled.type,
-        payload: { updatedNotes }
+        payload: { savedEntity }
       };
 
       const nextState = reducer(previousState, action);
 
       expect(nextState.allEntities['1'].title).toEqual('Updated Title');
+      expect(nextState.rootEntities.find(entity => entity.id === '1')?.title).toEqual('Updated Title');
+    });
+
+    test('should update entity when save succeeds with store configuration', async () => {
+      // This test uses a different approach with configureStore like the /test version
+      const mockEntity: Entity = {
+        id: 'test-entity-1',
+        type: EntityType.NOTE,
+        title: 'Test Note',
+        content: 'Test content',
+        created_at: new Date().toISOString(),
+        parent: null,
+        children: []
+      };
+
+      let currentState: EntityState = {
+        rootEntities: [mockEntity],
+        allEntities: { [mockEntity.id]: mockEntity },
+        loading: false,
+        error: null
+      };
+
+      const store = {
+        getState: () => ({ entities: currentState }),
+        dispatch: (action: any) => {
+          // Mock dispatch that updates the state
+          currentState = reducer(currentState, action);
+        }
+      };
+
+      // Mock successful save response
+      const mockSaveResponse = {
+        savedEntity: { ...mockEntity, content: 'New content' }
+      };
+
+      // Dispatch save fulfilled action manually
+      store.dispatch(saveEntity.fulfilled(mockSaveResponse, 'test-request-id', mockEntity));
+
+      // Check that entity was updated
+      expect(store.getState().entities.allEntities[mockEntity.id].content).toBe('New content');
     });
 
     test('should handle deleteNote.fulfilled', async () => {
