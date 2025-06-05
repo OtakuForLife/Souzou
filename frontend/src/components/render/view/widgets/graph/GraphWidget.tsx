@@ -9,7 +9,6 @@ import { GraphWidgetConfig } from '@/types/widgetTypes';
 import { RootState } from '@/store';
 import { linkParsingService } from '@/services/linkParsingService';
 import { Entity } from '@/models/Entity';
-import { useWidgetData } from '@/hooks/useWidgetData';
 
 // Link types for graph edges
 enum LinkType {
@@ -79,9 +78,6 @@ const addEdgeToContext = (sourceId: string, targetId: string, linkType: LinkType
 
 const GraphWidget: React.FC<GraphWidgetProps> = ({
   widget,
-  mode = 'render',
-  onUpdate,
-  onDelete
 }) => {
   const allEntities = useSelector((state: RootState) => state.entities.allEntities);
   const rootEntities = useSelector((state: RootState) => state.entities.rootEntities);

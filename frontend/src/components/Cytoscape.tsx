@@ -149,7 +149,27 @@ class ReactCytoscape extends Component<Props> {
 
   clean() {
     if (this.cy) {
-      this.cy.destroy();
+      try {
+        // Remove all event listeners first to prevent dangling references
+        this.cy.removeAllListeners();
+
+        // Check if the instance is still valid before destroying
+        if (!this.cy.destroyed()) {
+          this.cy.destroy();
+        }
+      } catch (error) {
+        console.warn('Error during Cytoscape cleanup:', error);
+        // Force destroy even if there's an error
+        try {
+          if (this.cy && !this.cy.destroyed()) {
+            this.cy.destroy();
+          }
+        } catch (destroyError) {
+          console.warn('Error during forced Cytoscape destroy:', destroyError);
+        }
+      } finally {
+        this.cy = null;
+      }
     }
   }
 }
