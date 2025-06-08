@@ -17,7 +17,6 @@ interface WidgetContainerProps {
   widget: WidgetConfig;
   onUpdate?: (widgetId: string, updates: Partial<WidgetConfig>) => void;
   onDelete?: (widgetId: string) => void;
-  isEditable?: boolean;
   mode?: ViewMode; // Add mode prop to distinguish between config and render modes
   onConfigModalChange?: (widgetId: string, isOpen: boolean) => void; // Callback for config modal state
 }
@@ -26,7 +25,6 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   widget,
   onUpdate,
   onDelete,
-  isEditable = true,
   mode = ViewMode.RENDER,
   onConfigModalChange,
 }) => {
@@ -95,8 +93,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
       className="h-full w-full border rounded-lg shadow-sm flex flex-col overflow-hidden"
     >
         <div className="flex items-center justify-end p-3 border-b min-h-[48px]">
-          {/* Widget Controls */}
-          {isEditable && (
+          
             <div className="flex items-center gap-1 transition-opacity duration-200">
               <Button
                 variant="ghost"
@@ -118,7 +115,6 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
                 <X className="h-3 w-3" />
               </Button>
             </div>
-          )}
         </div>
 
       {/* Widget Content */}

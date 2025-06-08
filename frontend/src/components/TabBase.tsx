@@ -7,6 +7,9 @@ import { truncateText } from "@/utils/common";
 import { DragType, EntityDragData } from "@/types/contentTypes";
 import { EntityType } from "@/models/Entity";
 import { Active, Over } from "@dnd-kit/core";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { EntityState } from "@/store/slices/entitySlice";
 
 
 interface TabProps {
@@ -19,6 +22,8 @@ interface TabProps {
 
 function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabProps) {
   const uid = objectID;
+  const entityState: EntityState = useSelector((state: RootState) => state.entities);
+  const isDirty: boolean = entityState.dirtyEntityIDs.includes(objectID);
 
   const data: EntityDragData = {
     objectID: objectID,
@@ -59,6 +64,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
         value={uid}
       >
         <div>
+          {isDirty && <span className="text-red-500">*</span>}
           <span className="pr-1" title={displayname}>{truncateText(displayname, 13)}</span>
           <span
             className="p-0"

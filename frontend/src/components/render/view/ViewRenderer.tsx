@@ -220,7 +220,6 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
             onLayoutChange={handleLayoutChange}
             onWidgetUpdate={handleWidgetUpdate}
             onWidgetDelete={handleWidgetDelete}
-            isEditable={mode === ViewMode.CONFIG}
             mode={mode}
           />
         </div>

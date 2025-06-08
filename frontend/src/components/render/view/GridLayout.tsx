@@ -19,7 +19,6 @@ interface GridLayoutProps {
   onLayoutChange?: (widgets: WidgetConfig[]) => void;
   onWidgetUpdate?: (widgetId: string, updates: Partial<WidgetConfig>) => void;
   onWidgetDelete?: (widgetId: string) => void;
-  isEditable?: boolean;
   mode?: ViewMode;
 }
 
@@ -28,7 +27,6 @@ const GridLayout: React.FC<GridLayoutProps> = ({
   onLayoutChange,
   onWidgetUpdate,
   onWidgetDelete,
-  isEditable = true,
   mode = ViewMode.RENDER,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -105,17 +103,6 @@ const GridLayout: React.FC<GridLayoutProps> = ({
       <div className="min-h-full h-full w-full flex items-center justify-center">
         <div className="text-center p-2">
           <h3 className="text-lg font-semibold mb-2">No widgets yet</h3>
-          <p className="mb-4">
-            {isEditable
-              ? "Switch to config mode and use the 'Add Widget' button to start building your dashboard"
-              : "This dashboard is empty"
-            }
-          </p>
-          {!isEditable && (
-            <p className="text-sm text-gray-400">
-              Switch to config mode to add widgets
-            </p>
-          )}
         </div>
       </div>
     );
@@ -134,8 +121,8 @@ const GridLayout: React.FC<GridLayoutProps> = ({
         onDragStart={handleDragStart}
         onDragStop={handleDragStop}
         onResizeStop={handleResizeStop}
-        isDraggable={isEditable && !hasOpenModal}
-        isResizable={isEditable && !hasOpenModal}
+        isDraggable={mode == ViewMode.CONFIG && !hasOpenModal}
+        isResizable={mode == ViewMode.CONFIG && !hasOpenModal}
         useCSSTransforms={true}
         preventCollision={false}
         compactType="vertical"
@@ -146,7 +133,6 @@ const GridLayout: React.FC<GridLayoutProps> = ({
               widget={widget}
               onUpdate={onWidgetUpdate}
               onDelete={onWidgetDelete}
-              isEditable={isEditable}
               mode={mode}
               onConfigModalChange={handleConfigModalChange}
             />
