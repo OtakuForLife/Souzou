@@ -13,7 +13,8 @@ import { WidgetProps } from '../WidgetRegistry';
 import { EntityType } from '@/models/Entity';
 import NoteEditor from '@/components/render/note/NoteEditor';
 import { useAppDispatch } from '@/hooks';
-import { updateEntity } from '@/store/slices/entitySlice';
+import { updateEntity, saveEntity } from '@/store/slices/entitySlice';
+import { Save } from 'lucide-react';
 
 interface NoteWidgetProps extends WidgetProps<WidgetType.NOTE> {
   widget: NoteWidgetConfig;
@@ -35,17 +36,18 @@ const ReadOnlyNoteContent: React.FC<{ content: string; title: string }> = ({ con
 
 const NoteWidget: React.FC<NoteWidgetProps> = ({
   widget,
-  mode = 'render',
-  onUpdate,
-  onDelete
 }) => {
   const allEntities = useSelector((state: RootState) => state.entities.allEntities);
+  const dirtyEntityIDs = useSelector((state: RootState) => state.entities.dirtyEntityIDs);
   const dispatch = useAppDispatch();
 
   const { noteId, isEditable } = widget.config;
 
   // Get the selected note
   const selectedNote = noteId ? allEntities[noteId] : null;
+
+  // Check if the note has unsaved changes
+  const isDirty = noteId ? dirtyEntityIDs.includes(noteId) : false;
 
   // Validate that the selected entity is actually a note
   const isValidNote = selectedNote && selectedNote.type === EntityType.NOTE;
@@ -60,10 +62,17 @@ const NoteWidget: React.FC<NoteWidgetProps> = ({
     }
   };
 
+  // Handle save button click
+  const handleSave = () => {
+    if (selectedNote) {
+      dispatch(saveEntity(selectedNote));
+    }
+  };
+
   // Render different states
   if (!noteId || !selectedNote) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg mb-2">No note selected</p>
           <p className="text-sm">Configure this widget to select a note to display</p>
@@ -91,7 +100,19 @@ const NoteWidget: React.FC<NoteWidgetProps> = ({
         <div className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">
             <div className="p-4">
-              <h2 className="text-xl font-semibold mb-4">{selectedNote.title}</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-xl font-semibold flex-1">
+                  {isDirty && <span className="text-red-500 mr-1">*</span>}
+                  {selectedNote.title}
+                </h2>
+                <span
+                  className="p-1 cursor-pointer rounded"
+                  onClick={handleSave}
+                  title="Save Note"
+                >
+                  <Save className="w-5 h-5" />
+                </span>
+              </div>
             </div>
             <NoteEditor
               initialText={selectedNote.content}
