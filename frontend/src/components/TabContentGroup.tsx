@@ -13,20 +13,18 @@ import EntityTabContent from "./EntityTabContent";
 export default function TabContentGroup() {
   const dispatch = useAppDispatch();
   const tabsState: TabsState = useSelector((state: RootState) => state.tabs);
+  const allEntities = useSelector((state: RootState) => state.entities.allEntities);
 
-  const openTabIDs: string[] = tabsState.openTabs.map(
-    (t: Entity) => t.id,
-  );
+  const openTabIDs: string[] = tabsState.openTabs;
 
   const onTabChange = (tabValue: string) => {
-    const tabData: Entity | undefined = tabsState.openTabs.find(
-      (e: Entity) => e.id === tabValue
-    );
-    if (tabData)
-      dispatch(setCurrentTab(tabData));
+    const entity = allEntities[tabValue];
+    if (entity) {
+      dispatch(setCurrentTab(entity));
+    }
   };
 
-  const currentTabValue = tabsState.currentTab?.id;
+  const currentTabValue = tabsState.currentTab;
 
   return (
     <Tabs
@@ -37,21 +35,24 @@ export default function TabContentGroup() {
     >
       <TabsList className="flex justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
         <SortableContext items={openTabIDs} strategy={rectSortingStrategy}>
-          {tabsState.openTabs.map((tab: Entity) => (
-            <EntityTabTrigger key={tab.id} entityID={tab.id} />
+          {tabsState.openTabs.map((tabId: string) => (
+            <EntityTabTrigger key={tabId} entityID={tabId} />
           ))}
         </SortableContext>
       </TabsList>
       <div className="theme-main-content-background theme-main-content-text h-full">
-        {tabsState.openTabs.map((tab: Entity) => (
-          <TabsContent
-            className="outline-2 outline-black data-[state=active]:flex data-[state=active]:flex-col h-full max-h-full"
-            key={tab.id}
-            value={tab.id}
-          >
-            <EntityTabContent entity={tab} />
-          </TabsContent>
-        ))}
+        {tabsState.openTabs.map((tabId: string) => {
+          const entity = allEntities[tabId];
+          return entity ? (
+            <TabsContent
+              className="outline-2 outline-black data-[state=active]:flex data-[state=active]:flex-col h-full max-h-full"
+              key={tabId}
+              value={tabId}
+            >
+              <EntityTabContent entity={entity} />
+            </TabsContent>
+          ) : null;
+        })}
       </div>
     </Tabs>
   );

@@ -1,9 +1,8 @@
 import { EntityRendererProps } from "@/components/ContentRenderer";
 import { Input } from "@/components/Input";
 import { useAppDispatch } from "@/hooks";
-import { saveEntity, updateEntity } from "@/store/slices/entitySlice";
+import { updateEntity } from "@/store/slices/entitySlice";
 import { validateNoteTitle } from "@/utils/common";
-import { Save } from "lucide-react";
 import { useState } from "react";
 import NoteEditor from "./NoteEditor";
 import { Entity } from "@/models/Entity";
@@ -29,20 +28,8 @@ function NoteRenderer({ entityID }: EntityRendererProps) {
     return (
         <div className="h-full overflow-y-scroll">
             <div className="pb-10">
-                {/* Header with Save Icon and Title */}
+                {/* Header with Title */}
                 <div className="flex items-center gap-2 p-4">
-                    <span
-                        className="p-1 cursor-pointer"
-                        onClick={(e: React.MouseEvent<HTMLElement>) => {
-                            e.preventDefault();
-                            if (entity?.id) {
-                                dispatch(saveEntity(entity));
-                            }
-                        }}
-                        title="Save Note"
-                    >
-                        <Save className="w-5 h-5" />
-                    </span>
                     <div className="flex-1">
                         <Input
                             className="text-4xl p-0 border-none bg-transparent focus:ring-0 focus:border-none"

@@ -4,13 +4,13 @@
 
 import React, { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Settings, Eye, Save } from 'lucide-react';
+import { Settings, Eye } from 'lucide-react';
 import { RootState } from '@/store';
 import { Entity } from '@/models/Entity';
 import { ViewContent, WidgetConfig, createDefaultViewContent } from '@/types/widgetTypes';
 import { parseAndValidateViewContent, formatValidationError } from '@/types/widgetValidation';
 import { EntityRendererProps } from '@/components/ContentRenderer';
-import { saveEntity, updateEntity } from '@/store/slices/entitySlice';
+import { updateEntity } from '@/store/slices/entitySlice';
 import GridLayout from '@/components/render/view/GridLayout';
 import { Button } from '@/components/ui/button';
 import { AddWidgetButton } from '@/components/render/view/widgets/AddWidgetButton';
@@ -126,16 +126,6 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
         {/* View Header with Mode Switch */}
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            <span className="w-5 h-5 p-0"
-              onClick={(e: React.MouseEvent<HTMLElement>) => {
-                e.preventDefault();
-                if (entity?.id) {
-                  dispatch(saveEntity(entity));
-                }
-              }}
-            >
-              <Save className="w-5 h-5" />
-            </span>
             <Input
               className="text-4xl h-15 p-0 py-1"
               value={entity?.title}

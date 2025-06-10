@@ -16,7 +16,7 @@ import {
 import {ImperativePanelHandle}  from "react-resizable-panels"
 import { SidebarInset, SidebarProvider } from "../components/ui/sidebar"
 
-import { fetchEntities, EntityState, createEntity } from "@/store/slices/entitySlice";
+import { fetchEntities, EntityState, createEntity, saveEntity } from "@/store/slices/entitySlice";
 import { NoteTree } from "../components/EntityTree";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import ContentFrame from "../components/ContentFrame";
@@ -38,6 +38,10 @@ function Home() {
     const entityState: EntityState = useSelector((state: RootState) => state.entities);
     const entities: { [id: string]: Entity; } = entityState.allEntities;
     const { error: notesError } = entityState;
+
+    // Get current tab for Ctrl+S shortcut
+    const currentTabId = useSelector((state: RootState) => state.tabs.currentTab);
+    const currentEntity = currentTabId ? entities[currentTabId] : null;
 
     // Fetch entities on component mount
     useEffect(()=> {
@@ -96,6 +100,16 @@ function Home() {
             callback: () => {
                 // Refresh entities with Ctrl+R
                 dispatch(fetchEntities());
+            }
+        },
+        {
+            key: 's',
+            ctrlKey: true,
+            callback: () => {
+                // Save current entity with Ctrl+S
+                if (currentEntity) {
+                    dispatch(saveEntity(currentEntity));
+                }
             }
         }
     ]);

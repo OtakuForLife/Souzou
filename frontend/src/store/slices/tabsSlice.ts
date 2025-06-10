@@ -2,8 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Entity } from '@/models/Entity';
 
 interface TabsState {
-  openTabs: Entity[];
-  currentTab: Entity | null;
+  openTabs: string[]; // Array of entity IDs
+  currentTab: string | null; // Entity ID
 }
 
 const initialState: TabsState = {
@@ -20,30 +20,29 @@ export const tabsSlice = createSlice({
 
       // Check if tab is already open
       const existingIndex = state.openTabs.findIndex(
-        (t) => t.type === tab.type && t.id === tab.id
+        (tabId) => tabId === tab.id
       );
 
       if (existingIndex === -1) {
         // Add new tab
-        state.openTabs.push(tab);
+        state.openTabs.push(tab.id);
       }
 
       // Set as current tab
-      state.currentTab = tab;
+      state.currentTab = tab.id;
     },
 
     closeTab: (state, action: PayloadAction<Entity>) => {
       const tab = action.payload;
       const tabIndex = state.openTabs.findIndex(
-        (t) => t.type === tab.type && t.id === tab.id
+        (tabId) => tabId === tab.id
       );
 
       if (tabIndex >= 0) {
         state.openTabs.splice(tabIndex, 1);
 
         // If the closed tab was the current tab, set current to the last open tab
-        if (state.currentTab?.type === tab.type &&
-            state.currentTab?.id === tab.id) {
+        if (state.currentTab === tab.id) {
           if (state.openTabs.length > 0) {
             const newIndex = Math.max(0, tabIndex - 1);
             state.currentTab = state.openTabs[newIndex];
@@ -59,11 +58,11 @@ export const tabsSlice = createSlice({
 
       // Verify the tab is actually open
       const isOpen = state.openTabs.some(
-        (t) => t.type === tab.type && t.id === tab.id
+        (tabId) => tabId === tab.id
       );
 
       if (isOpen) {
-        state.currentTab = tab;
+        state.currentTab = tab.id;
       }
     },
 
@@ -82,10 +81,10 @@ export const tabsSlice = createSlice({
       const { activeTab, overTab } = action.payload;
 
       const fromIndex = state.openTabs.findIndex(
-        (t) => t.type === activeTab.type && t.id === activeTab.id
+        (tabId) => tabId === activeTab.id
       );
       const toIndex = state.openTabs.findIndex(
-        (t) => t.type === overTab.type && t.id === overTab.id
+        (tabId) => tabId === overTab.id
       );
 
       if (fromIndex >= 0 && toIndex >= 0 && fromIndex !== toIndex) {
@@ -93,59 +92,6 @@ export const tabsSlice = createSlice({
         state.openTabs.splice(toIndex, 0, movedTab);
       }
     },
-
-    /* // Sync tabs from external sources (notes, graphs)
-    syncTabsFromSources: (state, action: PayloadAction<{
-      openNotes: Array<{ id: string; title: string }>;
-      currentNoteId: string | null;
-      openGraphs: Array<{ id: string; title: string }>;
-      currentGraphId: string | null;
-    }>) => {
-      const { openNotes, currentNoteId } = action.payload;
-
-      // Create tab data from sources
-      const noteTabs: TabData[] = openNotes.map(note => ({
-        type: ContentType.NOTE,
-        id: note.id
-      }));
-
-      // Update open tabs, preserving order where possible
-      const newTabs = [...noteTabs];
-
-      // Filter out tabs that are no longer valid
-      state.openTabs = state.openTabs.filter(tab =>
-        newTabs.some(newTab =>
-          newTab.type === tab.type && newTab.id === tab.id
-        )
-      );
-
-      // Add new tabs that aren't already open
-      newTabs.forEach(newTab => {
-        const exists = state.openTabs.some(tab =>
-          tab.type === newTab.type && tab.id === newTab.id
-        );
-        if (!exists) {
-          state.openTabs.push(newTab);
-        }
-      });
-
-      // Update current tab based on sources
-      let newCurrentTab: TabData | null = null;
-      if (currentNoteId) {
-        newCurrentTab = { type: ContentType.NOTE, id: currentNoteId };
-      }
-
-      // Only update current tab if it's actually open
-      if (newCurrentTab && state.openTabs.some(tab =>
-          tab.type === newCurrentTab!.type && tab.id === newCurrentTab!.id
-        )) {
-        state.currentTab = newCurrentTab;
-      } else if (state.openTabs.length > 0) {
-        state.currentTab = state.openTabs[0];
-      } else {
-        state.currentTab = null;
-      }
-    }, */
 
     clearAllTabs: (state) => {
       state.openTabs = [];
