@@ -18,6 +18,7 @@ export const API_CONFIG = {
   ENDPOINTS: {
     ENTITIES: '/api/entities/',
     THEMES: '/api/themes/',
+    AI: '/api/ai/',
   },
 } as const;
 
@@ -52,6 +53,11 @@ export const CONTENT_TYPE_CONFIG = {
   GRAPH: {
     DEFAULT_TITLE: 'Graph View',
     ICON: 'Network',
+  },
+  AI_CHAT_HISTORY: {
+    DEFAULT_TITLE: 'New AI Chat',
+    DEFAULT_CONTENT: '[]',
+    ICON: 'Bot',
   },
 } as const;
 

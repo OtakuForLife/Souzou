@@ -6,22 +6,23 @@
  */
 
 import React from 'react';
-import { WidgetConfig, WidgetType, isWidgetOfType } from '@/types/widgetTypes';
+import { WidgetConfig} from '@/types/widgetTypes';
 import { WidgetRegistry, WidgetProps } from './WidgetRegistry';
 
 // Import widget registrations to ensure they're loaded
 import './index';
+import { ViewMode } from '../ViewRenderer';
 
 interface WidgetRendererProps {
   widget: WidgetConfig;
-  mode?: 'render' | 'config';
+  mode?: ViewMode;
   onUpdate?: (updates: Partial<WidgetConfig>) => void;
   onDelete?: () => void;
 }
 
 const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   widget,
-  mode = 'render',
+  mode = ViewMode.RENDER,
   onUpdate,
   onDelete
 }) => {

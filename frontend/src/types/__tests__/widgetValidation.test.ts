@@ -9,8 +9,12 @@ import {
   parseAndValidateViewContent,
   validateWidgetConfigForType,
   formatValidationError,
+  validateAIChatWidgetConfig,
+
+  validateAIModelConfig,
   GridPositionSchema,
   GraphWidgetConfigSchema,
+  AIChatWidgetConfigSchema,
   ViewContentSchema,
 } from '../widgetValidation';
 import { WidgetType } from '../widgetTypes';
@@ -369,6 +373,182 @@ describe('Widget Validation System', () => {
       // For now, we test with the same type to ensure the function works
       const result = validateWidgetConfigForType(graphConfig, WidgetType.GRAPH);
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe('AIChatWidgetConfigSchema', () => {
+    it('should validate valid AI Chat widget config', () => {
+      const validConfig = {
+        id: 'ai-chat-widget-123',
+        type: WidgetType.AI_CHAT,
+        position: { x: 0, y: 0, w: 6, h: 4 },
+        config: {
+          model: 'llama2',
+          temperature: 0.7,
+          maxTokens: 2000,
+          maxContextNotes: 5,
+          showContextPreview: true,
+          autoSaveChats: true,
+        },
+      };
+
+      const result = AIChatWidgetConfigSchema.safeParse(validConfig);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.type).toBe(WidgetType.AI_CHAT);
+        expect(result.data.config.model).toBe('llama2');
+        expect(result.data.config.temperature).toBe(0.7);
+      }
+    });
+
+
+
+    it('should reject invalid model name', () => {
+      const invalidConfig = {
+        id: 'ai-chat-widget-123',
+        type: WidgetType.AI_CHAT,
+        position: { x: 0, y: 0, w: 6, h: 4 },
+        config: {
+          model: '', // Invalid: empty string
+          temperature: 0.7,
+          maxContextNotes: 5,
+          showContextPreview: true,
+          autoSaveChats: true,
+        },
+      };
+
+      const result = AIChatWidgetConfigSchema.safeParse(invalidConfig);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject invalid temperature', () => {
+      const invalidConfig = {
+        id: 'ai-chat-widget-123',
+        type: WidgetType.AI_CHAT,
+        position: { x: 0, y: 0, w: 6, h: 4 },
+        config: {
+          model: 'llama2',
+          temperature: 1.5, // Invalid: > 1
+          maxContextNotes: 5,
+          showContextPreview: true,
+          autoSaveChats: true,
+        },
+      };
+
+      const result = AIChatWidgetConfigSchema.safeParse(invalidConfig);
+      expect(result.success).toBe(false);
+    });
+
+
+
+    it('should reject invalid maxContextNotes', () => {
+      const invalidConfig = {
+        id: 'ai-chat-widget-123',
+        type: WidgetType.AI_CHAT,
+        position: { x: 0, y: 0, w: 6, h: 4 },
+        config: {
+          model: 'llama2',
+          temperature: 0.7,
+          maxContextNotes: 0, // Invalid: < 1
+          showContextPreview: true,
+          autoSaveChats: true,
+        },
+      };
+
+      const result = AIChatWidgetConfigSchema.safeParse(invalidConfig);
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('validateAIChatWidgetConfig', () => {
+    it('should validate valid AI Chat widget config', () => {
+      const validConfig = {
+        id: 'ai-chat-widget-123',
+        type: WidgetType.AI_CHAT,
+        position: { x: 0, y: 0, w: 6, h: 4 },
+        config: {
+          model: 'llama2',
+          temperature: 0.7,
+          maxContextNotes: 5,
+          showContextPreview: true,
+          autoSaveChats: true,
+        },
+      };
+
+      const result = validateAIChatWidgetConfig(validConfig);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(validConfig);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should return error for invalid AI Chat widget config', () => {
+      const invalidConfig = {
+        id: 'ai-chat-widget-123',
+        type: WidgetType.AI_CHAT,
+        position: { x: 0, y: 0, w: 6, h: 4 },
+        config: {
+          model: '',
+          temperature: 2.0, // Invalid
+          maxContextNotes: 5,
+          showContextPreview: true,
+          autoSaveChats: true,
+        },
+      };
+
+      const result = validateAIChatWidgetConfig(invalidConfig);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+      expect(result.issues).toBeDefined();
+    });
+  });
+
+
+
+  describe('validateAIModelConfig', () => {
+    it('should validate valid model config', () => {
+      const validConfig = {
+        model: 'llama2',
+        temperature: 0.7,
+        maxTokens: 2000,
+      };
+
+      const result = validateAIModelConfig(validConfig);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(validConfig);
+    });
+
+    it('should validate model config without maxTokens', () => {
+      const validConfig = {
+        model: 'llama2',
+        temperature: 0.7,
+      };
+
+      const result = validateAIModelConfig(validConfig);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(validConfig);
+    });
+
+    it('should reject invalid temperature range', () => {
+      const invalidConfig = {
+        model: 'llama2',
+        temperature: -0.1,
+      };
+
+      const result = validateAIModelConfig(invalidConfig);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+
+    it('should reject invalid maxTokens range', () => {
+      const invalidConfig = {
+        model: 'llama2',
+        temperature: 0.7,
+        maxTokens: 50, // Too low
+      };
+
+      const result = validateAIModelConfig(invalidConfig);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 

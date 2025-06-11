@@ -17,12 +17,15 @@ import GraphWidget from './graph/GraphWidget';
 import GraphWidgetConfigDialog from './graph/GraphWidgetConfigDialog';
 import NoteWidget from './note/NoteWidget';
 import NoteWidgetConfigDialog from './note/NoteWidgetConfigDialog';
+import AIChatWidget from './ai-chat/AIChatWidget';
+import AIChatWidgetConfigDialog from './ai-chat/AIChatWidgetConfigDialog';
 
 // Widget icons (using lucide-react icons)
-import { Network, FileText } from 'lucide-react';
+import { Network, FileText, MessageSquare } from 'lucide-react';
 
 const GraphIcon = Network;
 const NoteIcon = FileText;
+const AIChatIcon = MessageSquare;
 
 /**
  * Register all widgets here
@@ -58,6 +61,17 @@ WidgetRegistry.register({
   component: NoteWidget as any,
   configComponent: NoteWidgetConfigDialog as any,
   defaultConfig: DEFAULT_WIDGET_CONFIGS[WidgetType.NOTE],
+});
+
+// Register AI Chat Widget
+WidgetRegistry.register({
+  type: WidgetType.AI_CHAT,
+  displayName: 'AI Chat',
+  description: 'Chat with AI using your notes as context',
+  icon: AIChatIcon,
+  component: AIChatWidget as any,
+  configComponent: AIChatWidgetConfigDialog as any,
+  defaultConfig: DEFAULT_WIDGET_CONFIGS[WidgetType.AI_CHAT],
 });
 
 // Future widgets can be added here with the same simple pattern:

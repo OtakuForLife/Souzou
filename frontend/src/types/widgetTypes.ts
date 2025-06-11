@@ -12,6 +12,7 @@
 export enum WidgetType {
   GRAPH = 'graph',
   NOTE = 'note',
+  AI_CHAT = 'ai_chat',
 }
 
 /**
@@ -65,12 +66,36 @@ export interface NoteWidgetConfig extends BaseWidgetConfig<WidgetType.NOTE> {
 }
 
 /**
+ * AI Chat widget specific configuration
+ */
+export interface AIChatWidgetConfig extends BaseWidgetConfig<WidgetType.AI_CHAT> {
+  type: WidgetType.AI_CHAT;
+  config: {
+    // Ollama Settings
+    model: string;
+    temperature: number;
+    maxTokens?: number;
+
+    // Context Settings
+    maxContextNotes: number;
+
+    // UI Settings
+    showContextPreview: boolean;
+    autoSaveChats: boolean;
+
+    // Chat History Entity Reference
+    chatHistoryEntityId?: string; // ID of the AI Chat History entity
+  };
+}
+
+/**
  * Type-safe mapping of widget types to their configurations
  * This enables proper type inference and eliminates the need for type assertions
  */
 export interface WidgetConfigMap {
   [WidgetType.GRAPH]: GraphWidgetConfig;
   [WidgetType.NOTE]: NoteWidgetConfig;
+  [WidgetType.AI_CHAT]: AIChatWidgetConfig;
 }
 
 /**
@@ -102,6 +127,15 @@ export const DEFAULT_WIDGET_CONFIGS: {
   [WidgetType.NOTE]: {
     isEditable: false,
   },
+  [WidgetType.AI_CHAT]: {
+    model: 'llama2',
+    temperature: 0.7,
+    maxTokens: 2000,
+    maxContextNotes: 5,
+    showContextPreview: true,
+    autoSaveChats: true,
+    chatHistoryEntityId: undefined,
+  },
 } as const;
 
 /**
@@ -122,6 +156,12 @@ export const WIDGET_CONSTRAINTS: {
     minH: 4,
     maxW: 12,
     maxH: 12,
+  },
+  [WidgetType.AI_CHAT]: {
+    minW: 4,
+    minH: 4,
+    maxW: 12,
+    maxH: 10,
   },
 } as const;
 

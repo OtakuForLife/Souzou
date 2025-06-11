@@ -61,13 +61,24 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     }
   };
 
+  // Create a wrapper for onUpdate that matches the expected signature
+  const handleWidgetUpdate = (updates: Partial<WidgetConfig>) => {
+    if (onUpdate) {
+      onUpdate(widget.id, updates);
+    }
+  };
+
   if (mode === ViewMode.RENDER) {
     // View mode: Full-size content with no header
     return (
       <div className="h-full w-full border rounded-lg shadow-sm overflow-hidden">
         {/* Widget Content - Takes full space */}
         <div className="h-full w-full overflow-hidden">
-          <WidgetRenderer widget={widget} />
+          <WidgetRenderer
+            widget={widget}
+            onUpdate={handleWidgetUpdate}
+            onDelete={() => onDelete?.(widget.id)}
+          />
         </div>
 
         {/* Configuration Modal */}
@@ -119,7 +130,11 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
 
       {/* Widget Content */}
       <div className="flex-1 overflow-hidden relative">
-        <WidgetRenderer widget={widget} />
+        <WidgetRenderer
+          widget={widget}
+          onUpdate={handleWidgetUpdate}
+          onDelete={() => onDelete?.(widget.id)}
+        />
         {/* Overlay to disable interaction in config mode */}
         <div className="absolute inset-0 bg-transparent pointer-events-auto cursor-not-allowed z-10" />
       </div>

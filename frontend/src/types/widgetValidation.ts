@@ -57,12 +57,37 @@ export const NoteWidgetConfigSchema = BaseWidgetConfigSchema.extend({
   }),
 });
 
+
+/**
+ * AI Chat widget configuration schema
+ */
+export const AIChatWidgetConfigSchema = BaseWidgetConfigSchema.extend({
+  type: z.literal(WidgetType.AI_CHAT),
+  config: z.object({
+    // Ollama Settings
+    model: z.string().min(1),
+    temperature: z.number().min(0).max(1),
+    maxTokens: z.number().int().min(100).max(8000).optional(),
+
+    // Context Settings
+    maxContextNotes: z.number().int().min(1).max(20),
+
+    // UI Settings
+    showContextPreview: z.boolean(),
+    autoSaveChats: z.boolean(),
+
+    // Chat History Entity Reference
+    chatHistoryEntityId: z.string().optional(),
+  }),
+});
+
 /**
  * Discriminated union schema for all widget types
  */
 export const WidgetConfigSchema = z.discriminatedUnion('type', [
   GraphWidgetConfigSchema,
   NoteWidgetConfigSchema,
+  AIChatWidgetConfigSchema,
 ]);
 
 /**
@@ -209,4 +234,77 @@ export function formatValidationError(issues: z.ZodIssue[]): string {
   return issues
     .map(issue => `${issue.path.join('.')}: ${issue.message}`)
     .join('; ');
+}
+
+
+/**
+ * Validates AI Chat widget configuration specifically
+ * @param data - Raw AI Chat widget configuration data
+ * @returns Validation result with typed AI Chat widget config
+ */
+export function validateAIChatWidgetConfig(data: unknown): ValidationResult<z.infer<typeof AIChatWidgetConfigSchema>> {
+  try {
+    const result = AIChatWidgetConfigSchema.safeParse(data);
+
+    if (result.success) {
+      return {
+        success: true,
+        data: result.data,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'AI Chat widget configuration validation failed',
+        issues: result.error.issues,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown validation error',
+    };
+  }
+}
+
+/**
+ * Validates AI model configuration
+ * @param config - AI model configuration object
+ * @returns Validation result
+ */
+export function validateAIModelConfig(config: {
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+}): ValidationResult<{
+  model: string;
+  temperature: number;
+  maxTokens?: number;
+}> {
+  try {
+    const schema = z.object({
+      model: z.string().min(1, 'Model name is required'),
+      temperature: z.number().min(0, 'Temperature must be >= 0').max(1, 'Temperature must be <= 1'),
+      maxTokens: z.number().int().min(100, 'Max tokens must be >= 100').max(8000, 'Max tokens must be <= 8000').optional(),
+    });
+
+    const result = schema.safeParse(config);
+
+    if (result.success) {
+      return {
+        success: true,
+        data: result.data,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'AI model configuration validation failed',
+        issues: result.error.issues,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown validation error',
+    };
+  }
 }

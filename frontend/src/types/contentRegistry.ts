@@ -4,6 +4,7 @@ import React from 'react';
 import { EntityType } from '@/models/Entity';
 import NoteRenderer from '@/components/render/note/NoteRenderer';
 import ViewRenderer from '@/components/render/view/ViewRenderer';
+import AIChatHistoryRenderer from '@/components/render/ai-chat-history/AIChatHistoryRenderer';
 import {EntityRendererProps} from '@/components/ContentRenderer'
 
 // Content type metadata
@@ -26,6 +27,10 @@ const entityTypeMetadata: Record<EntityType, EntityTypeMetadata> = {
   [EntityType.VIEW]: {
     type: EntityType.VIEW,
     defaultCreationTitle: 'New Dashboard'
+  },
+  [EntityType.AI_CHAT_HISTORY]: {
+    type: EntityType.AI_CHAT_HISTORY,
+    defaultCreationTitle: 'New AI Chat'
   }
 };
 
@@ -38,6 +43,10 @@ const contentTypeRegistry: Record<EntityType, ContentTypeRegistryEntry> = {
   [EntityType.VIEW]: {
     metadata: entityTypeMetadata[EntityType.VIEW],
     contentComponent: ViewRenderer
+  },
+  [EntityType.AI_CHAT_HISTORY]: {
+    metadata: entityTypeMetadata[EntityType.AI_CHAT_HISTORY],
+    contentComponent: AIChatHistoryRenderer
   },
 };
 
