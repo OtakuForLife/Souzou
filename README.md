@@ -1,6 +1,6 @@
 # 🌿 Souzou – The Calm, Powerful Life Management System
 
-<img src="https://github.com/OtakuForLife/Souzou/blob/main/frontend/public/screenshots/Dashboard.png" width="255" height="255">
+<img src="https://github.com/OtakuForLife/Souzou/blob/main/frontend/public/screenshots/Dashboard.png" height="400">
 
 **Souzou** is your personal digital sanctuary — a powerful yet serene knowledge and life management tool inspired by the best of Obsidian and Notion, but without the clutter and overwhelm.
 
