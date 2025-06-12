@@ -6,6 +6,8 @@
  * compile-time safety.
  */
 
+import { ViewMode } from "@/components/render/view/ViewRenderer";
+
 /**
  * Enumeration of all supported widget types
  */
@@ -148,20 +150,20 @@ export const WIDGET_CONSTRAINTS: {
   [WidgetType.GRAPH]: {
     minW: 3,
     minH: 3,
-    maxW: 12,
-    maxH: 8,
+    maxW: 14,
+    maxH: 14,
   },
   [WidgetType.NOTE]: {
     minW: 3,
-    minH: 4,
-    maxW: 12,
-    maxH: 12,
+    minH: 3,
+    maxW: 14,
+    maxH: 14,
   },
   [WidgetType.AI_CHAT]: {
-    minW: 4,
-    minH: 4,
-    maxW: 12,
-    maxH: 10,
+    minW: 3,
+    minH: 3,
+    maxW: 14,
+    maxH: 14,
   },
 } as const;
 
@@ -286,7 +288,7 @@ export function isValidWidgetType(type: string): type is WidgetType {
  */
 export interface WidgetProps<T extends WidgetType> {
   widget: WidgetConfigForType<T>;
-  mode?: 'render' | 'config';
+  mode?: ViewMode;
   onUpdate?: (updates: Partial<WidgetConfigForType<T>>) => void;
   onDelete?: () => void;
 }
