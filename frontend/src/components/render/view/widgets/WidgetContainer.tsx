@@ -2,7 +2,7 @@
  * WidgetContainer - Wrapper component for individual widgets with header and controls
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Settings, X} from 'lucide-react';
 import { WidgetConfig} from '@/types/widgetTypes';
 import { Button } from '@/components/ui/button';
@@ -62,11 +62,18 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   };
 
   // Create a wrapper for onUpdate that matches the expected signature
-  const handleWidgetUpdate = (updates: Partial<WidgetConfig>) => {
+  const handleWidgetUpdate = useCallback((updates: Partial<WidgetConfig>) => {
     if (onUpdate) {
       onUpdate(widget.id, updates);
     }
-  };
+  }, [onUpdate, widget.id]);
+
+  // Create a stable callback for onDelete
+  const handleWidgetDelete = useCallback(() => {
+    if (onDelete) {
+      onDelete(widget.id);
+    }
+  }, [onDelete, widget.id]);
 
   if (mode === ViewMode.RENDER) {
     // View mode: Full-size content with no header
@@ -77,7 +84,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
           <WidgetRenderer
             widget={widget}
             onUpdate={handleWidgetUpdate}
-            onDelete={() => onDelete?.(widget.id)}
+            onDelete={handleWidgetDelete}
           />
         </div>
 
@@ -133,7 +140,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
         <WidgetRenderer
           widget={widget}
           onUpdate={handleWidgetUpdate}
-          onDelete={() => onDelete?.(widget.id)}
+          onDelete={handleWidgetDelete}
         />
         {/* Overlay to disable interaction in config mode */}
         <div className="absolute inset-0 bg-transparent pointer-events-auto cursor-not-allowed z-10" />

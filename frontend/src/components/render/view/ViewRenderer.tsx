@@ -2,8 +2,9 @@
  * ViewRenderer - Main component for rendering dashboard views with widgets
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { createSelector } from '@reduxjs/toolkit';
 import { Settings, Eye } from 'lucide-react';
 import { RootState } from '@/store';
 import { Entity } from '@/models/Entity';
@@ -32,9 +33,22 @@ export enum ViewMode {
 
 const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
   const dispatch = useAppDispatch();
-  const entity: Entity = useSelector((state: RootState) => state.entities.allEntities[entityID]);
+
+  // Create a memoized selector that only changes when THIS specific entity changes
+  const selectViewEntity = useMemo(() =>
+    createSelector(
+      [(state: RootState) => state.entities.allEntities[entityID]],
+      (entity) => entity
+    ),
+    [entityID]
+  );
+
+  const entity: Entity = useSelector(selectViewEntity);
   const [mode, setMode] = useState<ViewMode>(ViewMode.RENDER);
   const [titleError, setTitleError] = useState<string | undefined>();
+
+  // DEBUG: Log when ViewRenderer renders
+  console.log('🔍 ViewRenderer render - entityID:', entityID, 'entity title:', entity?.title);
 
   if (!entity) {
     return (
@@ -44,25 +58,29 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
     );
   }
 
-  // Parse and validate view content with proper error handling
-  let viewContent: ViewContent;
-  let contentError: string | null = null;
+  // Parse and validate view content with proper error handling - memoized to prevent unnecessary rerenders
+  const { viewContent, contentError } = useMemo(() => {
+    let parsedViewContent: ViewContent;
+    let error: string | null = null;
 
-  if (entity.content) {
-    const validationResult = parseAndValidateViewContent(entity.content);
-    if (validationResult.success) {
-      viewContent = validationResult.data!;
-    } else {
-      console.error('View content validation failed:', validationResult.error);
-      if (validationResult.issues) {
-        console.error('Validation issues:', formatValidationError(validationResult.issues));
+    if (entity.content) {
+      const validationResult = parseAndValidateViewContent(entity.content);
+      if (validationResult.success) {
+        parsedViewContent = validationResult.data!;
+      } else {
+        console.error('View content validation failed:', validationResult.error);
+        if (validationResult.issues) {
+          console.error('Validation issues:', formatValidationError(validationResult.issues));
+        }
+        error = validationResult.error || 'Invalid view content format';
+        parsedViewContent = createDefaultViewContent();
       }
-      contentError = validationResult.error || 'Invalid view content format';
-      viewContent = createDefaultViewContent();
+    } else {
+      parsedViewContent = createDefaultViewContent();
     }
-  } else {
-    viewContent = createDefaultViewContent();
-  }
+
+    return { viewContent: parsedViewContent, contentError: error };
+  }, [entity.content]);
 
   const handleLayoutChange = useCallback((updatedWidgets: WidgetConfig[]) => {
     const updatedViewContent: ViewContent = {
