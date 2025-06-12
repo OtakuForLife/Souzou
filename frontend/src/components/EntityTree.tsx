@@ -1,15 +1,14 @@
 import NoteTreeItem from "./EntityTreeItem";
 import { Entity } from "@/models/Entity";
 import { RootState } from "@/store";
-import { EntityState } from "@/store/slices/entitySlice";
+import { EntityState, selectRootEntities } from "@/store/slices/entitySlice";
 import { useSelector } from "react-redux";
 import { LoadingSpinner } from "@/components/common";
 
 
 export const NoteTree = () => {
-  const noteState: EntityState = useSelector((state: RootState) => state.entities);
-  const notes: Entity[] = noteState.rootEntities;
-  const { loading } = noteState;
+  const notes: Entity[] = useSelector(selectRootEntities);
+  const { loading } = useSelector((state: RootState) => state.entities);
 
   return (
     <div className="relative flex-initial justify-center w-full h-full theme-explorer-background">

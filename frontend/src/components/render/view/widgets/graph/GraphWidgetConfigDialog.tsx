@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { GraphWidgetConfig } from '@/types/widgetTypes';
 import { RootState } from '@/store';
+import { selectRootEntities } from '@/store/slices/entitySlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,7 +30,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
   onClose,
 }) => {
   const allEntities = useSelector((state: RootState) => state.entities.allEntities);
-  const rootEntities = useSelector((state: RootState) => state.entities.rootEntities);
+  const rootEntities = useSelector(selectRootEntities);
 
   // Helper function to get safe config values
   const getSafeConfigValue = (key: keyof typeof widget.config, defaultValue: any) => {

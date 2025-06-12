@@ -25,7 +25,6 @@ export interface WidgetDataResult<TData> {
  */
 export interface WidgetDataContext {
   allEntities: Record<string, any>;
-  rootEntities: any[];
   currentEntityId?: string;
 }
 
@@ -50,7 +49,9 @@ class WidgetDataCache {
     // Remove oldest entries if cache is full
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      if(firstKey){
+        this.cache.delete(firstKey);
+      }
     }
 
     this.cache.set(key, {
@@ -159,10 +160,7 @@ export function useWidgetData<TConfig, TData>(
   const { widgetId = 'unknown', enabled = true, refreshInterval } = options;
   
   // Get data context from Redux store
-  const { allEntities, rootEntities } = useSelector((state: RootState) => ({
-    allEntities: state.entities.allEntities,
-    rootEntities: state.entities.rootEntities
-  }));
+  const allEntities = useSelector((state: RootState) => state.entities.allEntities);
 
   // State management
   const [data, setData] = useState<TData | null>(null);
@@ -193,9 +191,8 @@ export function useWidgetData<TConfig, TData>(
   // Create data context
   const dataContext = useMemo((): WidgetDataContext => ({
     allEntities,
-    rootEntities,
     currentEntityId: widgetId
-  }), [allEntities, rootEntities, widgetId]);
+  }), [allEntities, widgetId]);
 
   // Refresh function
   const refresh = useCallback(() => {

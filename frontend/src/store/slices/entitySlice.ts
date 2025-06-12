@@ -1,6 +1,7 @@
 import { Entity } from '@/models/Entity';
 import { CreateEntityRequest, entityService } from '@/services';
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
+import type { RootState } from '@/store';
 
 
 export const createEntity = createAsyncThunk(
@@ -32,7 +33,6 @@ export const fetchEntities = createAsyncThunk(
 );
 
 interface EntityState {
-  rootEntities: Entity[];
   allEntities: { [id: string]: Entity; };
   dirtyEntityIDs: string[]; // IDs of entities that have been modified but not saved
   loading: boolean;
@@ -40,12 +40,17 @@ interface EntityState {
 }
 
 const initialState: EntityState = {
-  rootEntities: [],
   allEntities: {},
   dirtyEntityIDs: [],
   loading: false,
   error: null,
 }
+
+// Selector to get root entities (entities with no parent)
+export const selectRootEntities = createSelector(
+  [(state: RootState) => state.entities.allEntities],
+  (allEntities) => Object.values(allEntities).filter(entity => entity.parent === null)
+);
 
 export const entitySlice = createSlice({
   name: 'entities',
@@ -98,7 +103,6 @@ export const entitySlice = createSlice({
       .addCase(fetchEntities.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.rootEntities = action.payload.filter((entity: Entity) => entity.parent === null);
         state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
       })
       .addCase(fetchEntities.rejected, (state, action) => {
@@ -117,10 +121,8 @@ export const entitySlice = createSlice({
         // Add the new entity to allEntities
         state.allEntities[newEntity.id] = newEntity;
 
-        // If it's a root entity (no parent), add it to rootEntities
-        if (newEntity.parent === null) {
-          state.rootEntities.push(newEntity);
-        } else {
+        // If it has a parent, add it to parent's children
+        if (newEntity.parent !== null) {
           const parent = state.allEntities[newEntity.parent];
           if (parent) {
             if (!parent.children.includes(newEntity.id)) {
@@ -144,53 +146,31 @@ export const entitySlice = createSlice({
         const savedEntity = action.payload.savedEntity;
         const oldEntity = state.allEntities[savedEntity.id] || { parent: null };
 
-        if (oldEntity.parent === savedEntity.parent) {
-          // Entity's parent didn't change - update in place
-          state.allEntities[savedEntity.id] = savedEntity;
-
-          // Also update in rootEntities if it's a root entity
-          if (savedEntity.parent === null) {
-            const rootIndex = state.rootEntities.findIndex(entity => entity.id === savedEntity.id);
-            if (rootIndex !== -1) {
-              state.rootEntities[rootIndex] = savedEntity;
+        // Handle parent changes
+        if (oldEntity.parent !== savedEntity.parent) {
+          // Remove from old parent's children if it had a parent
+          if (oldEntity.parent !== null) {
+            const oldParent = state.allEntities[oldEntity.parent];
+            if (oldParent) {
+              oldParent.children = oldParent.children.filter(child => child !== savedEntity.id);
+              state.allEntities[oldParent.id] = oldParent;
             }
           }
-        } else {
-          console.log("Entity's parent changed");
-          if (savedEntity.parent === null) {
-            console.log("Entity is now root");
-            // Entity is now root - add to rootEntities
-            if (!state.rootEntities.includes(savedEntity)) {
-              state.rootEntities.push(savedEntity);
-            }
-          } else {
-            console.log("Entity has a new parent");
-            // Entity has a new parent - add to new parent's children
+
+          // Add to new parent's children if it has a new parent
+          if (savedEntity.parent !== null) {
             const newParent = state.allEntities[savedEntity.parent];
             if (newParent && !newParent.children.includes(savedEntity.id)) {
               newParent.children.push(savedEntity.id);
               state.allEntities[newParent.id] = newParent;
             }
           }
-          if (oldEntity.parent !== null) {
-            console.log("Entity had a parent before");
-            // Entity had a parent before - remove from old parent's children
-            const oldParent = state.allEntities[oldEntity.parent];
-            if (oldParent) {
-              oldParent.children = oldParent.children.filter(child => child !== savedEntity.id);
-              state.allEntities[oldParent.id] = oldParent;
-            }
-          } else {
-            console.log("Entity was root before");
-            // Entity was root before - remove from rootEntities
-            if (state.rootEntities.some(entity => entity.id === savedEntity.id)) {
-              console.log("Removing from rootEntities");
-              state.rootEntities = state.rootEntities.filter(entity => entity.id !== savedEntity.id);
-            }
-          }
-          state.allEntities[savedEntity.id] = savedEntity;
         }
 
+        // Update the entity
+        state.allEntities[savedEntity.id] = savedEntity;
+
+        // Remove from dirty entities
         if (state.dirtyEntityIDs.includes(savedEntity.id)) {
           state.dirtyEntityIDs = state.dirtyEntityIDs.filter(id => id !== savedEntity.id);
         }
@@ -206,7 +186,6 @@ export const entitySlice = createSlice({
       .addCase(deleteEntity.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.rootEntities = action.payload.filter((entity: Entity) => entity.parent === null);
         state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
       })
       .addCase(deleteEntity.rejected, (state, action) => {

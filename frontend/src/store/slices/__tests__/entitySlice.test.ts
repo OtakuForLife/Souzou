@@ -21,7 +21,8 @@ const {
   fetchEntities,
   createEntity,
   saveEntity,
-  deleteEntity
+  deleteEntity,
+  selectRootEntities
 } = EntitySlice;
 type EntityState = EntitySlice.EntityState;
 
@@ -70,7 +71,6 @@ describe('entitySlice', () => {
   test('should return the initial state', () => {
     const initialState = reducer(undefined, { type: '' });
     expect(initialState).toEqual({
-      rootEntities: [],
       allEntities: {},
       dirtyEntityIDs: [],
       loading: false,
@@ -81,7 +81,6 @@ describe('entitySlice', () => {
   describe('reducers', () => {
     test('should handle updateEntity', () => {
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
         loading: false,
@@ -104,7 +103,6 @@ describe('entitySlice', () => {
 
     test('should handle changeEntityParent', () => {
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
         loading: false,
@@ -126,7 +124,6 @@ describe('entitySlice', () => {
   describe('dirtyEntityIDs tracking', () => {
     test('should add entity ID to dirtyEntityIDs when updateEntity is called', () => {
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
         loading: false,
@@ -144,7 +141,6 @@ describe('entitySlice', () => {
 
     test('should not duplicate entity ID in dirtyEntityIDs when updating already dirty entity', () => {
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: ['1'], // Entity '1' is already dirty
         loading: false,
@@ -162,7 +158,6 @@ describe('entitySlice', () => {
 
     test('should track multiple dirty entities', () => {
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
         loading: false,
@@ -188,7 +183,6 @@ describe('entitySlice', () => {
 
     test('should handle complete update-save workflow for dirtyEntityIDs', () => {
       const initialState: EntityState = {
-        rootEntities: [mockNote1],
         allEntities: { '1': mockNote1 },
         dirtyEntityIDs: [],
         loading: false,
@@ -230,7 +224,6 @@ describe('entitySlice', () => {
       });
 
       const previousState: EntityState = {
-        rootEntities: [],
         allEntities: {},
         dirtyEntityIDs: [],
         loading: false,
@@ -249,7 +242,6 @@ describe('entitySlice', () => {
       const action = { type: fetchEntities.fulfilled.type, payload: mockNotesWithNullParent };
       const nextState = reducer(previousState, action);
 
-      expect(nextState.rootEntities).toHaveLength(2); // Only notes with parent=null
       expect(Object.keys(nextState.allEntities)).toHaveLength(3);
       expect(nextState.allEntities['1']).toEqual({...mockNote1, parent: null});
       expect(nextState.allEntities['2']).toEqual({...mockNote2, parent: null});
@@ -268,7 +260,6 @@ describe('entitySlice', () => {
       };
 
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
         loading: false,
@@ -287,8 +278,6 @@ describe('entitySlice', () => {
 
       expect(Object.keys(nextState.allEntities)).toHaveLength(3);
       expect(nextState.allEntities['4']).toEqual(newNoteData);
-      expect(nextState.rootEntities).toHaveLength(3);
-      expect(nextState.rootEntities.some(entity => entity.id === '4')).toBe(true);
     });
 
     test('should handle saveEntity.fulfilled', async () => {
@@ -298,7 +287,6 @@ describe('entitySlice', () => {
       const savedEntity = { ...mockRootNote1, title: 'Updated Title' };
 
       const previousState: EntityState = {
-        rootEntities: [mockRootNote1, mockRootNote2],
         allEntities: { '1': mockRootNote1, '2': mockRootNote2, '3': mockNote3 },
         dirtyEntityIDs: [],
         loading: false,
@@ -313,7 +301,6 @@ describe('entitySlice', () => {
       const nextState = reducer(previousState, action);
 
       expect(nextState.allEntities['1'].title).toEqual('Updated Title');
-      expect(nextState.rootEntities.find(entity => entity.id === '1')?.title).toEqual('Updated Title');
     });
 
     test('should remove entity ID from dirtyEntityIDs when saveEntity.fulfilled', async () => {
@@ -321,7 +308,6 @@ describe('entitySlice', () => {
       const savedEntity = { ...mockRootNote1, title: 'Updated Title' };
 
       const previousState: EntityState = {
-        rootEntities: [mockRootNote1],
         allEntities: { '1': mockRootNote1 },
         dirtyEntityIDs: ['1'], // Entity '1' is dirty
         loading: false,
@@ -345,7 +331,6 @@ describe('entitySlice', () => {
       const savedEntity = { ...mockRootNote1, title: 'Updated Title' };
 
       const previousState: EntityState = {
-        rootEntities: [mockRootNote1, mockRootNote2],
         allEntities: { '1': mockRootNote1, '2': mockRootNote2 },
         dirtyEntityIDs: ['1', '2'], // Both entities are dirty
         loading: false,
@@ -369,7 +354,6 @@ describe('entitySlice', () => {
       const savedEntity = { ...mockRootNote1, title: 'Updated Title' };
 
       const previousState: EntityState = {
-        rootEntities: [mockRootNote1],
         allEntities: { '1': mockRootNote1 },
         dirtyEntityIDs: [], // Entity '1' is not dirty
         loading: false,
@@ -401,7 +385,6 @@ describe('entitySlice', () => {
       };
 
       let currentState: EntityState = {
-        rootEntities: [mockEntity],
         allEntities: { [mockEntity.id]: mockEntity },
         dirtyEntityIDs: [],
         loading: false,
@@ -432,7 +415,6 @@ describe('entitySlice', () => {
       const remainingNotes = [mockNote2, mockNote3];
 
       const previousState: EntityState = {
-        rootEntities: [mockNote1, mockNote2],
         allEntities: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
         dirtyEntityIDs: [],
         loading: false,
@@ -448,6 +430,54 @@ describe('entitySlice', () => {
 
       expect(Object.keys(nextState.allEntities)).toHaveLength(2);
       expect(nextState.allEntities['1']).toBeUndefined();
+    });
+  });
+
+  describe('selectors', () => {
+    test('selectRootEntities should return entities with no parent', () => {
+      const mockRootNote1 = { ...mockNote1, parent: null };
+      const mockRootNote2 = { ...mockNote2, parent: null };
+      const mockChildNote = { ...mockNote3, parent: '1' };
+
+      const state = {
+        entities: {
+          allEntities: {
+            '1': mockRootNote1,
+            '2': mockRootNote2,
+            '3': mockChildNote
+          },
+          dirtyEntityIDs: [],
+          loading: false,
+          error: null
+        }
+      } as any;
+
+      const rootEntities = selectRootEntities(state);
+
+      expect(rootEntities).toHaveLength(2);
+      expect(rootEntities.map(e => e.id)).toEqual(['1', '2']);
+      expect(rootEntities.every(e => e.parent === null)).toBe(true);
+    });
+
+    test('selectRootEntities should return empty array when no root entities exist', () => {
+      const mockChildNote1 = { ...mockNote1, parent: '2' };
+      const mockChildNote2 = { ...mockNote2, parent: '1' };
+
+      const state = {
+        entities: {
+          allEntities: {
+            '1': mockChildNote1,
+            '2': mockChildNote2
+          },
+          dirtyEntityIDs: [],
+          loading: false,
+          error: null
+        }
+      } as any;
+
+      const rootEntities = selectRootEntities(state);
+
+      expect(rootEntities).toHaveLength(0);
     });
   });
 });
