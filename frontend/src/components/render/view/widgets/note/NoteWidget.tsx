@@ -25,7 +25,7 @@ interface NoteWidgetProps extends WidgetProps<WidgetType.NOTE> {
  */
 const ReadOnlyNoteContent: React.FC<{ content: string; title: string }> = ({ content, title }) => {
   return (
-    <div className="h-full overflow-y-auto p-4">
+    <div className="h-full overflow-y-auto overflow-x-hidden p-4">
       <div className="prose prose-sm max-w-none">
         <h1 className="text-2xl font-bold mb-4">{title}</h1>
         <div className="whitespace-pre-wrap">{content}</div>
@@ -98,7 +98,7 @@ const NoteWidget: React.FC<NoteWidgetProps> = ({
       {isEditable ? (
         // Editable mode - use NoteEditor
         <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
+          <div className="h-full overflow-y-auto overflow-x-hidden">
             <div className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-xl font-semibold flex-1">

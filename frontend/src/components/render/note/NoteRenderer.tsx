@@ -26,7 +26,7 @@ function NoteRenderer({ entityID }: EntityRendererProps) {
         );
     };
     return (
-        <div className="h-full overflow-y-scroll">
+        <div className="h-full overflow-y-scroll overflow-x-hidden">
             <div className="pb-10">
                 {/* Header with Title */}
                 <div className="flex items-center gap-2 p-4">

@@ -84,6 +84,7 @@ var customTheme = EditorView.theme({
     "&": {
         color: editorText,
         backgroundColor: editorBackground,
+        overflowX: "hidden", // Prevent horizontal scrolling
     },
     ".cm-content": {
         padding: "0",
@@ -91,12 +92,19 @@ var customTheme = EditorView.theme({
         fontSize: "14px",
         lineHeight: "1.6",
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        whiteSpace: "pre-wrap", // Enable text wrapping
+        wordWrap: "break-word", // Break long words if necessary
+        overflowWrap: "break-word", // Modern CSS property for word breaking
     },
     ".cm-focused": {
         outline: "none",
     },
     ".cm-editor": {
         fontSize: "14px",
+        overflowX: "hidden", // Prevent horizontal scrolling on editor
+    },
+    ".cm-scroller": {
+        overflowX: "hidden", // Prevent horizontal scrolling on scroller
     },
     ".cm-cursor": {
         borderLeft: `2px solid ${editorCursor}`,
@@ -111,6 +119,8 @@ var customTheme = EditorView.theme({
     ".cm-line": {
         padding: "0 0 0 0",
         lineHeight: "1.6",
+        whiteSpace: "pre-wrap", // Ensure line wrapping
+        wordWrap: "break-word", // Break long words
     },
 
     // Note link styling

@@ -119,8 +119,9 @@ const NoteEditor: React.FC<Props> = ({
 
   return (
     <div
-      className="px-4"
+      className="px-4 overflow-hidden"
       ref={editorRef}
+      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
     />
   );
 };

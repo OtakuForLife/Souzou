@@ -10,7 +10,8 @@ import {
     dropCursor,
     rectangularSelection,
     crosshairCursor,
-    keymap } from "@codemirror/view";
+    keymap,
+    EditorView } from "@codemirror/view";
 import {
     autocompletion,
     completionKeymap,
@@ -27,6 +28,8 @@ const baseExtensions = [
   // A gutter with code folding markers
   //foldGutter(),
   markdown(),
+  // Enable line wrapping for long text
+  EditorView.lineWrapping,
   // Replace non-printable characters with placeholders
   highlightSpecialChars(),
   // The undo history
