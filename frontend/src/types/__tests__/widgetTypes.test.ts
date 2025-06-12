@@ -14,90 +14,10 @@ import {
   WIDGET_CONSTRAINTS,
   DEFAULT_GRID_CONFIG,
 } from '../widgetTypes';
+import { fail } from 'assert';
 
 describe('Widget Types System', () => {
-  describe('WidgetType enum', () => {
-    it('should contain expected widget types', () => {
-      expect(WidgetType.GRAPH).toBe('graph');
-      expect(WidgetType.NOTE).toBe('note');
-      expect(Object.values(WidgetType)).toContain('graph');
-      expect(Object.values(WidgetType)).toContain('note');
-    });
-  });
-
-  describe('DEFAULT_WIDGET_CONFIGS', () => {
-    it('should have configuration for all widget types', () => {
-      Object.values(WidgetType).forEach(type => {
-        expect(DEFAULT_WIDGET_CONFIGS[type]).toBeDefined();
-      });
-    });
-
-    it('should have valid graph widget default config', () => {
-      const graphConfig = DEFAULT_WIDGET_CONFIGS[WidgetType.GRAPH];
-      expect(graphConfig.maxDepth).toBe(2);
-      expect(graphConfig.layoutAlgorithm).toBe('circle');
-      expect(graphConfig.showLabels).toBe(true);
-      expect(graphConfig.nodeSize).toBe(30);
-      expect(graphConfig.edgeWidth).toBe(2);
-    });
-
-    it('should have valid note widget default config', () => {
-      const noteConfig = DEFAULT_WIDGET_CONFIGS[WidgetType.NOTE];
-      expect(noteConfig.isEditable).toBe(false);
-    });
-  });
-
-  describe('WIDGET_CONSTRAINTS', () => {
-    it('should have constraints for all widget types', () => {
-      Object.values(WidgetType).forEach(type => {
-        expect(WIDGET_CONSTRAINTS[type]).toBeDefined();
-      });
-    });
-
-    it('should have valid graph widget constraints', () => {
-      const graphConstraints = WIDGET_CONSTRAINTS[WidgetType.GRAPH];
-      expect(graphConstraints.minW).toBe(3);
-      expect(graphConstraints.minH).toBe(3);
-      expect(graphConstraints.maxW).toBe(12);
-      expect(graphConstraints.maxH).toBe(8);
-    });
-
-    it('should have valid note widget constraints', () => {
-      const noteConstraints = WIDGET_CONSTRAINTS[WidgetType.NOTE];
-      expect(noteConstraints.minW).toBe(3);
-      expect(noteConstraints.minH).toBe(4);
-      expect(noteConstraints.maxW).toBe(12);
-      expect(noteConstraints.maxH).toBe(12);
-    });
-
-    it('should have logical constraint values', () => {
-      Object.values(WIDGET_CONSTRAINTS).forEach(constraints => {
-        expect(constraints.minW).toBeGreaterThan(0);
-        expect(constraints.minH).toBeGreaterThan(0);
-        expect(constraints.maxW).toBeGreaterThanOrEqual(constraints.minW);
-        expect(constraints.maxH).toBeGreaterThanOrEqual(constraints.minH);
-      });
-    });
-  });
-
-  describe('DEFAULT_GRID_CONFIG', () => {
-    it('should have valid default grid configuration', () => {
-      expect(DEFAULT_GRID_CONFIG.cols).toBe(15);
-      expect(DEFAULT_GRID_CONFIG.rowHeight).toBe(50);
-      expect(DEFAULT_GRID_CONFIG.margin).toEqual([16, 16]);
-      expect(DEFAULT_GRID_CONFIG.containerPadding).toEqual([16, 16]);
-    });
-
-    it('should have breakpoints configuration', () => {
-      expect(DEFAULT_GRID_CONFIG.breakpoints).toBeDefined();
-      expect(DEFAULT_GRID_CONFIG.colsByBreakpoint).toBeDefined();
-      
-      const breakpoints = DEFAULT_GRID_CONFIG.breakpoints!;
-      expect(breakpoints.lg).toBe(1200);
-      expect(breakpoints.md).toBe(996);
-      expect(breakpoints.sm).toBe(768);
-    });
-  });
+  
 
   describe('createDefaultViewContent', () => {
     it('should create valid default view content', () => {

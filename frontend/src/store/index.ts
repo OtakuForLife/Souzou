@@ -2,16 +2,21 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import themeReducer from './slices/themeSlice'
 import entityReducer from './slices/entitySlice'
 import tabsReducer from './slices/tabsSlice'
+import entityLinkReducer from './slices/entityLinkSlice'
+import { entityLinkMiddleware } from './middleware/entityLinkMiddleware'
 
 const rootReducer = combineReducers({
   themes: themeReducer,
   entities: entityReducer,
   tabs: tabsReducer,
+  entityLink: entityLinkReducer,
 })
 
 export function setupStore(preloadedState?: Partial<RootState>) {
   return configureStore({
     reducer: rootReducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(entityLinkMiddleware),
     preloadedState
   })
 }

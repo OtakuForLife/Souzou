@@ -2,14 +2,12 @@
  * GraphWidget - Graph visualization widget using Cytoscape
  */
 
-import React, { useMemo, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useMemo, useEffect, useState, memo } from 'react';
 import ReactCytoscape from '@/components/Cytoscape';
 import { GraphWidgetConfig } from '@/types/widgetTypes';
-import { RootState } from '@/store';
 import { linkParsingService } from '@/services/linkParsingService';
-import { Entity } from '@/models/Entity';
-import { selectRootEntities } from '@/store/slices/entitySlice';
+import { useStableLinkData } from '@/hooks/useStableLinkData';
+import { LinkEntityData } from '@/store/slices/entityLinkSlice';
 
 // Link types for graph edges
 enum LinkType {
@@ -27,7 +25,7 @@ interface TraversalContext {
 
 // Entity with depth information for hierarchy-based traversal
 interface EntityWithDepth {
-  entity: Entity;
+  entity: LinkEntityData;
   depth: number;
 }
 
@@ -39,7 +37,7 @@ interface GraphWidgetProps {
 }
 
 // Helper function to get all children of an entity
-const getChildEntities = (entityId: string, allEntities: Record<string, Entity>): Entity[] => {
+const getChildEntities = (entityId: string, allEntities: Record<string, LinkEntityData>): LinkEntityData[] => {
   return Object.values(allEntities).filter(entity => entity.parent === entityId);
 };
 
@@ -49,7 +47,7 @@ const createEdgeId = (sourceId: string, targetId: string, linkType: LinkType): s
 };
 
 // Helper function to add node to context
-const addNodeToContext = (entity: Entity, depth: number, context: TraversalContext): void => {
+const addNodeToContext = (entity: LinkEntityData, depth: number, context: TraversalContext): void => {
   if (!context.nodes.has(entity.id)) {
     context.nodes.set(entity.id, {
       data: {
@@ -82,12 +80,15 @@ const addEdgeToContext = (sourceId: string, targetId: string, linkType: LinkType
   }
 };
 
-const GraphWidget: React.FC<GraphWidgetProps> = ({
+const GraphWidget: React.FC<GraphWidgetProps> = memo(({
   widget,
 }) => {
-  const allEntities = useSelector((state: RootState) => state.entities.allEntities);
-  const rootEntities = useSelector(selectRootEntities);
+  // Use stable link data that only changes when actual link data changes
+  const { linkData, rootEntities } = useStableLinkData();
   const [graphElements, setGraphElements] = useState<any[]>([]);
+
+  // DEBUG: Log when GraphWidget renders (remove in production)
+  // console.log('🔍 GraphWidget render - widget.id:', widget.id);
 
   // Generate graph elements based on widget configuration
   useEffect(() => {
@@ -104,8 +105,8 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
       };
 
       // Determine starting entities (root entities or specific entity)
-      const startingEntities: EntityWithDepth[] = rootEntityId && allEntities[rootEntityId]
-        ? [{ entity: allEntities[rootEntityId], depth: 0 }]
+      const startingEntities: EntityWithDepth[] = rootEntityId && linkData[rootEntityId]
+        ? [{ entity: linkData[rootEntityId], depth: 0 }]
         : rootEntities.map(entity => ({ entity, depth: 0 }));
 
       if (startingEntities.length === 0) {
@@ -129,11 +130,11 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
 
         // Process markdown links from entity content
         if (entity.content) {
-          const linkResult = linkParsingService.parseLinks(entity.content, allEntities);
+          const linkResult = linkParsingService.parseLinks(entity.content, linkData as any);
 
           linkResult.links.forEach(link => {
-            if (link.targetNoteId && allEntities[link.targetNoteId]) {
-              const targetEntity = allEntities[link.targetNoteId];
+            if (link.targetNoteId && linkData[link.targetNoteId]) {
+              const targetEntity = linkData[link.targetNoteId];
 
               // Add target node if not already added and within depth limit
               if (!context.visitedEntities.has(link.targetNoteId) && depth < effectiveMaxDepth) {
@@ -148,8 +149,8 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
         }
 
         // Process parent relationship (child → parent)
-        if (entity.parent && allEntities[entity.parent]) {
-          const parentEntity = allEntities[entity.parent];
+        if (entity.parent && linkData[entity.parent]) {
+          const parentEntity = linkData[entity.parent];
 
           // Add parent node if not already added and within depth limit
           if (!context.visitedEntities.has(entity.parent) && depth < effectiveMaxDepth) {
@@ -162,7 +163,7 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
         }
 
         // Process children relationships (discover all children)
-        const childEntities = getChildEntities(entity.id, allEntities);
+        const childEntities = getChildEntities(entity.id, linkData);
         childEntities.forEach(childEntity => {
           // Add child node if not already added and within depth limit
           if (!context.visitedEntities.has(childEntity.id) && depth < effectiveMaxDepth) {
@@ -180,7 +181,7 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
     };
 
     setGraphElements(generateGraphElements());
-  }, [widget.config, allEntities, rootEntities]);
+  }, [widget.config, linkData, rootEntities]);
 
   // Memoize layout configuration
   const layout = useMemo(() => ({
@@ -272,6 +273,10 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({
       />
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison: only rerender if widget config actually changes
+  return JSON.stringify(prevProps.widget.config) === JSON.stringify(nextProps.widget.config) &&
+         prevProps.widget.id === nextProps.widget.id;
+});
 
 export default GraphWidget;
