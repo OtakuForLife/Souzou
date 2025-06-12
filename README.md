@@ -29,31 +29,17 @@ With a self-hostable server that provides a REST API, you can easily trigger aut
 - **Database**: Compared to multiple plain text files, Souzou uses a database to store your data. This allows for more complex functionality and relationships between your data with increased performance.
 ---
 
-## Project Feature Status
+## Current features
 
- - [x] Simplle Markdown Editor with CRUD Operations for Notes
- - [x] Tab System
- - [x] Folders are Notes
- - [ ] Note Linking
- - [ ] Tags / Nested Tags
- - [ ] Calendar
- - [ ] External Calendar Integration
- - [ ] Graph View for Notes with Relationships
- - [ ] Introduction of Views (Pages that can be created; Widgets can be added with Drag and Drop)
- - [ ] Introduction of Widgets
-      - [ ] Single Note Widget
-          - includes a specific Note
-          - Readonly OR Writable
-      - [ ] Graph View Widget
-      - [ ] Calendar Widget
-          - [ ] Show Upcoming Events (Today, This Week, This Month)
-          - [ ] Show Overview
-      - [ ] Quick Actions Widget
-  - [ ] Simple Global Search
-  - [ ] Advanced Search with Filters
-  - [ ] Media Integration
-  - [ ] AI Integration with AG-UI
-  - [ ] ...
+ - Simple Markdown Editor with Note linking
+ - Themes
+ - Notes-inside-Notes Hierarchy
+ - 3 Entity Types
+    - Markdown Notes
+    - Views
+    - AI Chat History (for now only Ollama provider supported)
+ - familiar Layout
+ - Build Customizable Dashboards (Views) with Widgets (Graph Widget, Note Widget, AI Chat Widget)
 
 ---
 
