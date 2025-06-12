@@ -21,15 +21,7 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
 
 ---
 
-## Design Choices
-
-- **Web-based**: Souzou is designed to be accessible from anywhere, on any device but is not designed to be local-first. 
-*Why?*
-With a self-hostable server that provides a REST API, you can easily trigger automations and integrations with other services from outside.
-- **Database**: Compared to multiple plain text files, Souzou uses a database to store your data. This allows for more complex functionality and relationships between your data with increased performance.
----
-
-## Current features
+## 🚀 Features
 
  - Simple Markdown Editor with Note linking
  - Themes
