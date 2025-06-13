@@ -139,98 +139,96 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
   }, [dispatch, entityID, viewContent]);
 
   return (
-    <div className="h-full w-full overflow-y-auto">
-      <div className="pb-8">
-        {/* View Header with Mode Switch */}
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
-            <Input
-              className="text-4xl h-15 p-0 py-1"
-              value={entity?.title}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const newTitle = e.currentTarget.value;
+    <div className="w-full h-full flex flex-col">
+      {/* View Header with Mode Switch */}
+      <div className="flex-shrink-0 flex items-center justify-between p-4 pb-0">
+        <div className="flex items-center gap-4">
+          <Input
+            className="text-4xl h-15 p-0 py-1"
+            value={entity?.title}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const newTitle = e.currentTarget.value;
 
-                // Validate title
-                const validation = validateNoteTitle(newTitle);
-                if (!validation.isValid) {
-                  setTitleError(validation.error);
-                } else {
-                  setTitleError(undefined);
-                }
+              // Validate title
+              const validation = validateNoteTitle(newTitle);
+              if (!validation.isValid) {
+                setTitleError(validation.error);
+              } else {
+                setTitleError(undefined);
+              }
 
-                // Update note in store immediately for UI responsiveness
-                dispatch(
-                  updateEntity({
-                    noteID: entity?.id,
-                    title: newTitle,
-                    content: entity?.content,
-                    parent: entity?.parent,
-                  }),
-                );
-              }}
-            />
-            {titleError && (
-              <div className="text-sm mt-1 px-1">
-                {titleError}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 theme-explorer-background theme-explorer-item-text">
-            {/* Add Widget Button (only in config mode) */}
-            {mode === ViewMode.CONFIG && (
-              <AddWidgetButton
-                onAddWidget={handleAddWidget}
-                className="theme-explorer-background theme-explorer-item-text"
-              />
-            )}
-
-            {/* Mode Switch */}
-            <div className="flex items-center border rounded-md">
-              <Button
-                variant={mode === ViewMode.RENDER ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setMode(ViewMode.RENDER)}
-                className="rounded-r-none"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View
-              </Button>
-              <Button
-                variant={mode === ViewMode.CONFIG ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setMode(ViewMode.CONFIG)}
-                className="rounded-l-none border-l"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Error Display */}
-        {contentError && (
-          <div className="mx-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <div className="text-red-800 text-sm">
-              <strong>Content Error:</strong> {contentError}
-            </div>
-            <div className="text-red-600 text-xs mt-1">
-              Using default configuration. Please check the view content format.
-            </div>
-          </div>
-        )}
-
-        {/* Grid Layout Container */}
-        <div className="px-4">
-          <GridLayout
-            viewContent={viewContent}
-            onLayoutChange={handleLayoutChange}
-            onWidgetUpdate={handleWidgetUpdate}
-            onWidgetDelete={handleWidgetDelete}
-            mode={mode}
+              // Update note in store immediately for UI responsiveness
+              dispatch(
+                updateEntity({
+                  noteID: entity?.id,
+                  title: newTitle,
+                  content: entity?.content,
+                  parent: entity?.parent,
+                }),
+              );
+            }}
           />
+          {titleError && (
+            <div className="text-sm mt-1 px-1">
+              {titleError}
+            </div>
+          )}
         </div>
+
+        <div className="flex items-center gap-2 theme-explorer-background theme-explorer-item-text">
+          {/* Add Widget Button (only in config mode) */}
+          {mode === ViewMode.CONFIG && (
+            <AddWidgetButton
+              onAddWidget={handleAddWidget}
+              className="theme-explorer-background theme-explorer-item-text"
+            />
+          )}
+
+          {/* Mode Switch */}
+          <div className="flex items-center border rounded-md">
+            <Button
+              variant={mode === ViewMode.RENDER ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setMode(ViewMode.RENDER)}
+              className="rounded-r-none"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View
+            </Button>
+            <Button
+              variant={mode === ViewMode.CONFIG ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setMode(ViewMode.CONFIG)}
+              className="rounded-l-none border-l"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Error Display */}
+      {contentError && (
+        <div className="flex-shrink-0 mx-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <div className="text-red-800 text-sm">
+            <strong>Content Error:</strong> {contentError}
+          </div>
+          <div className="text-red-600 text-xs mt-1">
+            Using default configuration. Please check the view content format.
+          </div>
+        </div>
+      )}
+
+      {/* Grid Layout Container - Takes remaining space and handles its own scrolling */}
+      <div className="flex-1 min-h-0">
+        <GridLayout
+          viewContent={viewContent}
+          onLayoutChange={handleLayoutChange}
+          onWidgetUpdate={handleWidgetUpdate}
+          onWidgetDelete={handleWidgetDelete}
+          mode={mode}
+        />
       </div>
     </div>
   );

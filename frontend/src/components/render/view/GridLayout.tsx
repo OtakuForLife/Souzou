@@ -109,36 +109,39 @@ const GridLayout: React.FC<GridLayoutProps> = ({
   }
 
   return (
-    <div className="min-h-full p-0">
-      <ReactGridLayout
-        className="layout"
-        layout={layoutItems}
-        cols={viewContent.layout.cols}
-        rowHeight={viewContent.layout.rowHeight}
-        margin={viewContent.layout.margin}
-        containerPadding={viewContent.layout.containerPadding}
-        onLayoutChange={handleLayoutChange}
-        onDragStart={handleDragStart}
-        onDragStop={handleDragStop}
-        onResizeStop={handleResizeStop}
-        isDraggable={mode == ViewMode.CONFIG && !hasOpenModal}
-        isResizable={mode == ViewMode.CONFIG && !hasOpenModal}
-        useCSSTransforms={true}
-        preventCollision={false}
-        compactType="vertical"
-      >
-        {viewContent.widgets.map(widget => (
-          <div key={widget.id} className="widget-grid-item">
-            <WidgetContainer
-              widget={widget}
-              onUpdate={onWidgetUpdate}
-              onDelete={onWidgetDelete}
-              mode={mode}
-              onConfigModalChange={handleConfigModalChange}
-            />
-          </div>
-        ))}
-      </ReactGridLayout>
+    <div className="h-full w-full overflow-y-auto overflow-x-hidden">
+      <div className="p-0 min-h-full">
+        <ReactGridLayout
+          className="layout"
+          layout={layoutItems}
+          cols={viewContent.layout.cols}
+          rowHeight={viewContent.layout.rowHeight}
+          margin={viewContent.layout.margin}
+          containerPadding={viewContent.layout.containerPadding}
+          onLayoutChange={handleLayoutChange}
+          onDragStart={handleDragStart}
+          onDragStop={handleDragStop}
+          onResizeStop={handleResizeStop}
+          isDraggable={mode == ViewMode.CONFIG && !hasOpenModal}
+          isResizable={mode == ViewMode.CONFIG && !hasOpenModal}
+          useCSSTransforms={true}
+          preventCollision={false}
+          compactType="vertical"
+          autoSize={true}
+        >
+          {viewContent.widgets.map(widget => (
+            <div key={widget.id} className="widget-grid-item">
+              <WidgetContainer
+                widget={widget}
+                onUpdate={onWidgetUpdate}
+                onDelete={onWidgetDelete}
+                mode={mode}
+                onConfigModalChange={handleConfigModalChange}
+              />
+            </div>
+          ))}
+        </ReactGridLayout>
+      </div>
     </div>
   );
 };

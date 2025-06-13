@@ -150,31 +150,31 @@ export const WIDGET_CONSTRAINTS: {
   [WidgetType.GRAPH]: {
     minW: 3,
     minH: 3,
-    maxW: 14,
-    maxH: 14,
+    maxW: 20,
+    maxH: 20,
   },
   [WidgetType.NOTE]: {
     minW: 3,
     minH: 3,
-    maxW: 14,
-    maxH: 14,
+    maxW: 20,
+    maxH: 20,
   },
   [WidgetType.AI_CHAT]: {
     minW: 3,
     minH: 3,
-    maxW: 14,
-    maxH: 14,
+    maxW: 20,
+    maxH: 20,
   },
 } as const;
 
 // Default grid layout configuration
 export const DEFAULT_GRID_CONFIG = {
-  cols: 15,
-  rowHeight: 50,
+  cols: 20,
+  rowHeight: 25,
   margin: [16, 16] as [number, number],
   containerPadding: [16, 16] as [number, number],
   breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
-  colsByBreakpoint: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
+  colsByBreakpoint: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 1 },
 } as const;
 
 /**

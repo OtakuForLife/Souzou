@@ -32,14 +32,14 @@ export default function TabContentGroup() {
       onValueChange={onTabChange}
       activationMode="manual"
     >
-      <TabsList className="flex justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
+      <TabsList className="flex-shrink-0 flex justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
         <SortableContext items={openTabIDs} strategy={rectSortingStrategy}>
           {tabsState.openTabs.map((tabId: string) => (
             <EntityTabTrigger key={tabId} entityID={tabId} />
           ))}
         </SortableContext>
       </TabsList>
-      <div className="theme-main-content-background theme-main-content-text h-full">
+      <div className="flex-1 min-h-0 theme-main-content-background theme-main-content-text">
         {tabsState.openTabs.map((tabId: string) => {
           const entity = allEntities[tabId];
           return entity ? (
