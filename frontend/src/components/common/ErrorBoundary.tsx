@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { log } from '@/lib/logger';
 import { ERROR_MESSAGES } from '@/config/constants';
 
