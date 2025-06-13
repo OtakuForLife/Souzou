@@ -192,60 +192,87 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
     animationDuration: 500,
   }), [widget.config.layoutAlgorithm]);
 
-  // Memoize style configuration
-  const style = useMemo(() => [
-    {
-      selector: 'node',
-      style: {
-        'background-color': '#666',
-        'label': widget.config.showLabels ? 'data(label)' : '',
-        'text-valign': 'center',
-        'text-halign': 'center',
-        'color': '#fff',
-        'font-size': '12px',
-        'width': widget.config.nodeSize,
-        'height': widget.config.nodeSize,
-      }
-    },
-    {
-      selector: 'edge',
-      style: {
-        'width': widget.config.edgeWidth,
-        'line-color': '#ccc',
-        'target-arrow-color': '#ccc',
-        'target-arrow-shape': 'triangle',
-        'curve-style': 'bezier'
-      }
-    },
-    {
-      selector: 'node[type="note"]',
-      style: {
-        'background-color': '#3b82f6',
-      }
-    },
-    {
-      selector: 'node[type="view"]',
-      style: {
-        'background-color': '#10b981',
-      }
-    },
-    {
-      selector: 'edge[type="markdown"]',
-      style: {
-        'line-color': '#3b82f6',
-        'target-arrow-color': '#3b82f6',
-        'line-style': 'solid',
-      }
-    },
-    {
-      selector: 'edge[type="child-to-parent"]',
-      style: {
-        'line-color': '#10b981',
-        'target-arrow-color': '#10b981',
-        'line-style': 'dashed',
-      }
+  // Get current theme colors from CSS variables
+  const getThemeColor = (cssVar: string, fallback: string) => {
+    if (typeof window !== 'undefined') {
+      const value = getComputedStyle(document.documentElement)
+        .getPropertyValue(cssVar)
+        .trim();
+      return value || fallback;
     }
-  ], [widget.config]);
+    return fallback;
+  };
+
+  // Memoize style configuration
+  const style = useMemo(() => {
+    const textColor = getThemeColor('--color-main-content-text', '#ffffff');
+    const backgroundColor = getThemeColor('--color-explorer-background', '#666666');
+
+    return [
+      {
+        selector: 'node',
+        style: {
+          'background-color': '#666',
+          'label': widget.config.showLabels ? 'data(label)' : '',
+          'text-valign': 'bottom',
+          'text-halign': 'center',
+          'text-margin-y': 10, // Add some spacing between node and label
+          'color': textColor,
+          'font-size': '11px',
+          'font-weight': '600',
+          'text-outline-width': 2,
+          'text-outline-color': backgroundColor,
+          'text-outline-opacity': 0.9,
+          'text-max-width': '100px',
+          'text-wrap': 'wrap',
+          'text-background-color': backgroundColor,
+          'text-background-opacity': 0.8,
+          'text-background-padding': '2px',
+          'text-border-radius': '3px',
+          'width': widget.config.nodeSize,
+          'height': widget.config.nodeSize,
+        }
+      },
+      {
+        selector: 'edge',
+        style: {
+          'width': widget.config.edgeWidth,
+          'line-color': '#ccc',
+          'target-arrow-color': '#ccc',
+          'target-arrow-shape': 'triangle',
+          'curve-style': 'bezier'
+        }
+      },
+      {
+        selector: 'node[type="note"]',
+        style: {
+          'background-color': '#3b82f6',
+        }
+      },
+      {
+        selector: 'node[type="view"]',
+        style: {
+          'background-color': '#10b981',
+        }
+      },
+      {
+        selector: 'edge[type="markdown"]',
+        style: {
+          'line-color': '#3b82f6',
+          'target-arrow-color': '#3b82f6',
+          'line-style': 'solid',
+        }
+      },
+      {
+        selector: 'edge[type="child-to-parent"]',
+        style: {
+          'line-color': '#10b981',
+          'target-arrow-color': '#10b981',
+          'line-style': 'dashed',
+        }
+      }
+    ];
+  }, [widget.config]);
 
   // Memoize cytoscape options
   const cytoscapeOptions = useMemo(() => ({
