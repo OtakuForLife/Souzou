@@ -46,6 +46,7 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
   - Tailwind CSS
   - Shadcn UI
   - Vitest
+  - CodeMirror
 
 - **Backend**
   - Python
@@ -68,15 +69,6 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
 *Coming soon...*
 
 Step-by-step instructions to build and run Souzou locally will be added here.
-
----
-
-## 📬 Get Involved
-
-Souzou is in active development. Contributions, feedback, and ideas are always welcome!
-
-- ⭐ Star this repo to support the project  
-- 🛠️ Open an issue to report bugs or suggest features  
 
 ---
 
