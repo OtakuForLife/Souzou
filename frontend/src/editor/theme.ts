@@ -222,6 +222,60 @@ var customTheme = EditorView.theme({
     ".cm-tooltip-autocomplete .cm-completionLabel[data-type='note-id']": {
         color: syntaxString,
     },
+
+    // Checkbox styling for live preview
+    ".cm-checkbox-widget": {
+        display: "inline-block",
+        verticalAlign: "middle",
+        marginRight: "6px",
+        cursor: "pointer",
+        position: "relative",
+        top: "-1px",
+    },
+
+    ".cm-checkbox-widget input[type='checkbox']": {
+        width: "16px",
+        height: "16px",
+        margin: "0",
+        cursor: "pointer",
+        appearance: "none",
+        border: `2px solid ${syntaxComment}`,
+        borderRadius: "3px",
+        backgroundColor: "transparent",
+        transition: "all 0.15s ease",
+    },
+
+    ".cm-checkbox-widget input[type='checkbox']:checked": {
+        backgroundColor: syntaxKeyword,
+        borderColor: syntaxKeyword,
+    },
+
+    ".cm-checkbox-widget input[type='checkbox']:checked::before": {
+        content: "✓",
+        position: "absolute",
+        left: "2px",
+        top: "-1px",
+        fontSize: "11px",
+        color: editorBackground,
+        fontWeight: "bold",
+    },
+
+    ".cm-checkbox-widget input[type='checkbox']:hover": {
+        borderColor: syntaxKeyword,
+        transform: "scale(1.05)",
+    },
+
+    // Hide the markdown checkbox syntax when rendered as widget
+    ".cm-checkbox-hidden": {
+        display: "none",
+    },
+
+    // Style for the checkbox line when checked
+    ".cm-checkbox-line-checked": {
+        textDecoration: "line-through",
+        opacity: "0.6",
+        color: syntaxComment,
+    },
 });
 
 export { markdownHighlightStyle, customTheme };

@@ -20,6 +20,7 @@ import {
 import { lintKeymap } from "@codemirror/lint"
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search"
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
+import { checkboxPlugin } from "./checkboxExtension"
 
 
 const baseExtensions = [
@@ -58,6 +59,8 @@ const baseExtensions = [
   //highlightActiveLineGutter(),
   // Highlight text that matches the selected text
   highlightSelectionMatches(),
+  // Obsidian-style checkbox live preview
+  checkboxPlugin,
   keymap.of([
     // Closed-brackets aware backspace
     ...closeBracketsKeymap,
