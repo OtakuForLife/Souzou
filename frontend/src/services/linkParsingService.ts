@@ -51,7 +51,7 @@ class LinkParsingService {
   }
 
   /**
-   * Parse [[Note Title]] style links
+   * Parse [[noteID]] style links
    */
   private parseWikiLinks(content: string, allNotes: Record<string, Entity>): ParsedLink[] {
     const links: ParsedLink[] = [];
@@ -61,16 +61,18 @@ class LinkParsingService {
     while ((match = wikiLinkRegex.exec(content)) !== null) {
       const from = match.index;
       const to = match.index + match[0].length;
-      const noteTitle = match[1].trim();
+      const noteId = match[1].trim();
 
-      const targetNote = this.findNoteByTitle(noteTitle, allNotes);
+      // Look up the note by ID
+      const targetNote = allNotes[noteId] || null;
+      const displayText = targetNote ? targetNote.title : `Unknown Note (${noteId})`;
 
       links.push({
         from,
         to,
         type: 'wiki',
-        displayText: noteTitle,
-        targetIdentifier: noteTitle,
+        displayText,
+        targetIdentifier: noteId,
         targetNoteId: targetNote?.id,
         isValid: !!targetNote
       });
@@ -234,10 +236,10 @@ class LinkParsingService {
   }
 
   /**
-   * Create a wiki-style link
+   * Create a wiki-style link using note ID
    */
-  createWikiLink(noteTitle: string): string {
-    return `[[${noteTitle}]]`;
+  createWikiLink(noteId: string): string {
+    return `[[${noteId}]]`;
   }
 
   /**

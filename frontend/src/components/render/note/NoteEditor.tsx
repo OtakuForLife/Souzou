@@ -7,10 +7,12 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { useSelector } from "react-redux";
 
 import { baseExtensions } from "@/editor/extensions";
-import { hideMarkdownSyntax } from "@/editor/plugins";
+import { hideMarkdownSyntax } from "@/editor/hideSyntax";
 import { markdownHighlightStyle, customTheme } from "@/editor/theme";
 import { createCombinedLinkCompletion } from "@/editor/linkCompletion";
 import { createLinkDecorations } from "@/editor/linkDecorations";
+import { createWikiLinkDisplay } from "@/editor/wikiLinkDisplay";
+import { createWikiLinkSyntax } from "@/editor/wikiLinkSyntax";
 import { RootState } from "@/store";
 import { useAppDispatch } from "@/hooks";
 import { openTab } from "@/store/slices/tabsSlice";
@@ -76,6 +78,8 @@ const NoteEditor: React.FC<Props> = ({
     });
     const linkCompletion = createCombinedLinkCompletion(getNotesData);
     const linkDecorations = createLinkDecorations(() => notesRef.current, handleLinkClick);
+    const wikiLinkDisplay = createWikiLinkDisplay(() => notesRef.current, handleLinkClick);
+    const wikiLinkSyntax = createWikiLinkSyntax(() => notesRef.current);
 
     const state = EditorState.create({
       doc: initialText,
@@ -83,9 +87,11 @@ const NoteEditor: React.FC<Props> = ({
         ...baseExtensions,
         syntaxHighlighting(markdownHighlightStyle),
         hideMarkdownSyntax,
+        wikiLinkSyntax, // Add wiki link syntax styling (for raw text)
+        wikiLinkDisplay, // Add wiki link display (should come before linkDecorations)
         updateListener,
         customTheme,
-        linkDecorations, // Add link decorations
+        linkDecorations,
         autocompletion({ override: [linkCompletion] }), // Add link completion
       ],
     });

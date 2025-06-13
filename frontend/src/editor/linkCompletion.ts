@@ -79,7 +79,7 @@ export function createNoteLinkCompletion(
         options: suggestions.map((note: NoteSuggestion) => ({
           label: note.title,
           type: "text",
-          apply: `${note.title}]]`, // Complete the wiki link
+          apply: `${note.id}]]`, // Complete with note ID instead of title
           detail: "Note",
           info: `Link to: ${note.title}`,
           boost: note.title.toLowerCase().startsWith(query.toLowerCase()) ? 1 : 0,
@@ -280,7 +280,7 @@ function handleWikiCompletion(
       options: suggestions.map((note: NoteSuggestion) => ({
         label: note.title,
         type: "text",
-        apply: `${note.title}`, // Complete the wiki link
+        apply: `${note.id}`, // Complete with note ID instead of title
         detail: "Note",
         info: `Link to: ${note.title}`,
         boost: note.title.toLowerCase().startsWith(query.toLowerCase()) ? 1 : 0

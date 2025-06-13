@@ -40,24 +40,38 @@ const mockNotes: Record<string, Entity> = {
 
 describe('LinkParsingService', () => {
   describe('parseLinks', () => {
-    it('should parse wiki-style links correctly', () => {
-      const content = 'Check out [[First Note]] and [[Second Note]] for more info.';
+    it('should parse ID-based wiki-style links correctly', () => {
+      const content = 'Check out [[note-1]] and [[note-2]] for more info.';
       const result = linkParsingService.parseLinks(content, mockNotes);
-      
+
       expect(result.links).toHaveLength(2);
       expect(result.links[0]).toMatchObject({
         type: 'wiki',
-        displayText: 'First Note',
-        targetIdentifier: 'First Note',
+        displayText: 'First Note', // Should display the note title
+        targetIdentifier: 'note-1', // Should store the note ID
         targetNoteId: 'note-1',
         isValid: true
       });
       expect(result.links[1]).toMatchObject({
         type: 'wiki',
-        displayText: 'Second Note',
-        targetIdentifier: 'Second Note',
+        displayText: 'Second Note', // Should display the note title
+        targetIdentifier: 'note-2', // Should store the note ID
         targetNoteId: 'note-2',
         isValid: true
+      });
+    });
+
+    it('should handle broken ID-based wiki links', () => {
+      const content = 'This links to [[invalid-id]] which does not exist.';
+      const result = linkParsingService.parseLinks(content, mockNotes);
+
+      expect(result.links).toHaveLength(0);
+      expect(result.brokenLinks).toHaveLength(1);
+      expect(result.brokenLinks[0]).toMatchObject({
+        type: 'wiki',
+        displayText: 'Unknown Note (invalid-id)', // Should show formatted message for broken links
+        targetIdentifier: 'invalid-id',
+        isValid: false
       });
     });
 
@@ -90,14 +104,15 @@ describe('LinkParsingService', () => {
     });
 
     it('should identify broken links', () => {
-      const content = 'This links to [[Nonexistent Note]] and [broken](invalid-id).';
+      const content = 'This links to [[invalid-note-id]] and [broken](invalid-id).';
       const result = linkParsingService.parseLinks(content, mockNotes);
-      
+
       expect(result.links).toHaveLength(0);
       expect(result.brokenLinks).toHaveLength(2);
       expect(result.brokenLinks[0]).toMatchObject({
         type: 'wiki',
-        displayText: 'Nonexistent Note',
+        displayText: 'Unknown Note (invalid-note-id)',
+        targetIdentifier: 'invalid-note-id',
         isValid: false
       });
       expect(result.brokenLinks[1]).toMatchObject({
@@ -167,7 +182,7 @@ describe('LinkParsingService', () => {
         id: 'note-with-links',
         title: 'Note with Links',
         type: EntityType.NOTE,
-        content: 'See [[First Note]] and [Second](note-2) for more.',
+        content: 'See [[note-1]] and [Second](note-2) for more.',
         created_at: '2023-01-04T00:00:00Z',
         parent: null,
         children: []
@@ -189,7 +204,7 @@ describe('LinkParsingService', () => {
         id: 'note-with-links-1',
         title: 'Note with Links 1',
         type: EntityType.NOTE,
-        content: 'See [[First Note]] for details.',
+        content: 'See [[note-1]] for details.',
         created_at: '2023-01-04T00:00:00Z',
         parent: null,
         children: []
@@ -246,31 +261,31 @@ describe('LinkParsingService', () => {
     });
 
     it('should handle very long content', () => {
-      const longContent = 'Start ' + 'x'.repeat(10000) + ' [[First Note]] end.';
+      const longContent = 'Start ' + 'x'.repeat(10000) + ' [[note-1]] end.';
       const result = linkParsingService.parseLinks(longContent, mockNotes);
       expect(result.links).toHaveLength(1);
       expect(result.links[0].from).toBeGreaterThan(10000);
     });
 
     it('should handle multiple links to same note', () => {
-      const content = '[[First Note]] and [[First Note]] again and [link](note-1).';
+      const content = '[[note-1]] and [[note-1]] again and [link](note-1).';
       const result = linkParsingService.parseLinks(content, mockNotes);
       expect(result.links).toHaveLength(3);
       expect(result.links.every(link => link.targetNoteId === 'note-1')).toBe(true);
     });
 
     it('should handle empty entities object', () => {
-      const content = 'This has [[some link]] and [another](link).';
+      const content = 'This has [[some-id]] and [another](link).';
       const result = linkParsingService.parseLinks(content, {});
       expect(result.links).toHaveLength(0);
       expect(result.brokenLinks).toHaveLength(2);
     });
 
-    it('should handle special characters in note titles', () => {
+    it('should handle special characters in note IDs', () => {
       const specialNotes = {
         ...mockNotes,
-        'special-note': {
-          id: 'special-note',
+        'special-note-id': {
+          id: 'special-note-id',
           title: 'Note with (special) chars & symbols!',
           type: EntityType.NOTE,
           content: 'Special content',
@@ -280,23 +295,15 @@ describe('LinkParsingService', () => {
         }
       };
 
-      // Remove nested brackets which break the regex
-      const content = '[[Note with (special) chars & symbols!]]';
+      const content = '[[special-note-id]]';
       const result = linkParsingService.parseLinks(content, specialNotes);
       expect(result.links).toHaveLength(1);
-      expect(result.links[0].targetNoteId).toBe('special-note');
-    });
-
-    it('should handle case sensitivity correctly', () => {
-      const content = 'Link to [[first note]] (lowercase).';
-      const result = linkParsingService.parseLinks(content, mockNotes);
-      // The service does fuzzy matching, so "first note" should match "First Note"
-      expect(result.links).toHaveLength(1);
-      expect(result.brokenLinks).toHaveLength(0);
+      expect(result.links[0].targetNoteId).toBe('special-note-id');
+      expect(result.links[0].displayText).toBe('Note with (special) chars & symbols!');
     });
 
     it('should handle whitespace in links', () => {
-      const content = '[[ First Note ]] and [ link ]( note-1 ).';
+      const content = '[[ note-1 ]] and [ link ]( note-1 ).';
       const result = linkParsingService.parseLinks(content, mockNotes);
       // Should handle trimmed whitespace - both links should work
       expect(result.links).toHaveLength(2); // Both wiki and markdown links should work after trimming
@@ -305,14 +312,14 @@ describe('LinkParsingService', () => {
 
   describe('Link position tracking', () => {
     it('should track correct positions for wiki links', () => {
-      const content = 'Start [[First Note]] middle [[Second Note]] end.';
+      const content = 'Start [[note-1]] middle [[note-2]] end.';
       const result = linkParsingService.parseLinks(content, mockNotes);
 
       expect(result.links).toHaveLength(2);
       expect(result.links[0].from).toBe(6);
-      expect(result.links[0].to).toBe(20); // Corrected position
-      expect(result.links[1].from).toBe(28); // Corrected position
-      expect(result.links[1].to).toBe(43); // Corrected position
+      expect(result.links[0].to).toBe(16); // [[note-1]]
+      expect(result.links[1].from).toBe(24); // [[note-2]]
+      expect(result.links[1].to).toBe(34);
     });
 
     it('should track correct positions for markdown links', () => {
@@ -327,9 +334,21 @@ describe('LinkParsingService', () => {
     });
   });
 
+  describe('Link creation methods', () => {
+    it('should create ID-based wiki links', () => {
+      const wikiLink = linkParsingService.createWikiLink('note-1');
+      expect(wikiLink).toBe('[[note-1]]');
+    });
+
+    it('should create markdown links with IDs', () => {
+      const markdownLink = linkParsingService.createMarkdownLink('Display Text', 'note-1');
+      expect(markdownLink).toBe('[Display Text](note-1)');
+    });
+  });
+
   describe('Performance and stress tests', () => {
     it('should handle many links efficiently', () => {
-      const manyLinks = Array.from({ length: 100 }, (_, i) => `[[First Note]]`).join(' ');
+      const manyLinks = Array.from({ length: 100 }, (_, i) => `[[note-1]]`).join(' ');
       const start = performance.now();
       const result = linkParsingService.parseLinks(manyLinks, mockNotes);
       const end = performance.now();
@@ -352,7 +371,7 @@ describe('LinkParsingService', () => {
         };
       }
 
-      const content = '[[Note 500]] and [link](note-750)';
+      const content = '[[note-500]] and [link](note-750)';
       const start = performance.now();
       const result = linkParsingService.parseLinks(content, largeNoteCollection);
       const end = performance.now();

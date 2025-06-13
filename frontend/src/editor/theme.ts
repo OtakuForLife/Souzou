@@ -142,6 +142,17 @@ var customTheme = EditorView.theme({
         textDecoration: "underline",
     },
 
+    ".cm-note-link-invalid": {
+        color: "#cc6600",
+        backgroundColor: "rgba(204, 102, 0, 0.05)",
+        textDecoration: "underline",
+        textDecorationStyle: "wavy",
+    },
+
+    ".cm-note-link-invalid:hover": {
+        backgroundColor: "rgba(204, 102, 0, 0.15)",
+    },
+
     ".cm-note-link-broken": {
         color: "#cc6600",
         backgroundColor: "rgba(204, 102, 0, 0.05)",
@@ -150,6 +161,13 @@ var customTheme = EditorView.theme({
 
     ".cm-note-link-broken:hover, .cm-note-link-broken.cm-note-link-hover": {
         backgroundColor: "rgba(204, 102, 0, 0.15)",
+    },
+
+    // Wiki link syntax styling (for raw [[noteID]] text)
+    ".cm-wiki-link-syntax": {
+        color: syntaxComment,
+        opacity: "0.7",
+        fontStyle: "italic",
     },
 
     // Autocompletion popup styling

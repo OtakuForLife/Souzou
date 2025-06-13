@@ -36,8 +36,8 @@ export function createLinkDecorations(
       // Parse all links in the content
       const { links, brokenLinks } = linkParsingService.parseLinks(content, allNotes);
 
-      // Decorate valid links
-      links.forEach(link => {
+      // Decorate valid links (exclude wiki links as they are handled by wikiLinkDisplay)
+      links.filter(link => link.type !== 'wiki').forEach(link => {
         decorations.push(
           Decoration.mark({
             class: "cm-note-link cm-note-link-valid",
@@ -50,8 +50,8 @@ export function createLinkDecorations(
         );
       });
 
-      // Decorate broken links
-      brokenLinks.forEach(link => {
+      // Decorate broken links (exclude wiki links as they are handled by wikiLinkDisplay)
+      brokenLinks.filter(link => link.type !== 'wiki').forEach(link => {
         decorations.push(
           Decoration.mark({
             class: "cm-note-link cm-note-link-broken",
@@ -136,8 +136,10 @@ export function createLinkClickHandler(
         const allNotes = getNotesData();
         const { links } = linkParsingService.parseLinks(content, allNotes);
 
-        // Find if click position is within any link
-        const clickedLink = links.find(link => pos >= link.from && pos <= link.to);
+        // Find if click position is within any link (exclude wiki links as they're handled by widgets)
+        const clickedLink = links.find(link =>
+          link.type !== 'wiki' && pos >= link.from && pos <= link.to
+        );
 
         if (clickedLink && clickedLink.targetNoteId) {
           onLinkClick(clickedLink.targetNoteId);
