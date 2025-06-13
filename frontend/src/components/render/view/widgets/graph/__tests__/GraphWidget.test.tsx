@@ -133,4 +133,5 @@ describe('GraphWidget Optimization', () => {
     // Test passes if no errors are thrown and component still renders
     expect(container.querySelector('[data-testid="cytoscape-mock"]')).toBeInTheDocument();
   });
+
 });

@@ -2,12 +2,13 @@
  * GraphWidget - Graph visualization widget using Cytoscape
  */
 
-import React, { useMemo, useEffect, useState, memo } from 'react';
+import React, { useMemo, useEffect, useState, memo, useRef, useCallback } from 'react';
 import ReactCytoscape from '@/components/Cytoscape';
 import { GraphWidgetConfig } from '@/types/widgetTypes';
 import { linkParsingService } from '@/services/linkParsingService';
 import { useStableLinkData } from '@/hooks/useStableLinkData';
 import { LinkEntityData } from '@/store/slices/entityLinkSlice';
+import { Core } from 'cytoscape';
 
 // Link types for graph edges
 enum LinkType {
@@ -86,9 +87,37 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
   // Use stable link data that only changes when actual link data changes
   const { linkData, rootEntities } = useStableLinkData();
   const [graphElements, setGraphElements] = useState<any[]>([]);
+  const [currentZoom, setCurrentZoom] = useState<number>(1);
+  const cyRef = useRef<Core | null>(null);
+
+  // Configuration for zoom-based label visibility
+  const LABEL_HIDE_ZOOM_THRESHOLD = 0.75; // Hide labels when zoom is below this level
 
   // DEBUG: Log when GraphWidget renders (remove in production)
   // console.log('🔍 GraphWidget render - widget.id:', widget.id);
+
+  // Callback to handle cytoscape instance reference
+  const handleCyRef = useCallback((cy: Core | null) => {
+    if (cy && cy !== cyRef.current) {
+      cyRef.current = cy;
+
+      // Set initial zoom level
+      setCurrentZoom(cy.zoom());
+
+      // Listen for zoom events
+      cy.on('zoom', () => {
+        const newZoom = cy.zoom();
+        setCurrentZoom(newZoom);
+      });
+
+      // Cleanup function for when component unmounts or cy changes
+      return () => {
+        if (cyRef.current) {
+          cyRef.current.removeAllListeners();
+        }
+      };
+    }
+  }, []);
 
   // Generate graph elements based on widget configuration
   useEffect(() => {
@@ -208,12 +237,15 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
     const textColor = getThemeColor('--color-main-content-text', '#ffffff');
     const backgroundColor = getThemeColor('--color-explorer-background', '#666666');
 
+    // Determine if labels should be visible based on zoom level and widget config
+    const shouldShowLabels = widget.config.showLabels && currentZoom >= LABEL_HIDE_ZOOM_THRESHOLD;
+
     return [
       {
         selector: 'node',
         style: {
           'background-color': '#666',
-          'label': widget.config.showLabels ? 'data(label)' : '',
+          'label': shouldShowLabels ? 'data(label)' : '',
           'text-valign': 'bottom',
           'text-halign': 'center',
           'text-margin-y': 10, // Add some spacing between node and label
@@ -272,7 +304,7 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
         }
       }
     ];
-  }, [widget.config]);
+  }, [widget.config, currentZoom]);
 
   // Memoize cytoscape options
   const cytoscapeOptions = useMemo(() => ({
@@ -297,6 +329,7 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
         style={style}
         styleContainer={styleContainer}
         cytoscapeOptions={cytoscapeOptions}
+        cyRef={handleCyRef}
       />
     </div>
   );
