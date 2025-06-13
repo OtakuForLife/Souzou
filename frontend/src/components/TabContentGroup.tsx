@@ -6,7 +6,6 @@ import { TabsState, setCurrentTab } from "@/store/slices/tabsSlice";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 
-import { Entity } from "@/models/Entity";
 import EntityTabTrigger from "./EntityTabTrigger";
 import EntityTabContent from "./EntityTabContent";
 
@@ -24,7 +23,7 @@ export default function TabContentGroup() {
     }
   };
 
-  const currentTabValue = tabsState.currentTab;
+  const currentTabValue = tabsState.currentTab || openTabIDs[0];
 
   return (
     <Tabs

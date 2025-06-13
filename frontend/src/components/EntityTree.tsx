@@ -1,7 +1,7 @@
 import NoteTreeItem from "./EntityTreeItem";
 import { Entity } from "@/models/Entity";
 import { RootState } from "@/store";
-import { EntityState, selectRootEntities } from "@/store/slices/entitySlice";
+import { selectRootEntities } from "@/store/slices/entitySlice";
 import { useSelector } from "react-redux";
 import { LoadingSpinner } from "@/components/common";
 

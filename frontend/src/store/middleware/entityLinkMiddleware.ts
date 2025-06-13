@@ -10,15 +10,6 @@ import { RootState } from '../index';
 import { updateLinkData, updateSingleEntityLinkData, removeEntityLinkData } from '../slices/entityLinkSlice';
 import { linkParsingService } from '@/services/linkParsingService';
 
-// Helper function to extract link-relevant data from an entity
-const extractLinkRelevantData = (entity: any) => ({
-  id: entity.id,
-  title: entity.title,
-  parent: entity.parent || undefined,
-  content: entity.content || undefined,
-  type: entity.type,
-});
-
 // Helper function to check if ONLY graph-relevant data has changed
 const hasGraphRelevantDataChanged = (oldEntity: any, newEntity: any, allEntities: Record<string, any>): boolean => {
   if (!oldEntity || !newEntity) return true;
