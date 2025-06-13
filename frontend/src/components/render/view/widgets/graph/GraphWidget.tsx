@@ -9,6 +9,9 @@ import { linkParsingService } from '@/services/linkParsingService';
 import { useStableLinkData } from '@/hooks/useStableLinkData';
 import { LinkEntityData } from '@/store/slices/entityLinkSlice';
 import { Core } from 'cytoscape';
+import { useAppDispatch } from '@/hooks';
+import { openTab } from '@/store/slices/tabsSlice';
+import { Entity, EntityType } from '@/models/Entity';
 
 // Link types for graph edges
 enum LinkType {
@@ -89,12 +92,31 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
   const [graphElements, setGraphElements] = useState<any[]>([]);
   const [currentZoom, setCurrentZoom] = useState<number>(1);
   const cyRef = useRef<Core | null>(null);
+  const dispatch = useAppDispatch();
 
   // Configuration for zoom-based label visibility
   const LABEL_HIDE_ZOOM_THRESHOLD = 0.75; // Hide labels when zoom is below this level
 
   // DEBUG: Log when GraphWidget renders (remove in production)
   // console.log('🔍 GraphWidget render - widget.id:', widget.id);
+
+  // Handle node click to open entity in tab
+  const handleNodeClick = useCallback((nodeId: string) => {
+    const entityData = linkData[nodeId];
+    if (entityData) {
+      // Convert LinkEntityData to Entity format for openTab
+      const entity: Entity = {
+        id: entityData.id,
+        title: entityData.title,
+        content: entityData.content || '',
+        type: entityData.type as EntityType,
+        parent: entityData.parent || null,
+        children: [], // Children array not needed for opening tabs
+        created_at: new Date().toISOString(), // Fallback timestamp
+      };
+      dispatch(openTab(entity));
+    }
+  }, [linkData, dispatch]);
 
   // Callback to handle cytoscape instance reference
   const handleCyRef = useCallback((cy: Core | null) => {
@@ -110,6 +132,12 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
         setCurrentZoom(newZoom);
       });
 
+      // Listen for node click events
+      cy.on('tap', 'node', (event) => {
+        const nodeId = event.target.id();
+        handleNodeClick(nodeId);
+      });
+
       // Cleanup function for when component unmounts or cy changes
       return () => {
         if (cyRef.current) {
@@ -117,7 +145,7 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
         }
       };
     }
-  }, []);
+  }, [handleNodeClick]);
 
   // Generate graph elements based on widget configuration
   useEffect(() => {
@@ -263,6 +291,13 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
           'text-border-radius': '3px',
           'width': widget.config.nodeSize,
           'height': widget.config.nodeSize,
+          'cursor': 'pointer', // Show pointer cursor on hover
+        }
+      },
+      {
+        selector: 'node:active',
+        style: {
+          'background-opacity': 0.7, // Darken the node slightly when clicked
         }
       },
       {
