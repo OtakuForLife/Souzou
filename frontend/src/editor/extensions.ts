@@ -21,6 +21,7 @@ import { lintKeymap } from "@codemirror/lint"
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search"
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
 import { checkboxPlugin } from "./checkboxExtension"
+import { tablePlugin } from "./tableExtension"
 
 
 const baseExtensions = [
@@ -61,6 +62,8 @@ const baseExtensions = [
   highlightSelectionMatches(),
   // Obsidian-style checkbox live preview
   checkboxPlugin,
+  // TanStack table rendering
+  tablePlugin,
   keymap.of([
     // Closed-brackets aware backspace
     ...closeBracketsKeymap,

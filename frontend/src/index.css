@@ -109,4 +109,105 @@
     color: var(--color-editor-text);
   }
 
+  /* Table extension styles */
+  .cm-table-hidden {
+    display: none;
+  }
+
+  .cm-table-widget-container {
+    margin: 0;
+    padding: 0;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    display: inline-block;
+    width: 100%;
+    vertical-align: top;
+  }
+
+  .cm-table-widget {
+    background-color: var(--color-main-content-background);
+    color: var(--color-main-content-text);
+    padding: 0;
+    margin: 0;
+    display: block;
+    width: 100%;
+  }
+
+  .cm-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    padding: 0;
+    line-height: 1.2;
+    font-size: 0.875rem;
+  }
+
+  .cm-table-header {
+    background-color: var(--color-explorer-background);
+    color: var(--color-explorer-item-text-default);
+    padding: 0.25rem 0.5rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--color-explorer-item-background-hover);
+    user-select: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    position: relative;
+    height: auto;
+    vertical-align: middle;
+  }
+
+  .cm-table-header:hover {
+    background-color: var(--color-explorer-item-background-hover);
+  }
+
+  .cm-table-cell {
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid var(--color-explorer-item-background-hover);
+    height: auto;
+    vertical-align: middle;
+  }
+
+  .cm-table-row {
+    margin: 0;
+    padding: 0;
+    height: auto;
+    line-height: 1.2;
+  }
+
+  .cm-table-row:hover {
+    background-color: var(--color-explorer-item-background-hover);
+  }
+
+  .cm-table-row:last-child .cm-table-cell {
+    border-bottom: none;
+  }
+
+  .cm-table thead tr {
+    margin: 0;
+    padding: 0;
+    height: auto;
+  }
+
+  .cm-table tbody tr {
+    margin: 0;
+    padding: 0;
+    height: auto;
+  }
+
+  .cm-table-error {
+    padding: 0.5rem;
+    color: #ef4444;
+    text-align: center;
+    font-style: italic;
+    font-size: 0.875rem;
+  }
+
+  .sort-indicator {
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
+    color: var(--color-explorer-item-text-default);
+  }
+
 }
