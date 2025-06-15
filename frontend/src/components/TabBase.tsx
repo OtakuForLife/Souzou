@@ -29,7 +29,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
     objectID: objectID,
     objectType: objectType,
     type: DragType.TAB,
-    accepts: ["tab"],
+    accepts: [DragType.TAB],
     onDragEnd: onDropped
   }
 
@@ -64,8 +64,16 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
         value={uid}
       >
         <div>
-          {isDirty && <span className="text-red-500">*</span>}
-          <span className="pr-1" title={displayname}>{truncateText(displayname, 13)}</span>
+          <span className="pl-1" title={displayname}>
+            {isDirty ? (
+              <>
+                <span className="text-red-500 pr-1">*</span>
+                {truncateText(displayname, 12)}
+              </>
+            ) : (
+              truncateText(displayname, 13)
+            )}
+          </span>
           <span
             className="p-0"
             onMouseDown={(e: React.MouseEvent<HTMLElement>) => {
@@ -74,7 +82,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
             }}
             onClick={onClose}
           >
-            <X className="w-5 h-5 " />
+            <X className="size-6" />
           </span>
         </div>
       </TabsTrigger>
