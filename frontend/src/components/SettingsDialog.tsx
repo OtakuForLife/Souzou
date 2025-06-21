@@ -73,7 +73,7 @@ export default function SettingsDialog(){
     return (
         <Dialog>
             <DialogTrigger className="w-full h-full">
-                <Settings className="w-full h-full p-1"/>
+                <Settings className="w-full h-full p-1 cursor-pointer"/>
             </DialogTrigger>
             <DialogContent className="theme-explorer-background theme-explorer-item-text">
                 <DialogHeader>

@@ -3,6 +3,7 @@ import themeReducer from './slices/themeSlice'
 import entityReducer from './slices/entitySlice'
 import tabsReducer from './slices/tabsSlice'
 import entityLinkReducer from './slices/entityLinkSlice'
+import tagReducer from './slices/tagSlice'
 import { entityLinkMiddleware } from './middleware/entityLinkMiddleware'
 
 const rootReducer = combineReducers({
@@ -10,6 +11,7 @@ const rootReducer = combineReducers({
   entities: entityReducer,
   tabs: tabsReducer,
   entityLink: entityLinkReducer,
+  tags: tagReducer,
 })
 
 export function setupStore(preloadedState?: Partial<RootState>) {

@@ -1,16 +1,49 @@
 from rest_framework import serializers
-from .models import Entity, Theme
+from .models import Entity, Theme, Tag, EntityTag
 
+
+class TagSerializer(serializers.ModelSerializer):
+    children_count = serializers.SerializerMethodField()
+    entities_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Tag
+        fields = ["id", "name", "color", "description", "parent", "children_count", "entities_count", "created_at", "updated_at"]
+
+    def get_children_count(self, obj):
+        return obj.children.count()
+
+    def get_entities_count(self, obj):
+        return obj.entities.count()
+
+
+class EntityTagSerializer(serializers.ModelSerializer):
+    tag = TagSerializer(read_only=True)
+
+    class Meta:
+        model = EntityTag
+        fields = ["tag", "created_at"]
 
 
 class EntitySerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+    tag_ids = serializers.ListField(child=serializers.UUIDField(), write_only=True, required=False)
 
     #children = RecursiveNoteSerializer(many=True, read_only=True)
 
     class Meta:
         model = Entity
-        fields = ["id", "type", "title", "content", "created_at", "parent", "children"]
+        fields = ["id", "type", "title", "content", "created_at", "parent", "children", "tags", "tag_ids", "metadata"]
         extra_kwargs = {"parent": {"required": False}, "children": {"required": False}}
+
+    def update(self, instance, validated_data):
+        tag_ids = validated_data.pop('tag_ids', None)
+        instance = super().update(instance, validated_data)
+
+        if tag_ids is not None:
+            instance.tags.set(tag_ids)
+
+        return instance
 
 
 class ThemeSerializer(serializers.ModelSerializer):

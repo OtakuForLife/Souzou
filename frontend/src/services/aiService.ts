@@ -104,7 +104,7 @@ class AIService {
 
       // Use extended timeout for AI chat requests (60 seconds)
       const response = await api.post<ChatResponse>(
-        `${this.endpoint}chat/`,
+        `${this.endpoint}/chat/`,
         request,
         { timeout: 60000 }
       );
@@ -160,7 +160,7 @@ class AIService {
 
       // Use shorter timeout for context retrieval (10 seconds)
       const response = await api.post<RelevantContextResponse>(
-        `${API_CONFIG.ENDPOINTS.ENTITIES}get_relevant_context/`,
+        `${API_CONFIG.ENDPOINTS.ENTITIES}/get_relevant_context/`,
         request,
         { timeout: 10000 }
       );
@@ -195,7 +195,7 @@ class AIService {
     try {
       log.info('Fetching available AI models');
 
-      const response = await api.get<ModelsResponse>(`${this.endpoint}models/`);
+      const response = await api.get<ModelsResponse>(`${this.endpoint}/models/`);
       
       log.info('AI models fetched', { 
         modelCount: response.data.models?.length || 0 
@@ -219,7 +219,7 @@ class AIService {
     try {
       log.info('Checking AI service status');
 
-      const response = await api.get<AIStatus>(`${this.endpoint}status/`);
+      const response = await api.get<AIStatus>(`${this.endpoint}/status/`);
       
       log.info('AI service status checked', { 
         available: response.data.ollama_available 
@@ -246,7 +246,7 @@ class AIService {
       log.info('Fetching vector statistics');
 
       const response = await api.get<VectorStatsResponse>(
-        `${API_CONFIG.ENDPOINTS.ENTITIES}vector_stats/`
+        `${API_CONFIG.ENDPOINTS.ENTITIES}/vector_stats/`
       );
       
       log.info('Vector statistics fetched', { 

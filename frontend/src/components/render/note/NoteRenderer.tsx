@@ -64,6 +64,7 @@ function NoteRenderer({ entityID }: EntityRendererProps) {
                         )}
                     </div>
                 </div>
+
                 <NoteEditor
                     initialText={entity ? entity.content : ""}
                     onContentChange={handleContentChange}

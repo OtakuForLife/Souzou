@@ -2,6 +2,7 @@ import {
   StickyNote,
   Menu,
   LayoutDashboard,
+  Tag,
 } from "lucide-react";
 import {
   Sidebar,
@@ -15,6 +16,7 @@ import {
   SidebarMenuItem,
 } from "./ui/sidebar";
 import SettingsDialog from "./SettingsDialog";
+import { TagManager } from "./TagManager";
 import { useAppDispatch } from "@/hooks";
 import { createEntity } from "@/store/slices/entitySlice";
 import { openTab } from "@/store/slices/tabsSlice";
@@ -100,6 +102,13 @@ export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppS
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="p-1 m-0">
+              <TagManager>
+                <Tag className="w-full h-full p-1 cursor-pointer" />
+              </TagManager>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="p-1 m-0">
               <SettingsDialog />

@@ -19,6 +19,38 @@ class EntityType(models.TextChoices):
     AI_CHAT_HISTORY = "ai_chat_history", "AI Chat History"
 
 
+class Tag(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    color = models.CharField(max_length=7, default="#6B7280")  # Hex color
+    description = models.TextField(blank=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name="children")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['parent']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class EntityTag(models.Model):
+    entity = models.ForeignKey('Entity', on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('entity', 'tag')
+        indexes = [
+            models.Index(fields=['entity']),
+            models.Index(fields=['tag']),
+        ]
+
+
 class Entity(models.Model):
     id = models.UUIDField(primary_key = True, default = uuid.uuid4, editable = False)
     type = models.CharField(max_length=50, choices=EntityType.choices, default=EntityType.NOTE)
@@ -32,6 +64,12 @@ class Entity(models.Model):
     embedding = models.JSONField(null=True, blank=True, help_text="Vector embedding for semantic search")
     embedding_model = models.CharField(max_length=100, null=True, blank=True, help_text="Model used for embedding")
     embedding_updated_at = models.DateTimeField(null=True, blank=True, help_text="When embedding was last updated")
+
+    # Metadata field for custom properties
+    metadata = models.JSONField(default=dict, blank=True, help_text="Custom metadata and properties stored as JSON")
+
+    # Tags relationship
+    tags = models.ManyToManyField(Tag, through=EntityTag, blank=True, related_name="entities")
 
     class Meta:
         indexes = [

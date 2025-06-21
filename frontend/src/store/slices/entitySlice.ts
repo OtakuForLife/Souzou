@@ -1,5 +1,6 @@
 import { Entity } from '@/models/Entity';
 import { CreateEntityRequest, entityService } from '@/services';
+import { tagService } from '@/services/tagService';
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '@/store';
 
@@ -32,6 +33,20 @@ export const fetchEntities = createAsyncThunk(
   }
 );
 
+export const addTagsToEntity = createAsyncThunk(
+  'entities/addTagsToEntity',
+  async ({ entityId, tagIds }: { entityId: string; tagIds: string[] }) => {
+    return await tagService.addTagsToEntity(entityId, tagIds);
+  }
+);
+
+export const removeTagsFromEntity = createAsyncThunk(
+  'entities/removeTagsFromEntity',
+  async ({ entityId, tagIds }: { entityId: string; tagIds: string[] }) => {
+    return await tagService.removeTagsFromEntity(entityId, tagIds);
+  }
+);
+
 interface EntityState {
   allEntities: { [id: string]: Entity; };
   dirtyEntityIDs: string[]; // IDs of entities that have been modified but not saved
@@ -61,6 +76,8 @@ export const entitySlice = createSlice({
       title?: string;
       content?: string;
       parent?: string | null;
+      tags?: any[];
+      metadata?: Record<string, any>;
     }>) => {
       const noteID: string = action.payload.noteID;
       var entity: Entity = state.allEntities[noteID];
@@ -74,8 +91,16 @@ export const entitySlice = createSlice({
           entity.content = action.payload.content
           isDirty = true;
         };
-        if (action.payload.parent !== undefined && action.payload.parent !== entity.parent) { 
+        if (action.payload.parent !== undefined && action.payload.parent !== entity.parent) {
           entity.parent = action.payload.parent
+          isDirty = true;
+        };
+        if (action.payload.tags !== undefined) {
+          entity.tags = action.payload.tags
+          isDirty = true;
+        };
+        if (action.payload.metadata !== undefined) {
+          entity.metadata = action.payload.metadata
           isDirty = true;
         };
 
@@ -192,6 +217,36 @@ export const entitySlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to delete entity';
       })
+      // Add tags to entity
+      .addCase(addTagsToEntity.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addTagsToEntity.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const updatedEntity = action.payload;
+        state.allEntities[updatedEntity.id] = updatedEntity;
+      })
+      .addCase(addTagsToEntity.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to add tags to entity';
+      })
+      // Remove tags from entity
+      .addCase(removeTagsFromEntity.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeTagsFromEntity.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const updatedEntity = action.payload;
+        state.allEntities[updatedEntity.id] = updatedEntity;
+      })
+      .addCase(removeTagsFromEntity.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to remove tags from entity';
+      });
   },
 })
 

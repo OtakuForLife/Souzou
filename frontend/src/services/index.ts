@@ -5,6 +5,7 @@
 export { entityService } from './entityService';
 export { themeService } from './themeService';
 export { aiService } from './aiService';
+export { tagService } from './tagService';
 
 export type {
   CreateEntityRequest,
@@ -26,3 +27,7 @@ export type {
   VectorStatsResponse,
 } from './aiService';
 
+export type {
+  CreateTagRequest,
+  UpdateTagRequest,
+} from './tagService';

@@ -1,5 +1,5 @@
-from .models import Entity, Theme
-from .serializers import EntitySerializer, ThemeSerializer
+from .models import Entity, Theme, Tag
+from .serializers import EntitySerializer, ThemeSerializer, TagSerializer
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -79,6 +79,69 @@ class EntityViewSet(viewsets.ModelViewSet):
                 'success': False,
                 'error': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'])
+    def by_tags(self, request):
+        """Filter entities by tags"""
+        tag_ids = request.query_params.getlist('tags')
+        if not tag_ids:
+            return Response([])
+
+        entities = Entity.objects.filter(tags__id__in=tag_ids).distinct()
+        serializer = self.get_serializer(entities, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def add_tags(self, request, pk=None):
+        """Add tags to entity"""
+        entity = self.get_object()
+        tag_ids = request.data.get('tag_ids', [])
+
+        for tag_id in tag_ids:
+            try:
+                tag = Tag.objects.get(id=tag_id)
+                entity.tags.add(tag)
+            except Tag.DoesNotExist:
+                continue
+
+        serializer = self.get_serializer(entity)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'])
+    def remove_tags(self, request, pk=None):
+        """Remove tags from entity"""
+        entity = self.get_object()
+        tag_ids = request.data.get('tag_ids', [])
+
+        for tag_id in tag_ids:
+            try:
+                tag = Tag.objects.get(id=tag_id)
+                entity.tags.remove(tag)
+            except Tag.DoesNotExist:
+                continue
+
+        serializer = self.get_serializer(entity)
+        return Response(serializer.data)
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all()
+
+    @action(detail=False, methods=['get'])
+    def hierarchy(self, request):
+        """Get tags in hierarchical structure"""
+        root_tags = Tag.objects.filter(parent=None).prefetch_related('children')
+        serializer = TagSerializer(root_tags, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def entities(self, request, pk=None):
+        """Get entities with this tag"""
+        tag = self.get_object()
+        entities = tag.entities.all()
+        serializer = EntitySerializer(entities, many=True)
+        return Response(serializer.data)
 
 
 class ThemeViewSet(viewsets.ModelViewSet):

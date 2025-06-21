@@ -66,6 +66,7 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                         <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text">Upload Media</ContextMenuItem>
                     </ContextMenuSubContent>
                 </ContextMenuSub>
+                <ContextMenuSeparator />
                 <ContextMenuItem inset className="cursor-pointer theme-explorer-item-background theme-explorer-item-text" onSelect={()=>{
                     // Close the tab if it's open
                     dispatch(closeTab(note));

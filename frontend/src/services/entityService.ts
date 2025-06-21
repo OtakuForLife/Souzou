@@ -19,6 +19,8 @@ export interface UpdateEntityRequest {
   title?: string;
   content?: string;
   parent?: string | null;
+  metadata?: Record<string, any>;
+  tags?: string[];
 }
 
 export interface CreateEntityResponse {
@@ -81,7 +83,14 @@ class EntityService {
     try {
       log.info('Saving note', { id: note.id, title: note.title });
 
-      const response = await api.put<Entity>(`${this.endpoint}${note.id}/`, note);
+      // Transform the entity for the backend - convert tags to tag_ids
+      const entityData = {
+        ...note,
+        tag_ids: note.tags.map(tag => tag.id), // Convert tags to tag IDs
+        tags: undefined // Remove tags field since backend uses tag_ids
+      };
+
+      const response = await api.put<Entity>(`${this.endpoint}/${note.id}/`, entityData);
 
       if (response.status !== 200) {
         throw new Error(`Failed to save note: ${response.status}`);
@@ -104,7 +113,7 @@ class EntityService {
     try {
       log.info('Deleting note', { id: noteId });
 
-      const response = await api.delete(`${this.endpoint}${noteId}/`);
+      const response = await api.delete(`${this.endpoint}/${noteId}/`);
 
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Failed to delete note: ${response.status}`);
@@ -128,7 +137,7 @@ class EntityService {
     try {
       log.info('Updating note', { id: updateData.noteID });
 
-      const response = await api.patch<Entity>(`${this.endpoint}${updateData.noteID}/`, updateData);
+      const response = await api.patch<Entity>(`${this.endpoint}/${updateData.noteID}/`, updateData);
 
       if (response.status !== 200) {
         throw new Error(`Failed to update note: ${response.status}`);

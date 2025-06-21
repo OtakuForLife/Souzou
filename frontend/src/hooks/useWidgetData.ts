@@ -188,11 +188,17 @@ export function useWidgetData<TConfig, TData>(
     [config]
   );
 
-  // Create data context
-  const dataContext = useMemo((): WidgetDataContext => ({
+  // Create data context - use ref to avoid recreating on every allEntities change
+  const dataContextRef = useRef<WidgetDataContext>({
+    allEntities: {},
+    currentEntityId: widgetId
+  });
+
+  // Update the ref when values change
+  dataContextRef.current = {
     allEntities,
     currentEntityId: widgetId
-  }), [allEntities, widgetId]);
+  };
 
   // Refresh function
   const refresh = useCallback(() => {
@@ -226,7 +232,7 @@ export function useWidgetData<TConfig, TData>(
 
         // Process data
         const result = await Promise.resolve(
-          processorRef.current(configRef.current, dataContext)
+          processorRef.current(configRef.current, dataContextRef.current)
         );
 
         if (isCancelled) return;
@@ -254,7 +260,7 @@ export function useWidgetData<TConfig, TData>(
     return () => {
       isCancelled = true;
     };
-  }, [enabled, cacheKey, configHash, dataContext, refreshTrigger, widgetId]);
+  }, [enabled, cacheKey, configHash, refreshTrigger, widgetId]); // Removed dataContext to prevent infinite loops
 
   // Auto-refresh effect
   useEffect(() => {

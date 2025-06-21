@@ -21,6 +21,7 @@ import { NoteTree } from "../components/EntityTree";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import ContentFrame from "../components/ContentFrame";
 import AppSidebar from "../components/Sidebar";
+import { EntitySidePanel } from "../components/EntitySidePanel";
 import { useAppDispatch, useKeyboardShortcuts } from "@/hooks";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
@@ -176,8 +177,18 @@ function Home() {
                                 <NoteTree/>
                             </ResizablePanel>
                             <ResizableHandle className="w-1 theme-explorer-background"/>
-                            <ResizablePanel className="theme-main-content-background">
+                            <ResizablePanel className="theme-main-content-background" defaultSize={60}>
                                 <ContentFrame/>
+                            </ResizablePanel>
+                            <ResizableHandle className="w-1 theme-explorer-background"/>
+                            <ResizablePanel
+                                className="theme-explorer-background border-l"
+                                minSize={13}
+                                maxSize={35}
+                                defaultSize={25}
+                                collapsible={true}
+                            >
+                                <EntitySidePanel currentEntityId={currentTabId || undefined} />
                             </ResizablePanel>
                         </ResizablePanelGroup>
                     </SidebarInset>
