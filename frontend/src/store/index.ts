@@ -5,6 +5,7 @@ import tabsReducer from './slices/tabsSlice'
 import entityLinkReducer from './slices/entityLinkSlice'
 import tagReducer from './slices/tagSlice'
 import { entityLinkMiddleware } from './middleware/entityLinkMiddleware'
+import { tagCleanupMiddleware } from './middleware/tagCleanupMiddleware'
 
 const rootReducer = combineReducers({
   themes: themeReducer,
@@ -18,7 +19,7 @@ export function setupStore(preloadedState?: Partial<RootState>) {
   return configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(entityLinkMiddleware),
+      getDefaultMiddleware().concat(entityLinkMiddleware, tagCleanupMiddleware),
     preloadedState
   })
 }

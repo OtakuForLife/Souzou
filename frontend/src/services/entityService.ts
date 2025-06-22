@@ -83,10 +83,10 @@ class EntityService {
     try {
       log.info('Saving note', { id: note.id, title: note.title });
 
-      // Transform the entity for the backend - convert tags to tag_ids
+      // Transform the entity for the backend - tags are already IDs
       const entityData = {
         ...note,
-        tag_ids: note.tags.map(tag => tag.id), // Convert tags to tag IDs
+        tag_ids: note.tags, // Tags are already tag IDs
         tags: undefined // Remove tags field since backend uses tag_ids
       };
 

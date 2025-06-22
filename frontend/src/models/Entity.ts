@@ -1,6 +1,4 @@
 
-import { Tag } from './Tag';
-
 enum EntityType {
     NOTE = "note",
     VIEW = "view",
@@ -15,7 +13,7 @@ interface Entity {
     created_at: string;
     parent: string | null;
     children: string[];
-    tags: Tag[];
+    tags: string[]; // Changed from Tag[] to string[] (tag IDs)
     metadata: Record<string, any>;
 }
 

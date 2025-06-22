@@ -76,17 +76,17 @@ export const TagItem: React.FC<TagItemProps> = ({
                         <Button variant="ghost" size="sm" className="flex items-center gap-2 p-0 h-auto">
                             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                             <Badge
-                                style={{ backgroundColor: `${tag.color}30`, borderColor: tag.color }}
+                                style={{ backgroundColor: `${editingTag.color}30`, borderColor: editingTag.color }}
                                 className="text-sm"
                             >
-                                {tag.name}
+                                {editingTag.name}
                             </Badge>
                         </Button>
                     </CollapsibleTrigger>
 
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                            {tag.entities_count} entities
+                            {editingTag.entities_count} entities
                         </span>
                         <Button
                             variant="ghost"
@@ -105,7 +105,7 @@ export const TagItem: React.FC<TagItemProps> = ({
                         <div>
                             <label className="text-sm font-medium">Name</label>
                             <Input
-                                value={tag.name}
+                                value={editingTag.name}
                                 onChange={(e) => setEditingTag({ ...tag, name: e.target.value })}
                                 className="mt-1"
                             />
@@ -115,7 +115,7 @@ export const TagItem: React.FC<TagItemProps> = ({
                         <div>
                             <label className="text-sm font-medium">Description</label>
                             <Textarea
-                                value={tag.description}
+                                value={editingTag.description}
                                 onChange={(e) => setEditingTag({ ...editingTag, description: e.target.value })}
                                 className="mt-1"
                                 rows={3}
@@ -128,12 +128,12 @@ export const TagItem: React.FC<TagItemProps> = ({
                             <div className="flex items-center gap-2 mt-1">
                                 <Input
                                     type="color"
-                                    value={tag.color}
+                                    value={editingTag.color}
                                     onChange={(e) => setEditingTag({ ...editingTag, color: e.target.value })}
                                     className="w-12 h-8 p-1"
                                 />
                                 <Input
-                                    value={tag.color}
+                                    value={editingTag.color}
                                     onChange={(e) => setEditingTag({ ...editingTag, color: e.target.value })}
                                     className="flex-1"
                                 />

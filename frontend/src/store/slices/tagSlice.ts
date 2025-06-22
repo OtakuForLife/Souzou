@@ -32,8 +32,6 @@ export const getEntitiesByTags = createAsyncThunk('tags/getEntitiesByTags', asyn
 interface TagState {
   allTags: { [id: string]: Tag };
   tagHierarchy: TagHierarchy[];
-  selectedTags: string[]; // For filtering
-  filteredEntities: string[]; // Entity IDs filtered by selected tags
   loading: boolean;
   error: string | null;
 }
@@ -41,8 +39,6 @@ interface TagState {
 const initialState: TagState = {
   allTags: {},
   tagHierarchy: [],
-  selectedTags: [],
-  filteredEntities: [],
   loading: false,
   error: null,
 };
@@ -58,37 +54,15 @@ export const selectTagsByIds = createSelector(
   (allTags, tagIds) => tagIds.map(id => allTags[id]).filter(Boolean)
 );
 
-export const selectSelectedTags = createSelector(
-  [(state: RootState) => state.tags.allTags, (state: RootState) => state.tags.selectedTags],
-  (allTags, selectedTagIds) => selectedTagIds.map(id => allTags[id]).filter(Boolean)
-);
-
 export const tagSlice = createSlice({
   name: 'tags',
   initialState,
   reducers: {
-    setSelectedTags: (state, action: PayloadAction<string[]>) => {
-      state.selectedTags = action.payload;
-    },
-    toggleTag: (state, action: PayloadAction<string>) => {
-      const tagId = action.payload;
-      const index = state.selectedTags.indexOf(tagId);
-      if (index > -1) {
-        state.selectedTags.splice(index, 1);
-      } else {
-        state.selectedTags.push(tagId);
-      }
-    },
-    clearSelectedTags: (state) => {
-      state.selectedTags = [];
-      state.filteredEntities = [];
-    },
     addTag: (state, action: PayloadAction<Tag>) => {
       state.allTags[action.payload.id] = action.payload;
     },
     removeTag: (state, action: PayloadAction<string>) => {
       delete state.allTags[action.payload];
-      state.selectedTags = state.selectedTags.filter(id => id !== action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -124,14 +98,9 @@ export const tagSlice = createSlice({
       // Delete tag
       .addCase(deleteEntityTag.fulfilled, (state, action) => {
         delete state.allTags[action.payload];
-        state.selectedTags = state.selectedTags.filter(id => id !== action.payload);
       })
-      // Get entities by tags
-      .addCase(getEntitiesByTags.fulfilled, (state, action) => {
-        state.filteredEntities = action.payload.map(entity => entity.id);
-      });
   },
 });
 
-export const { setSelectedTags, toggleTag, clearSelectedTags, addTag, removeTag } = tagSlice.actions;
+export const { addTag, removeTag } = tagSlice.actions;
 export default tagSlice.reducer;

@@ -62,7 +62,9 @@ export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityI
     }
   }, [dispatch, allTags]);
 
-  const currentEntityTags = currentEntity?.tags || [];
+  const currentEntityTagIds = currentEntity?.tags || [];
+  // Convert tag IDs to Tag objects for display
+  const currentEntityTags = currentEntityTagIds.map(tagId => allTags[tagId]).filter(Boolean);
 
   // Get all custom properties from metadata
   const customProperties = currentEntity?.metadata || {};

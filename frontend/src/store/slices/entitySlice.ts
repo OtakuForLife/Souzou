@@ -76,7 +76,7 @@ export const entitySlice = createSlice({
       title?: string;
       content?: string;
       parent?: string | null;
-      tags?: any[];
+      tags?: string[]; // Changed from any[] to string[] (tag IDs)
       metadata?: Record<string, any>;
     }>) => {
       const noteID: string = action.payload.noteID;
@@ -117,6 +117,19 @@ export const entitySlice = createSlice({
       if (state.allEntities[noteID]) {
         state.allEntities[noteID].parent = newParent;
       }
+    },
+    removeTagFromAllEntities: (state, action: PayloadAction<string>) => {
+      const tagIdToRemove = action.payload;
+      // Remove the tag ID from all entities that have it
+      Object.values(state.allEntities).forEach(entity => {
+        if (entity.tags.includes(tagIdToRemove)) {
+          entity.tags = entity.tags.filter(tagId => tagId !== tagIdToRemove);
+          // Mark entity as dirty if it's not already
+          if (!state.dirtyEntityIDs.includes(entity.id)) {
+            state.dirtyEntityIDs.push(entity.id);
+          }
+        }
+      });
     }
   },
   extraReducers: builder => {
@@ -250,6 +263,6 @@ export const entitySlice = createSlice({
   },
 })
 
-export const { updateEntity, changeEntityParent } = entitySlice.actions;
+export const { updateEntity, changeEntityParent, removeTagFromAllEntities } = entitySlice.actions;
 export default entitySlice.reducer;
 export type { EntityState };

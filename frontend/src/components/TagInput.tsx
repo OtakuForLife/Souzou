@@ -10,7 +10,7 @@ import { Tag } from '@/models/Tag';
 
 interface TagInputProps {
   entityId: string;
-  currentTags: Tag[];
+  currentTags: Tag[]; // Still receives Tag objects for display
 }
 
 interface TagSuggestion {

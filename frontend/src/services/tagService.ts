@@ -48,7 +48,7 @@ class TagService {
   async createTag(tagData: CreateTagRequest): Promise<Tag> {
     try {
       log.info('Creating tag', { name: tagData.name });
-      const response = await api.post<Tag>(this.endpoint, tagData);
+      const response = await api.post<Tag>(`${this.endpoint}/`, tagData);
       log.info('Tag created successfully', { id: response.data.id, name: response.data.name });
       return response.data;
     } catch (error) {
@@ -60,7 +60,7 @@ class TagService {
   async updateTag(id: string, tagData: UpdateTagRequest): Promise<Tag> {
     try {
       log.info('Updating tag', { id, tagData });
-      const response = await api.patch<Tag>(`${this.endpoint}${id}/`, tagData);
+      const response = await api.patch<Tag>(`${this.endpoint}/${id}/`, tagData);
       log.info('Tag updated successfully', { id: response.data.id });
       return response.data;
     } catch (error) {

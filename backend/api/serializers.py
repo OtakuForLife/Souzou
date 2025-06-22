@@ -26,7 +26,8 @@ class EntityTagSerializer(serializers.ModelSerializer):
 
 
 class EntitySerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True, read_only=True)
+    # Return tag IDs instead of full Tag objects
+    tags = serializers.SerializerMethodField()
     tag_ids = serializers.ListField(child=serializers.UUIDField(), write_only=True, required=False)
 
     #children = RecursiveNoteSerializer(many=True, read_only=True)
@@ -35,6 +36,10 @@ class EntitySerializer(serializers.ModelSerializer):
         model = Entity
         fields = ["id", "type", "title", "content", "created_at", "parent", "children", "tags", "tag_ids", "metadata"]
         extra_kwargs = {"parent": {"required": False}, "children": {"required": False}}
+
+    def get_tags(self, obj):
+        """Return list of tag IDs instead of full Tag objects"""
+        return [str(tag.id) for tag in obj.tags.all()]
 
     def update(self, instance, validated_data):
         tag_ids = validated_data.pop('tag_ids', None)
