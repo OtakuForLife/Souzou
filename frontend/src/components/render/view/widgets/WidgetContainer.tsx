@@ -21,13 +21,13 @@ interface WidgetContainerProps {
   onConfigModalChange?: (widgetId: string, isOpen: boolean) => void; // Callback for config modal state
 }
 
-const WidgetContainer: React.FC<WidgetContainerProps> = ({
+const WidgetContainer = ({
   widget,
   onUpdate,
   onDelete,
   mode = ViewMode.RENDER,
   onConfigModalChange,
-}) => {
+}: WidgetContainerProps) => {
   const [showConfigModal, setShowConfigModal] = useState(false);
 
   const handleDelete = () => {

@@ -73,7 +73,8 @@ export interface NoteWidgetConfig extends BaseWidgetConfig<WidgetType.NOTE> {
 export interface AIChatWidgetConfig extends BaseWidgetConfig<WidgetType.AI_CHAT> {
   type: WidgetType.AI_CHAT;
   config: {
-    // Ollama Settings
+    // AI Provider Settings
+    provider?: string; // AI provider (ollama, openai, etc.)
     model: string;
     temperature: number;
     maxTokens?: number;
@@ -130,6 +131,7 @@ export const DEFAULT_WIDGET_CONFIGS: {
     isEditable: false,
   },
   [WidgetType.AI_CHAT]: {
+    provider: 'ollama', // Default provider
     model: 'llama2',
     temperature: 0.7,
     maxTokens: 2000,

@@ -1,2 +1,2 @@
 #!/bin/bash
-exec gunicorn backend.wsgi:application --bind 0.0.0.0:$BACKEND_PORT
+exec python -m uvicorn backend.asgi:application --host 0.0.0.0 --port $BACKEND_PORT

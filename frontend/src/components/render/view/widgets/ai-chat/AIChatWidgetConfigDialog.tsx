@@ -5,7 +5,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { AIChatWidgetConfig } from '@/types/widgetTypes';
-import { aiService, AIModel } from '@/services';
+import { aiService } from '@/services';
+import type { AIModel } from '@/services';
+import type { AIProvider } from '@/services/aiService';
 import { RootState } from '@/store';
 import { EntityType } from '@/models/Entity';
 import { createEntity } from '@/store/slices/entitySlice';
@@ -32,15 +34,16 @@ interface AIChatWidgetConfigDialogProps {
 }
 
 
-const AIChatWidgetConfigDialog: React.FC<AIChatWidgetConfigDialogProps> = ({
+const AIChatWidgetConfigDialog = ({
   widget,
   onSave,
   onCancel,
   isOpen = true,
   onClose,
-}) => {
+}: AIChatWidgetConfigDialogProps) => {
   const [config, setConfig] = useState(widget.config);
-  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [availableProviders, setAvailableProviders] = useState<AIProvider[]>([]);
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [aiStatus, setAIStatus] = useState<{ available: boolean; error?: string }>({ available: true });
   const [isCreatingChatHistory, setIsCreatingChatHistory] = useState(false);
@@ -54,20 +57,20 @@ const AIChatWidgetConfigDialog: React.FC<AIChatWidgetConfigDialogProps> = ({
     entity => entity.type === EntityType.AI_CHAT_HISTORY
   );
 
-  // Load available models when dialog opens
+  // Load available providers when dialog opens
   useEffect(() => {
     if (isOpen) {
-      loadModels();
+      loadProviders();
       checkAIStatus();
     }
   }, [isOpen]);
 
   const checkAIStatus = async () => {
     try {
-      const status = await aiService.getStatus();
+      const status = await aiService.getStatus(config.provider);
       setAIStatus({
-        available: status.ollama_available,
-        error: status.ollama_available ? undefined : 'Ollama server is not available'
+        available: status.provider_available,
+        error: status.provider_available ? undefined : `AI provider ${status.provider} is not available`
       });
     } catch (error) {
       setAIStatus({
@@ -77,19 +80,31 @@ const AIChatWidgetConfigDialog: React.FC<AIChatWidgetConfigDialogProps> = ({
     }
   };
 
-  const loadModels = async () => {
-    setIsLoadingModels(true);
+  const loadProviders = async () => {
+    setIsLoadingProviders(true);
     try {
-      const response = await aiService.listModels();
+      const response = await aiService.listProviders();
       if (response.success) {
-        setAvailableModels(response.models);
+        setAvailableProviders(response.providers);
+
+        // If no provider is selected, select the first available one
+        if (!config.provider && response.providers.length > 0) {
+          const firstAvailable = response.providers.find(p => p.available);
+          if (firstAvailable) {
+            updateConfig({ provider: firstAvailable.name });
+          }
+        }
       }
     } catch (error) {
-      console.error('Failed to load models:', error);
+      console.error('Failed to load providers:', error);
     } finally {
-      setIsLoadingModels(false);
+      setIsLoadingProviders(false);
     }
   };
+
+  // Since we load models for a specific provider, availableModels already contains
+  // only the models for the current provider - no need to filter again
+  const currentProviderModels = config.provider ? availableProviders.find(p => p.name === config.provider)?.models || [] : [];
 
   const handleSave = () => {
     onSave(config);
@@ -127,11 +142,18 @@ const AIChatWidgetConfigDialog: React.FC<AIChatWidgetConfigDialogProps> = ({
     }
   };
 
+  // Prepare provider options for dropdown
+  const providerOptions = availableProviders.map(provider => ({
+    value: provider.name,
+    label: provider.display_name,
+    description: provider.available ? `${provider.models.length} models available` : 'Not available',
+    disabled: !provider.available
+  }));
+
   // Prepare model options for dropdown
-  const modelOptions = availableModels.map(model => ({
-    value: model.name,
-    label: model.name,
-    description: `${(model.size / (1024 * 1024 * 1024)).toFixed(1)}GB`
+  const modelOptions = currentProviderModels.map(model => ({
+    value: model,
+    label: model
   }));
 
 
@@ -160,7 +182,7 @@ const AIChatWidgetConfigDialog: React.FC<AIChatWidgetConfigDialogProps> = ({
           {/* Service Status */}
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Ollama Status</span>
+              <span className="text-sm font-medium">AI Agent Status</span>
               {aiStatus.available ? (
                 <Badge variant="default" className="text-xs">Connected</Badge>
               ) : (
@@ -174,10 +196,10 @@ const AIChatWidgetConfigDialog: React.FC<AIChatWidgetConfigDialogProps> = ({
               variant="outline"
               size="sm"
               onClick={checkAIStatus}
-              disabled={isLoadingModels}
+              disabled={isLoadingProviders || isLoadingModels}
               className="text-xs"
             >
-              {isLoadingModels ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Refresh'}
+              {(isLoadingProviders || isLoadingModels) ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Refresh'}
             </Button>
           </div>
 
@@ -224,16 +246,35 @@ const AIChatWidgetConfigDialog: React.FC<AIChatWidgetConfigDialogProps> = ({
               </div>
             </div>
 
+            {/* Provider Selection */}
+            <div className="space-y-2">
+              <Label>AI Provider</Label>
+              <Dropdown
+                value={config.provider || ''}
+                options={providerOptions}
+                onChange={(value) => {
+                  updateConfig({ provider: value });
+                  // Clear current model when provider changes - it will be set after models load
+                  updateConfig({ model: '' });
+                }}
+                placeholder={isLoadingProviders ? "Loading providers..." : "Select a provider"}
+                disabled={!aiStatus.available || isLoadingProviders}
+              />
+            </div>
+
             {/* Model Selection */}
             <div className="space-y-2">
               <Label>AI Model</Label>
               <Dropdown
                 value={config.model}
-                options={modelOptions.length > 0 ? modelOptions : [{ value: 'llama2', label: 'llama2', description: 'Default model' }]}
+                options={modelOptions}
                 onChange={(value) => updateConfig({ model: value })}
-                placeholder="Select a model"
-                disabled={!aiStatus.available || isLoadingModels}
+                placeholder={isLoadingModels ? "Loading models..." : "Select a model"}
+                disabled={!aiStatus.available || isLoadingModels || !config.provider}
               />
+              {config.provider && modelOptions.length === 0 && (
+                <p className="text-xs text-gray-500">No models available for {config.provider}</p>
+              )}
             </div>
 
 

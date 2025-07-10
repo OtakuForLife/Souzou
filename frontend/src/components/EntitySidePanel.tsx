@@ -60,7 +60,7 @@ export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityI
     if (Object.keys(allTags).length === 0) {
       dispatch(fetchTags());
     }
-  }, [dispatch, allTags]);
+  }, [dispatch]); // Remove allTags from dependency array to prevent infinite loop
 
   const currentEntityTagIds = currentEntity?.tags || [];
   // Convert tag IDs to Tag objects for display
