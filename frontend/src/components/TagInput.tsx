@@ -37,7 +37,7 @@ export const TagInput: React.FC<TagInputProps> = ({
     if (Object.keys(allTags).length === 0) {
       dispatch(fetchTags());
     }
-  }, [dispatch, allTags]);
+  }, [dispatch]); // Remove allTags from dependency array to prevent infinite loop
 
   // Get current tag IDs for easy lookup (memoized to prevent infinite re-renders)
   const currentTagIds = useMemo(() => new Set(currentTags.map(tag => tag.id)), [currentTags]);
