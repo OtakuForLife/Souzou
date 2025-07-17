@@ -20,12 +20,12 @@ interface WidgetRendererProps {
   onDelete?: () => void;
 }
 
-const WidgetRenderer: React.FC<WidgetRendererProps> = ({
+const WidgetRenderer = ({
   widget,
   mode = ViewMode.RENDER,
   onUpdate,
   onDelete
-}) => {
+}: WidgetRendererProps) => {
   // Get widget component from registry
   const WidgetComponent = WidgetRegistry.getComponent(widget.type);
 

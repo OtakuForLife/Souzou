@@ -53,7 +53,7 @@ export const TagManager: React.FC<TagManagerProps> = ({ children }) => {
     if (open && Object.keys(allTags).length === 0) {
       dispatch(fetchTags());
     }
-  }, [open, dispatch, allTags]);
+  }, [open, dispatch]); // Remove allTags from dependency array to prevent infinite loop
 
 
   const createNewTag = async () => {

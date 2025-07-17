@@ -13,6 +13,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-COPY entrypoint_dev.sh /entrypoint_dev.sh
-RUN chmod +x /entrypoint_dev.sh
+# Create entrypoint script directly in Dockerfile to avoid line ending issues
+RUN echo '#!/bin/bash' > /entrypoint_dev.sh && \
+    echo '' >> /entrypoint_dev.sh && \
+    echo '# Run migrations' >> /entrypoint_dev.sh && \
+    echo 'echo "Running migrations..."' >> /entrypoint_dev.sh && \
+    echo 'python manage.py migrate' >> /entrypoint_dev.sh && \
+    echo '' >> /entrypoint_dev.sh && \
+    echo '# Start the development server' >> /entrypoint_dev.sh && \
+    echo 'echo "Starting development server..."' >> /entrypoint_dev.sh && \
+    echo 'exec python -m uvicorn backend.asgi:application --host 0.0.0.0 --port $BACKEND_PORT --reload' >> /entrypoint_dev.sh && \
+    chmod +x /entrypoint_dev.sh
+
 ENTRYPOINT ["/entrypoint_dev.sh"]

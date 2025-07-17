@@ -24,7 +24,7 @@ class TagService {
   async fetchTags(): Promise<Tag[]> {
     try {
       log.info('Fetching tags');
-      const response = await api.get<Tag[]>(this.endpoint);
+      const response = await api.get<Tag[]>(`${this.endpoint}/`);
       log.info('Tags fetched successfully', { count: response.data.length });
       return response.data;
     } catch (error) {

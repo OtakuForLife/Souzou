@@ -41,7 +41,7 @@ class EntityService {
   async fetchEntities(): Promise<Entity[]> {
     try {
       log.info('Fetching notes');
-      const response = await api.get<Entity[]>(this.endpoint);
+      const response = await api.get<Entity[]>(`${this.endpoint}/`);
       log.info('Notes fetched successfully', { count: response.data.length });
       return response.data;
     } catch (error) {
@@ -57,7 +57,7 @@ class EntityService {
     try {
       log.info('Creating note', { title: noteData.title, parent: noteData.parent });
 
-      const createResponse = await api.post<Entity>(this.endpoint, noteData);
+      const createResponse = await api.post<Entity>(`${this.endpoint}/`, noteData);
 
       if (createResponse.status !== 201) {
         throw new Error(`Failed to create note: ${createResponse.status}`);
