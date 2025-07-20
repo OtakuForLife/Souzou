@@ -116,7 +116,7 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
   const dispatch = useAppDispatch();
   const onClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
-    dispatch(openTab(note));
+    dispatch(openTab(noteID));
   }
   const [isOpen, setIsOpen] = useState(false);
   const onDragStart = (_active: Active) => {

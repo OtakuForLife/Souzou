@@ -3,6 +3,7 @@ enum EntityType {
     NOTE = "note",
     VIEW = "view",
     AI_CHAT_HISTORY = "ai_chat_history",
+    MEDIA = "media",
 }
 
 interface Entity {
