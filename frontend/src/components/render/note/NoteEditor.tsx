@@ -56,7 +56,7 @@ const NoteEditor: React.FC<Props> = ({
       onLinkClick(noteId);
     } else {
       // Default behavior: open note in new tab
-      dispatch(openTab(notesRef.current[noteId]));
+      dispatch(openTab(noteId));
     }
   }, [onLinkClick, dispatch]);
 

@@ -3,6 +3,7 @@ import {
   Menu,
   LayoutDashboard,
   Tag,
+  Upload,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,6 +24,7 @@ import { openTab } from "@/store/slices/tabsSlice";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 import { EntityType } from "@/models/Entity";
 import { createDefaultViewContent } from "@/types/widgetTypes";
+import { useDialog } from "@/contexts/DialogContext";
 
 interface AppSidebarProps {
   onIconOneClick: () => void;
@@ -31,6 +33,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppSidebarProps) {
   const dispatch = useAppDispatch();
+  const { openFileUpload } = useDialog();
 
   return (
     <Sidebar
@@ -69,7 +72,7 @@ export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppS
 
                     // Open the newly created note in a tab
                     if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                      dispatch(openTab(result.payload.newNoteData));
+                      dispatch(openTab(result.payload.newNoteData.id));
                     }
                   }}
                 >
@@ -89,11 +92,20 @@ export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppS
                     }));
     
                     if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                        dispatch(openTab(result.payload.newNoteData));
+                        dispatch(openTab(result.payload.newNoteData.id));
                     }
                   }}
                 >
                   <LayoutDashboard/>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="">
+                <SidebarMenuButton
+                  asChild
+                  className="cursor-pointer p-1 m-0"
+                  onClick={() => openFileUpload(null)}
+                >
+                  <Upload/>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

@@ -9,11 +9,12 @@ import {
     ContextMenuSubContent,
     ContextMenuSubTrigger,
     ContextMenuTrigger,
-  } from "../components/ui/context-menu";
+  } from "@/components/ui/context-menu";
 import { Entity, EntityType } from "@/models/Entity";
 import { createEntity, deleteEntity } from "@/store/slices/entitySlice";
 import { openTab, closeTab } from "@/store/slices/tabsSlice";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
+import { useDialog } from "@/contexts/DialogContext";
 
 interface NoteTreeContextMenuProps {
     children: React.ReactNode;
@@ -22,6 +23,8 @@ interface NoteTreeContextMenuProps {
 
 export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuProps) {
     const dispatch = useAppDispatch();
+    const { openFileUpload } = useDialog();
+
     return (
         <ContextMenu>
             <ContextMenuTrigger>
@@ -40,7 +43,7 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
 
                             // Open the newly created note in a tab
                             if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                              dispatch(openTab(result.payload.newNoteData));
+                              dispatch(openTab(result.payload.newNoteData.id));
                             }
                         }}>
                             Note
@@ -56,14 +59,19 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
 
                             // Open the newly created note in a tab
                             if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                              dispatch(openTab(result.payload.newNoteData));
+                              dispatch(openTab(result.payload.newNoteData.id));
                             }
                         }}>
                             View
                             <ContextMenuShortcut>⌘[</ContextMenuShortcut>
                         </ContextMenuItem>
                         <ContextMenuSeparator />
-                        <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text">Upload Media</ContextMenuItem>
+                        <ContextMenuItem
+                            className="cursor-pointer theme-explorer-item-background theme-explorer-item-text"
+                            onSelect={() => openFileUpload(note.id)}
+                        >
+                            Upload Media
+                        </ContextMenuItem>
                     </ContextMenuSubContent>
                 </ContextMenuSub>
                 <ContextMenuSeparator />
@@ -79,5 +87,5 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                 </ContextMenuItem>
             </ContextMenuContent>
         </ContextMenu>
-    )
+    );
 }

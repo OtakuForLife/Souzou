@@ -60,6 +60,7 @@ function Home() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const navigationRef = useRef<ImperativePanelHandle>(null);
 
+
     // Keyboard shortcuts
     useKeyboardShortcuts([
         {
@@ -74,7 +75,7 @@ function Home() {
                 }));
 
                 if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                    dispatch(openTab(result.payload.newNoteData));
+                    dispatch(openTab(result.payload.newNoteData.id));
                 }
             }
         },
@@ -91,7 +92,7 @@ function Home() {
                 }));
 
                 if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-                    dispatch(openTab(result.payload.newNoteData));
+                    dispatch(openTab(result.payload.newNoteData.id));
                 }
             }
         },

@@ -7,6 +7,8 @@ import NotFoundPage from './pages/NotFoundPage'
 import { useTheme } from './hooks/useTheme'
 import { ErrorBoundary } from './components/common'
 import { log } from './lib/logger'
+import { DialogProvider } from './contexts/DialogContext'
+import FileUploadDialog from './components/FileUploadDialog'
 
 // Create a component to load theme
 const AppContent = () => {
@@ -25,18 +27,23 @@ const AppContent = () => {
   }, [currentTheme])
 
   return (
-    <ErrorBoundary
-      onError={(error, errorInfo) => {
-        log.error('Application error caught by boundary', error, {
-          componentStack: errorInfo.componentStack,
-        });
-      }}
-    >
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </ErrorBoundary>
+    <DialogProvider>
+      <ErrorBoundary
+        onError={(error, errorInfo) => {
+          log.error('Application error caught by boundary', error, {
+            componentStack: errorInfo.componentStack,
+          });
+        }}
+      >
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+
+        {/* Centralized Dialogs */}
+        <FileUploadDialog />
+      </ErrorBoundary>
+    </DialogProvider>
   )
 }
 

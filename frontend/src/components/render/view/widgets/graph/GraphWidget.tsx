@@ -11,7 +11,7 @@ import { LinkEntityData } from '@/store/slices/entityLinkSlice';
 import { Core } from 'cytoscape';
 import { useAppDispatch } from '@/hooks';
 import { openTab } from '@/store/slices/tabsSlice';
-import { Entity, EntityType } from '@/models/Entity';
+import { ViewMode } from '../../ViewRenderer';
 
 // Link types for graph edges
 enum LinkType {
@@ -35,7 +35,7 @@ interface EntityWithDepth {
 
 interface GraphWidgetProps {
   widget: GraphWidgetConfig;
-  mode?: 'render' | 'config';
+  mode?: ViewMode;
   onUpdate?: (updates: Partial<GraphWidgetConfig>) => void;
   onDelete?: () => void;
 }
@@ -104,17 +104,7 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
   const handleNodeClick = useCallback((nodeId: string) => {
     const entityData = linkData[nodeId];
     if (entityData) {
-      // Convert LinkEntityData to Entity format for openTab
-      const entity: Entity = {
-        id: entityData.id,
-        title: entityData.title,
-        content: entityData.content || '',
-        type: entityData.type as EntityType,
-        parent: entityData.parent || null,
-        children: [], // Children array not needed for opening tabs
-        created_at: new Date().toISOString(), // Fallback timestamp
-      };
-      dispatch(openTab(entity));
+      dispatch(openTab(nodeId));
     }
   }, [linkData, dispatch]);
 
@@ -288,10 +278,8 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
           'text-background-color': backgroundColor,
           'text-background-opacity': 0.8,
           'text-background-padding': '2px',
-          'text-border-radius': '3px',
           'width': widget.config.nodeSize,
           'height': widget.config.nodeSize,
-          'cursor': 'pointer', // Show pointer cursor on hover
         }
       },
       {
@@ -328,6 +316,12 @@ const GraphWidget: React.FC<GraphWidgetProps> = memo(({
           'line-color': '#3b82f6',
           'target-arrow-color': '#3b82f6',
           'line-style': 'solid',
+        }
+      },
+      {
+        selector: 'node[type="media"]',
+        style: {
+          'background-color': '#f59e0b',
         }
       },
       {
