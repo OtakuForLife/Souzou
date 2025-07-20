@@ -48,7 +48,7 @@ function ImageViewer({ content }: ImageViewerProps) {
     return (
         <div className="space-y-4">
             {/* Controls */}
-            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2 p-2 rounded-lg">
                 <Button
                     variant="outline"
                     size="sm"
@@ -96,12 +96,12 @@ function ImageViewer({ content }: ImageViewerProps) {
             </div>
 
             {/* Image Container */}
-            <div className="border rounded-lg overflow-auto bg-white" style={{ maxHeight: '70vh' }}>
+            <div className="border rounded-lg overflow-auto" style={{ maxHeight: '70vh' }}>
                 <div className="flex items-center justify-center min-h-96 p-4">
                     <img
                         src={imageUrl}
                         alt={content.filename}
-                        className="max-w-none transition-transform duration-200"
+                        className="transition-transform duration-200"
                         style={{
                             transform: `scale(${zoom}) rotate(${rotation}deg)`,
                             transformOrigin: 'center'

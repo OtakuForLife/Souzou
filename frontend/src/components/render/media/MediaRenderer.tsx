@@ -100,7 +100,7 @@ function MediaRenderer({ entityID }: EntityRendererProps) {
 
                 {/* File Info */}
                 <div className="px-4 pb-4">
-                    <div className="text-sm text-gray-500 space-y-1">
+                    <div className="text-sm space-y-1">
                         <p>File: {mediaContent.filename}</p>
                         <p>Type: {mediaContent.mimeType}</p>
                         <p>Size: {(mediaContent.size / 1024).toFixed(1)} KB</p>

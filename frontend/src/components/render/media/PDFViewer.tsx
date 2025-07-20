@@ -126,7 +126,7 @@ function PDFViewer({ content }: PDFViewerProps) {
     return (
         <div className="space-y-4">
             {/* Controls */}
-            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2 p-2 rounded-lg">
                 <Button
                     variant="outline"
                     size="sm"
@@ -168,11 +168,6 @@ function PDFViewer({ content }: PDFViewerProps) {
                     // Allow necessary permissions but restrict others to minimize PDF.js conflicts
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
-            </div>
-
-            {/* Fallback message */}
-            <div className="text-center text-gray-500 text-sm">
-                <p>If the PDF doesn't display properly, try opening it in a new tab or downloading it.</p>
             </div>
         </div>
     );
