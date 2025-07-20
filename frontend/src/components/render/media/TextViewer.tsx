@@ -107,7 +107,7 @@ function TextViewer({ content }: TextViewerProps) {
     return (
         <div className="space-y-4">
             {/* Controls */}
-            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2 p-2 rounded-lg">
                 <Button
                     variant="outline"
                     size="sm"
@@ -122,7 +122,7 @@ function TextViewer({ content }: TextViewerProps) {
                     {copied ? 'Copied!' : 'Copy'}
                 </Button>
                 <div className="flex-1" />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm">
                     {textContent.split('\n').length} lines
                 </span>
                 <Button
@@ -137,7 +137,7 @@ function TextViewer({ content }: TextViewerProps) {
             </div>
 
             {/* Text Content */}
-            <div className="border rounded-lg overflow-hidden bg-white">
+            <div className="border rounded-lg overflow-hidden">
                 <pre className="p-4 text-sm overflow-auto max-h-96 whitespace-pre-wrap font-mono">
                     <code className={`language-${language}`}>
                         {textContent}
