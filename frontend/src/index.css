@@ -57,6 +57,11 @@
     background-color: var(--color-explorer-item-background-hover);
   }
 
+  /* Drag-over styling for tree items */
+  .drag-over .theme-explorer-item-background {
+    background-color: var(--color-explorer-item-background-hover) !important;
+  }
+
   .theme-explorer-item-text {
     color: var(--color-explorer-item-text-default);
   }

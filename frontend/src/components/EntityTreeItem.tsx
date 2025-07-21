@@ -43,7 +43,7 @@ function TreeItemDroppable({noteID, children}: TreeItemDroppableProps){
     dispatch(saveEntity(updatedNote));
   }
 
-  const {setNodeRef} = useDroppable({
+  const {setNodeRef, isOver} = useDroppable({
     id: "treeitem-"+noteID,
     data: {
       note: noteID,
@@ -51,8 +51,9 @@ function TreeItemDroppable({noteID, children}: TreeItemDroppableProps){
       onDragEnd: onTreeItemDropped,
     },
   });
+
   return (
-    <div ref={setNodeRef}>{children}</div>
+    <div ref={setNodeRef} className={isOver ? 'drag-over' : ''}>{children}</div>
   );
 }
 
