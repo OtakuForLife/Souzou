@@ -16,7 +16,9 @@ const mockNotes: Record<string, Entity> = {
     content: 'This is the first note',
     created_at: '2023-01-01T00:00:00Z',
     parent: null,
-    children: []
+    children: [],
+    tags: [],
+    metadata: {}
   },
   'note-2': {
     id: 'note-2',
@@ -25,7 +27,9 @@ const mockNotes: Record<string, Entity> = {
     content: 'This is the second note',
     created_at: '2023-01-02T00:00:00Z',
     parent: null,
-    children: []
+    children: [],
+    tags: [],
+    metadata: {}
   },
   'note-3': {
     id: 'note-3',
@@ -34,7 +38,9 @@ const mockNotes: Record<string, Entity> = {
     content: 'Various project ideas',
     created_at: '2023-01-03T00:00:00Z',
     parent: null,
-    children: []
+    children: [],
+    tags: [],
+    metadata: {}
   }
 };
 
@@ -185,7 +191,9 @@ describe('LinkParsingService', () => {
         content: 'See [[note-1]] and [Second](note-2) for more.',
         created_at: '2023-01-04T00:00:00Z',
         parent: null,
-        children: []
+        children: [],
+        tags: [],
+        metadata: {}
       };
       
       const notesWithLinks = { ...mockNotes, 'note-with-links': noteWithLinks };
@@ -207,9 +215,11 @@ describe('LinkParsingService', () => {
         content: 'See [[note-1]] for details.',
         created_at: '2023-01-04T00:00:00Z',
         parent: null,
-        children: []
+        children: [],
+        tags: [],
+        metadata: {}
       };
-      
+
       const noteWithLinks2: Entity = {
         id: 'note-with-links-2',
         title: 'Note with Links 2',
@@ -217,7 +227,9 @@ describe('LinkParsingService', () => {
         content: 'Check [this](note-1) out.',
         created_at: '2023-01-05T00:00:00Z',
         parent: null,
-        children: []
+        children: [],
+        tags: [],
+        metadata: {}
       };
       
       const notesWithLinks = { 
@@ -291,7 +303,9 @@ describe('LinkParsingService', () => {
           content: 'Special content',
           created_at: '2023-01-01T00:00:00Z',
           parent: null,
-          children: []
+          children: [],
+          tags: [],
+          metadata: {}
         }
       };
 
@@ -334,6 +348,88 @@ describe('LinkParsingService', () => {
     });
   });
 
+  describe('External link parsing', () => {
+    it('should parse external HTTP links', () => {
+      const content = 'Check out [Google](http://google.com) for search.';
+      const result = linkParsingService.parseLinks(content, mockNotes);
+
+      expect(result.links).toHaveLength(1);
+      expect(result.links[0]).toMatchObject({
+        type: 'external',
+        displayText: 'Google',
+        targetIdentifier: 'http://google.com',
+        externalUrl: 'http://google.com',
+        isValid: true
+      });
+    });
+
+    it('should parse external HTTPS links', () => {
+      const content = 'Visit [GitHub](https://github.com) for code.';
+      const result = linkParsingService.parseLinks(content, mockNotes);
+
+      expect(result.links).toHaveLength(1);
+      expect(result.links[0]).toMatchObject({
+        type: 'external',
+        displayText: 'GitHub',
+        targetIdentifier: 'https://github.com',
+        externalUrl: 'https://github.com',
+        isValid: true
+      });
+    });
+
+    it('should handle mixed internal and external links', () => {
+      const content = 'See [First Note](note-1) and [Google](https://google.com).';
+      const result = linkParsingService.parseLinks(content, mockNotes);
+
+      expect(result.links).toHaveLength(2);
+
+      // Internal link
+      expect(result.links[0]).toMatchObject({
+        type: 'markdown-id',
+        displayText: 'First Note',
+        targetIdentifier: 'note-1',
+        targetNoteId: 'note-1',
+        isValid: true
+      });
+
+      // External link
+      expect(result.links[1]).toMatchObject({
+        type: 'external',
+        displayText: 'Google',
+        targetIdentifier: 'https://google.com',
+        externalUrl: 'https://google.com',
+        isValid: true
+      });
+    });
+
+    it('should not treat non-URL text as external links', () => {
+      const content = 'This is [not a link](just text) here.';
+      const result = linkParsingService.parseLinks(content, mockNotes);
+
+      expect(result.links).toHaveLength(0);
+      expect(result.brokenLinks).toHaveLength(1);
+      expect(result.brokenLinks[0].type).toBe('markdown-title');
+    });
+  });
+
+  describe('External URL validation', () => {
+    it('should identify external URLs correctly', () => {
+      expect(linkParsingService.isExternalUrl('http://example.com')).toBe(true);
+      expect(linkParsingService.isExternalUrl('https://example.com')).toBe(true);
+      expect(linkParsingService.isExternalUrl('ftp://example.com')).toBe(false);
+      expect(linkParsingService.isExternalUrl('example.com')).toBe(false);
+      expect(linkParsingService.isExternalUrl('not a url')).toBe(false);
+    });
+
+    it('should validate external URLs correctly', () => {
+      expect(linkParsingService.validateExternalUrl('example.com')).toBe('https://example.com/');
+      expect(linkParsingService.validateExternalUrl('http://example.com')).toBe('http://example.com/');
+      expect(linkParsingService.validateExternalUrl('https://example.com')).toBe('https://example.com/');
+      expect(linkParsingService.validateExternalUrl('not a url')).toBe(null);
+      expect(linkParsingService.validateExternalUrl('')).toBe(null);
+    });
+  });
+
   describe('Link creation methods', () => {
     it('should create ID-based wiki links', () => {
       const wikiLink = linkParsingService.createWikiLink('note-1');
@@ -343,6 +439,11 @@ describe('LinkParsingService', () => {
     it('should create markdown links with IDs', () => {
       const markdownLink = linkParsingService.createMarkdownLink('Display Text', 'note-1');
       expect(markdownLink).toBe('[Display Text](note-1)');
+    });
+
+    it('should create external links', () => {
+      const externalLink = linkParsingService.createExternalLink('Google', 'https://google.com');
+      expect(externalLink).toBe('[Google](https://google.com)');
     });
   });
 
@@ -367,7 +468,9 @@ describe('LinkParsingService', () => {
           content: `Content ${i}`,
           created_at: '2023-01-01T00:00:00Z',
           parent: null,
-          children: []
+          children: [],
+          tags: [],
+          metadata: {}
         };
       }
 

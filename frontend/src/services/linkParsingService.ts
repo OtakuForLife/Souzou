@@ -7,10 +7,11 @@ import { Entity } from '@/models/Entity';
 export interface ParsedLink {
   from: number;
   to: number;
-  type: 'wiki' | 'markdown-id' | 'markdown-title';
+  type: 'wiki' | 'markdown-id' | 'markdown-title' | 'external';
   displayText: string;
-  targetIdentifier: string; // note title or ID
-  targetNoteId?: string; // resolved note ID
+  targetIdentifier: string; // note title, ID, or external URL
+  targetNoteId?: string; // resolved note ID (only for internal links)
+  externalUrl?: string; // external URL (only for external links)
   isValid: boolean;
 }
 
@@ -40,7 +41,7 @@ class LinkParsingService {
 
     // Combine and categorize
     [...wikiLinks, ...markdownLinks].forEach(link => {
-      if (link.isValid && link.targetNoteId) {
+      if (link.isValid && (link.targetNoteId || link.type === 'external')) {
         links.push(link);
       } else {
         brokenLinks.push(link);
@@ -94,6 +95,20 @@ class LinkParsingService {
       const to = match.index + match[0].length;
       const displayText = match[1].trim();
       const target = match[2].trim();
+
+      // Check if target is an external URL
+      if (this.isExternalUrl(target)) {
+        links.push({
+          from,
+          to,
+          type: 'external',
+          displayText,
+          targetIdentifier: target,
+          externalUrl: target,
+          isValid: true
+        });
+        continue;
+      }
 
       // Check if target is a note ID (UUID format or simple string ID)
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target);
@@ -247,6 +262,42 @@ class LinkParsingService {
    */
   createMarkdownLink(displayText: string, noteId: string): string {
     return `[${displayText}](${noteId})`;
+  }
+
+  /**
+   * Create a markdown-style external link
+   */
+  createExternalLink(displayText: string, url: string): string {
+    return `[${displayText}](${url})`;
+  }
+
+  /**
+   * Check if a target string is an external URL
+   */
+  isExternalUrl(target: string): boolean {
+    try {
+      const url = new URL(target);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Validate and normalize an external URL
+   */
+  validateExternalUrl(url: string): string | null {
+    try {
+      // Add protocol if missing
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      const validUrl = new URL(url);
+      return validUrl.href;
+    } catch {
+      return null;
+    }
   }
 }
 
