@@ -1,5 +1,18 @@
 import { syntaxTree } from "@codemirror/language";
-import { ViewPlugin, DecorationSet, EditorView, ViewUpdate, Decoration } from "@codemirror/view";
+import { ViewPlugin, DecorationSet, EditorView, ViewUpdate, Decoration, WidgetType } from "@codemirror/view";
+
+/**
+ * Widget to replace list markers with bullet points
+ */
+class ListBulletWidget extends WidgetType {
+  toDOM() {
+    const span = document.createElement("span");
+    span.textContent = "• ";
+    span.style.color = "#6b7280";
+    span.style.fontWeight = "bold";
+    return span;
+  }
+}
 
 
 const hideMarkdownSyntax = ViewPlugin.fromClass(class {
@@ -49,7 +62,6 @@ const hideMarkdownSyntax = ViewPlugin.fromClass(class {
   private hideBasicMarkdownSyntax(node: any, decorations: any[]) {
     const basicSyntaxNodes = [
       "EmphasisMark",   // * ** _ __
-      "ListMark",       // - * +
       "CodeMark",       // ` ```
       "QuoteMark",      // >
     ];
@@ -57,6 +69,15 @@ const hideMarkdownSyntax = ViewPlugin.fromClass(class {
     if (basicSyntaxNodes.includes(node.name)) {
       decorations.push(
         Decoration.replace({}).range(node.from, node.to)
+      );
+    }
+
+    // Special handling for ListMark - replace with bullet widget
+    if (node.name === "ListMark") {
+      decorations.push(
+        Decoration.replace({
+          widget: new ListBulletWidget()
+        }).range(node.from, node.to)
       );
     }
   }
