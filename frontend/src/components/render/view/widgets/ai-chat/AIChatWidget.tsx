@@ -36,11 +36,14 @@ interface AIChatWidgetProps {
 
 const AIChatWidget: React.FC<AIChatWidgetProps> = ({
   widget,
-  mode = 'render',
+  mode = ViewMode.RENDER,
   onUpdate,
 }) => {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const [toolActivity, setToolActivity] = useState<string[]>([]);
   const [contextNotes, setContextNotes] = useState<any[]>([]);
   const [aiStatus, setAIStatus] = useState<{ available: boolean; error?: string }>({ available: true });
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -81,10 +84,10 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({
 
   const checkAIStatus = async () => {
     try {
-      const status = await aiService.getStatus();
+      const status = await aiService.getStatus(widget.config.provider);
       setAIStatus({
-        available: status.ollama_available,
-        error: status.ollama_available ? undefined : 'Ollama server is not available'
+        available: status.provider_available,
+        error: status.provider_available ? undefined : `AI provider ${status.provider} is not available`
       });
     } catch (error) {
       setAIStatus({
@@ -184,7 +187,7 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim() || isLoading || !aiStatus.available) return;
+    if (!message.trim() || isLoading || isStreaming || !aiStatus.available) return;
 
     const userMessage = message.trim();
     setMessage('');
@@ -248,47 +251,63 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({
           content: msg.content
         }));
 
-      // Send to AI with extended timeout
-      const aiResponse = await Promise.race([
-        aiService.chat({
-          message: userMessage,
-          context_notes: contextNoteIds,
-          conversation_history: conversationHistory.slice(0, -1), // Exclude current message
-          model: widget.config.model,
-          temperature: widget.config.temperature,
-          max_tokens: widget.config.maxTokens
-        }),
-        new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('AI request timeout')), 60000) // 60 second timeout
-        )
-      ]);
+      // Start streaming response
+      setIsStreaming(true);
+      setStreamingContent('');
+      setToolActivity([]);
 
-      if (aiResponse.success && aiResponse.response) {
-        // Add AI response to history
-        const aiChatMessage: ChatHistoryMessage = {
-          role: 'assistant',
-          content: aiResponse.response,
-          timestamp: new Date().toISOString(),
-          contextNotes: contextNoteIds
-        };
+      let fullResponse = '';
 
-        const finalHistory = [...historyWithContext, aiChatMessage];
+      await aiService.chatStream({
+        message: userMessage,
+        context_notes: contextNoteIds,
+        conversation_history: conversationHistory.slice(0, -1), // Exclude current message
+        model: widget.config.model,
+        provider: widget.config.provider || 'ollama', // Use configured provider
+        temperature: widget.config.temperature,
+        max_tokens: widget.config.maxTokens
+      }, {
+        onChunk: (chunk) => {
+          if (chunk.type === 'content' && chunk.content) {
+            fullResponse += chunk.content;
+            setStreamingContent(fullResponse);
+          } else if (chunk.type === 'tool_start' && chunk.message) {
+            setToolActivity(prev => [...prev, `🔧 ${chunk.message}`]);
+          } else if (chunk.type === 'tool_result' && chunk.content) {
+            setToolActivity(prev => [...prev, `✅ Tool completed: ${chunk.content.substring(0, 100)}...`]);
+          }
+        },
+        onComplete: async (response) => {
+          setIsStreaming(false);
 
-        await updateChatHistoryEntity(entityId, finalHistory);
-      } else {
-        // Add error message
-        const errorMessage: ChatHistoryMessage = {
-          role: 'assistant',
-          content: `Sorry, I encountered an error: ${aiResponse.error || 'Unknown error'}`,
-          timestamp: new Date().toISOString(),
-          contextNotes: []
-        };
+          // Add AI response to history
+          const aiChatMessage: ChatHistoryMessage = {
+            role: 'assistant',
+            content: fullResponse || response,
+            timestamp: new Date().toISOString(),
+            contextNotes: contextNoteIds
+          };
 
-        const errorHistory = [...historyWithContext, errorMessage];
-        await updateChatHistoryEntity(entityId, errorHistory);
-      }
+          const finalHistory = [...historyWithContext, aiChatMessage];
+          await updateChatHistoryEntity(entityId, finalHistory);
+
+          // Clear streaming states
+          setStreamingContent('');
+          setToolActivity([]);
+        },
+        onError: (error) => {
+          setIsStreaming(false);
+          setStreamingContent('');
+          setToolActivity([]);
+          console.error('Streaming error:', error);
+          // Handle error appropriately
+        }
+      });
     } catch (error) {
       console.error('Chat error:', error);
+      setIsStreaming(false);
+      setStreamingContent('');
+      setToolActivity([]);
 
       // Add error message to chat
       const errorMessage: ChatHistoryMessage = {
@@ -404,6 +423,48 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Streaming indicator */}
+            {isStreaming && (
+              <div className="flex gap-3 justify-start">
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center">
+                    <Bot className="h-3 w-3 text-white" />
+                  </div>
+                  <Card className="bg-gray-50">
+                    <CardContent className="p-3">
+                      <div className="flex-1">
+                        {/* Tool activity display */}
+                        {toolActivity.length > 0 && (
+                          <div className="mb-2 p-2 bg-blue-50 rounded text-xs">
+                            <div className="font-medium text-blue-700 mb-1">Agent Activity:</div>
+                            {toolActivity.slice(-3).map((activity, index) => (
+                              <div key={index} className="text-blue-600 mb-1">
+                                {activity}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Streaming content */}
+                        {streamingContent && (
+                          <div className="prose prose-sm max-w-none">
+                            <ReactMarkdown children={streamingContent}/>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-1 mt-2">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span className="text-xs text-gray-500">
+                            {toolActivity.length > 0 ? 'Agent working...' : 'Streaming...'}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
@@ -431,15 +492,15 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({
               onKeyDown={handleKeyPress}
               placeholder="Ask me anything about your notes..."
               className="min-h-[40px] max-h-[120px] resize-none"
-              disabled={isLoading}
+              disabled={isLoading || isStreaming}
             />
             <Button
-              onClick={handleSendMessage}
-              disabled={!message.trim() || isLoading}
+              onClick={() => handleSendMessage()} // Enable streaming by default
+              disabled={!message.trim() || isLoading || isStreaming}
               size="sm"
               className="self-end"
             >
-              {isLoading ? (
+              {(isLoading || isStreaming) ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />

@@ -45,9 +45,11 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'corsheaders',
+    'channels',  # WebSocket support
 
     # Local apps
     'api',
+    'ai',  # AI app for WebSocket consumers
 ]
 
 MIDDLEWARE = [
@@ -77,6 +79,9 @@ CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 
 ROOT_URLCONF = 'backend.urls'
+
+# ASGI application for WebSocket support
+ASGI_APPLICATION = 'backend.asgi.application'
 
 TEMPLATES = [
     {
@@ -154,6 +159,62 @@ REST_FRAMEWORK = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Channels configuration for WebSocket support (development)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+# Logging configuration for development
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'ai': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'ai.consumers': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'ai.llm': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Ollama configuration
 OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
 OLLAMA_DEFAULT_MODEL = os.getenv('OLLAMA_DEFAULT_MODEL', 'llama2')
 OLLAMA_TIMEOUT = int(os.getenv('OLLAMA_TIMEOUT', '120'))

@@ -17,6 +17,7 @@ vi.mock('@/services/aiService', () => ({
   aiService: {
     getStatus: vi.fn(),
     listModels: vi.fn(),
+    listProviders: vi.fn(),
   },
 }));
 
@@ -85,9 +86,20 @@ describe('AIChatWidgetConfigDialog', () => {
     // Mock AI service responses
     mockAiService.getStatus.mockResolvedValue({
       success: true,
-      ollama_available: true,
-      base_url: 'http://localhost:11434',
-      default_model: 'llama2',
+      provider: 'ollama',
+      provider_available: true,
+    });
+
+    mockAiService.listProviders.mockResolvedValue({
+      success: true,
+      providers: [
+        {
+          name: 'ollama',
+          display_name: 'Ollama',
+          available: true,
+          models: []
+        }
+      ],
     });
 
     mockAiService.listModels.mockResolvedValue({
@@ -97,13 +109,15 @@ describe('AIChatWidgetConfigDialog', () => {
           name: 'llama2',
           size: 3800000000,
           modified_at: '2024-01-01T00:00:00Z',
-          digest: 'abc123',
+          digest: 'abc123'
+          // Note: provider field is added by frontend, not backend
         },
         {
           name: 'codellama',
           size: 7000000000,
           modified_at: '2024-01-01T00:00:00Z',
-          digest: 'def456',
+          digest: 'def456'
+          // Note: provider field is added by frontend, not backend
         },
       ],
     });
@@ -130,9 +144,8 @@ describe('AIChatWidgetConfigDialog', () => {
   it('should show AI service status as offline when unavailable', async () => {
     mockAiService.getStatus.mockResolvedValue({
       success: true,
-      ollama_available: false,
-      base_url: 'http://localhost:11434',
-      default_model: 'llama2',
+      provider: 'ollama',
+      provider_available: false,
     });
 
     renderWithProvider(<AIChatWidgetConfigDialog {...mockProps} />);
@@ -142,11 +155,23 @@ describe('AIChatWidgetConfigDialog', () => {
     });
   });
 
-  it('should load and display available models', async () => {
-    renderWithProvider(<AIChatWidgetConfigDialog {...mockProps} />);
+  it('should load and display available models when provider is selected', async () => {
+    // Set up props with a provider already selected
+    const propsWithProvider = {
+      ...mockProps,
+      widget: {
+        ...mockProps.widget,
+        config: {
+          ...mockProps.widget.config,
+          provider: 'ollama'
+        }
+      }
+    };
+
+    renderWithProvider(<AIChatWidgetConfigDialog {...propsWithProvider} />);
 
     await waitFor(() => {
-      expect(mockAiService.listModels).toHaveBeenCalled();
+      expect(mockAiService.listModels).toHaveBeenCalledWith('ollama');
     });
 
     // Check if models are loaded - the dropdown shows as a button with the current model
