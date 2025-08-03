@@ -13,6 +13,8 @@ import { createCombinedLinkCompletion } from "@/editor/linkCompletion";
 import { createLinkDecorations } from "@/editor/linkDecorations";
 import { createWikiLinkDisplay } from "@/editor/wikiLinkDisplay";
 import { createWikiLinkSyntax } from "@/editor/wikiLinkSyntax";
+import { checkboxPlugin } from "@/editor/checkboxExtension";
+import { tablePlugin } from "@/editor/tableExtension";
 import { RootState } from "@/store";
 import { useAppDispatch } from "@/hooks";
 import { openTab } from "@/store/slices/tabsSlice";
@@ -56,7 +58,7 @@ const NoteEditor: React.FC<Props> = ({
       onLinkClick(noteId);
     } else {
       // Default behavior: open note in new tab
-      dispatch(openTab(notesRef.current[noteId]));
+      dispatch(openTab(noteId));
     }
   }, [onLinkClick, dispatch]);
 
@@ -85,6 +87,10 @@ const NoteEditor: React.FC<Props> = ({
       doc: initialText,
       extensions: [
         ...baseExtensions,
+        // Obsidian-style checkbox live preview
+        checkboxPlugin,
+        // TanStack table rendering
+        tablePlugin,
         syntaxHighlighting(markdownHighlightStyle),
         hideMarkdownSyntax,
         wikiLinkSyntax, // Add wiki link syntax styling (for raw text)

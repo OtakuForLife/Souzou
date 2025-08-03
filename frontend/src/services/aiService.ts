@@ -13,6 +13,7 @@ import { log } from '@/lib/logger';
 import { Entity } from '@/models/Entity';
 
 // Types for AI service
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;

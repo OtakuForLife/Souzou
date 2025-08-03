@@ -15,21 +15,21 @@ export const tabsSlice = createSlice({
   name: 'tabs',
   initialState,
   reducers: {
-    openTab: (state, action: PayloadAction<Entity>) => {
-      const tab = action.payload;
+    openTab: (state, action: PayloadAction<string>) => {
+      const entityId = action.payload;
 
       // Check if tab is already open
       const existingIndex = state.openTabs.findIndex(
-        (tabId) => tabId === tab.id
+        (tabId) => tabId === entityId
       );
 
       if (existingIndex === -1) {
         // Add new tab
-        state.openTabs.push(tab.id);
+        state.openTabs.push(entityId);
       }
 
       // Set as current tab
-      state.currentTab = tab.id;
+      state.currentTab = entityId;
     },
 
     closeTab: (state, action: PayloadAction<Entity>) => {

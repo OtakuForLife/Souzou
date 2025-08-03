@@ -4,13 +4,23 @@
 
 import { Entity } from '@/models/Entity';
 
+enum LinkType {
+  WIKI = 'wiki',
+  MARKDOWN_ID = 'markdown-id',
+  MARKDOWN_TITLE = 'markdown-title',
+  EXTERNAL = 'external'
+}
+
+const PROTOCOLS = ['http', 'https'];
+
 export interface ParsedLink {
   from: number;
   to: number;
-  type: 'wiki' | 'markdown-id' | 'markdown-title';
+  type: LinkType;
   displayText: string;
-  targetIdentifier: string; // note title or ID
-  targetNoteId?: string; // resolved note ID
+  targetIdentifier: string; // note title, ID, or external URL
+  targetNoteId?: string; // resolved note ID (only for internal links)
+  externalUrl?: string; // external URL (only for external links)
   isValid: boolean;
 }
 
@@ -40,7 +50,7 @@ class LinkParsingService {
 
     // Combine and categorize
     [...wikiLinks, ...markdownLinks].forEach(link => {
-      if (link.isValid && link.targetNoteId) {
+      if (link.isValid && (link.targetNoteId || link.type === LinkType.EXTERNAL)) {
         links.push(link);
       } else {
         brokenLinks.push(link);
@@ -70,7 +80,7 @@ class LinkParsingService {
       links.push({
         from,
         to,
-        type: 'wiki',
+        type: LinkType.WIKI,
         displayText,
         targetIdentifier: noteId,
         targetNoteId: targetNote?.id,
@@ -95,6 +105,20 @@ class LinkParsingService {
       const displayText = match[1].trim();
       const target = match[2].trim();
 
+      // Check if target is an external URL
+      if (this.isExternalUrl(target)) {
+        links.push({
+          from,
+          to,
+          type: LinkType.EXTERNAL,
+          displayText,
+          targetIdentifier: target,
+          externalUrl: target,
+          isValid: true
+        });
+        continue;
+      }
+
       // Check if target is a note ID (UUID format or simple string ID)
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target);
       const isSimpleId = allNotes[target] !== undefined; // Check if it's a direct ID match
@@ -104,20 +128,20 @@ class LinkParsingService {
       const looksLikeId = /^[a-z0-9\-_]+$/i.test(target) && !target.includes(' ');
 
       let targetNote: Entity | null = null;
-      let linkType: 'markdown-id' | 'markdown-title' = 'markdown-title';
+      let linkType: LinkType = LinkType.MARKDOWN_TITLE;
 
       if (isUUID || isSimpleId) {
         // Target is a note ID (either UUID or simple string)
         targetNote = allNotes[target] || null;
-        linkType = 'markdown-id';
+        linkType = LinkType.MARKDOWN_ID;
       } else if (looksLikeId) {
         // Looks like an ID but doesn't exist - treat as broken ID
         targetNote = null;
-        linkType = 'markdown-id';
+        linkType = LinkType.MARKDOWN_ID;
       } else {
         // Target is a note title
         targetNote = this.findNoteByTitle(target, allNotes);
-        linkType = 'markdown-title';
+        linkType = LinkType.MARKDOWN_TITLE;
       }
 
       links.push({
@@ -247,6 +271,43 @@ class LinkParsingService {
    */
   createMarkdownLink(displayText: string, noteId: string): string {
     return `[${displayText}](${noteId})`;
+  }
+
+  /**
+   * Create a markdown-style external link
+   */
+  createExternalLink(displayText: string, url: string): string {
+    return `[${displayText}](${url})`;
+  }
+
+  /**
+   * Check if a target string is an external URL
+   */
+  isExternalUrl(target: string): boolean {
+    try {
+      const url = new URL(target);
+      return PROTOCOLS.includes(url.protocol.slice(0, -1)); // Remove trailing colon
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Validate and normalize an external URL
+   */
+  validateExternalUrl(url: string): string | null {
+    try {
+      // Add protocol if missing
+      const hasProtocol = PROTOCOLS.some(protocol => url.startsWith(`${protocol}://`));
+      if (!hasProtocol) {
+        url = 'https://' + url; // Default to HTTPS for security
+      }
+
+      const validUrl = new URL(url);
+      return validUrl.href;
+    } catch {
+      return null;
+    }
   }
 }
 

@@ -16,7 +16,7 @@ export default function NoOpenNote(){
 
         // Open the newly created note in a tab
         if (createEntity.fulfilled.match(result) && result.payload.newNoteData) {
-            dispatch(openTab(result.payload.newNoteData));
+            dispatch(openTab(result.payload.newNoteData.id));
         }
     };
 

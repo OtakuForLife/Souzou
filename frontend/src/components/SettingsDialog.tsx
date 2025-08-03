@@ -12,32 +12,15 @@ import {
 } from "./ui/dialog"
 import {Button} from "./ui/button";
 import { Label } from "./ui/label";
-import { useLocalStorage } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
-import { STORAGE_KEYS } from "@/config/constants";
 import { log } from "@/lib/logger";
 import { Theme } from "@/types/themeTypes";
 
-interface UserPreferences {
-    autoSave: boolean;
-    showLineNumbers: boolean;
-    fontSize: number;
-}
 
 export default function SettingsDialog(){
     const { currentTheme, allThemes, switchTheme } = useTheme();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-
-    // Use localStorage hook for user preferences
-    const [preferences, setPreferences] = useLocalStorage<UserPreferences>(
-        STORAGE_KEYS.USER_PREFERENCES,
-        {
-            autoSave: true,
-            showLineNumbers: false,
-            fontSize: 14,
-        }
-    );
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -63,12 +46,6 @@ export default function SettingsDialog(){
 
         // Switch theme directly without delays
         switchTheme(newThemeId);
-    };
-
-    const handlePreferenceChange = (key: keyof UserPreferences, value: any) => {
-        const newPreferences = { ...preferences, [key]: value };
-        setPreferences(newPreferences);
-        log.info('User preference changed', { key, value, preferences: newPreferences });
     };
     return (
         <Dialog>
@@ -116,41 +93,6 @@ export default function SettingsDialog(){
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Auto-save Setting */}
-                    <div className="flex flex-row items-center justify-between">
-                        <Label className="text-right">Auto-save</Label>
-                        <input
-                            type="checkbox"
-                            checked={preferences.autoSave}
-                            onChange={(e) => handlePreferenceChange('autoSave', e.target.checked)}
-                            className="w-4 h-4"
-                        />
-                    </div>
-
-                    {/* Show Line Numbers Setting */}
-                    <div className="flex flex-row items-center justify-between">
-                        <Label className="text-right">Show Line Numbers</Label>
-                        <input
-                            type="checkbox"
-                            checked={preferences.showLineNumbers}
-                            onChange={(e) => handlePreferenceChange('showLineNumbers', e.target.checked)}
-                            className="w-4 h-4"
-                        />
-                    </div>
-
-                    {/* Font Size Setting */}
-                    <div className="flex flex-row items-center justify-between">
-                        <Label className="text-right">Font Size</Label>
-                        <input
-                            type="number"
-                            min="10"
-                            max="24"
-                            value={preferences.fontSize}
-                            onChange={(e) => handlePreferenceChange('fontSize', parseInt(e.target.value))}
-                            className="w-20 px-2 py-1 border rounded"
-                        />
                     </div>
                 </div>
                 <DialogFooter>

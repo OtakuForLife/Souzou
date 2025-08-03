@@ -5,6 +5,7 @@ import { EntityType } from '@/models/Entity';
 import NoteRenderer from '@/components/render/note/NoteRenderer';
 import ViewRenderer from '@/components/render/view/ViewRenderer';
 import AIChatHistoryRenderer from '@/components/render/ai-chat-history/AIChatHistoryRenderer';
+import MediaRenderer from '@/components/render/media/MediaRenderer';
 import {EntityRendererProps} from '@/components/ContentRenderer'
 
 // Content type metadata
@@ -31,6 +32,10 @@ const entityTypeMetadata: Record<EntityType, EntityTypeMetadata> = {
   [EntityType.AI_CHAT_HISTORY]: {
     type: EntityType.AI_CHAT_HISTORY,
     defaultCreationTitle: 'New AI Chat'
+  },
+  [EntityType.MEDIA]: {
+    type: EntityType.MEDIA,
+    defaultCreationTitle: 'New Media'
   }
 };
 
@@ -47,6 +52,10 @@ const contentTypeRegistry: Record<EntityType, ContentTypeRegistryEntry> = {
   [EntityType.AI_CHAT_HISTORY]: {
     metadata: entityTypeMetadata[EntityType.AI_CHAT_HISTORY],
     contentComponent: AIChatHistoryRenderer
+  },
+  [EntityType.MEDIA]: {
+    metadata: entityTypeMetadata[EntityType.MEDIA],
+    contentComponent: MediaRenderer
   },
 };
 

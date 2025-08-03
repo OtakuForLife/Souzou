@@ -3,6 +3,7 @@ enum EntityType {
     NOTE = "note",
     VIEW = "view",
     AI_CHAT_HISTORY = "ai_chat_history",
+    MEDIA = "media",
 }
 
 interface Entity {
@@ -11,9 +12,10 @@ interface Entity {
     title: string;
     content: string;
     created_at: string;
+    updated_at: string;
     parent: string | null;
     children: string[];
-    tags: string[]; // Changed from Tag[] to string[] (tag IDs)
+    tags: string[];
     metadata: Record<string, any>;
 }
 

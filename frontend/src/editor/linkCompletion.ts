@@ -23,6 +23,10 @@ interface MatchResult {
   text: string;
 }
 
+function urlTest(query: string): boolean {
+  return /^https?:\/\//.test(query) || /^www\./.test(query) || /\.[a-z]{2,}/.test(query);
+}
+
 /**
  * Create a completion source for wiki-style note linking [[
  */
@@ -124,6 +128,13 @@ export function createMarkdownLinkCompletion(
       // Don't show suggestions for very short queries unless explicitly requested
       if (query.length < 1 && !context.explicit) {
         return null;
+      }
+
+      // Check if the query looks like an external URL - if so, don't show note suggestions
+      const looksLikeUrl = urlTest(query);
+
+      if (looksLikeUrl) {
+        return null; // Let user type external URLs without interference
       }
 
       // Get current notes data with error handling
@@ -321,6 +332,13 @@ function handleMarkdownCompletion(
     // Don't show suggestions for very short queries unless explicitly requested
     if (query.length < 1 && !context.explicit) {
       return null;
+    }
+
+    // Check if the query looks like an external URL - if so, don't show note suggestions
+    const looksLikeUrl = urlTest(query);
+
+    if (looksLikeUrl) {
+      return null; // Let user type external URLs without interference
     }
 
     // Get current notes data with error handling

@@ -163,6 +163,33 @@ var customTheme = EditorView.theme({
         backgroundColor: "rgba(204, 102, 0, 0.15)",
     },
 
+    // External link styling
+    ".cm-external-link": {
+        textDecoration: "underline",
+        cursor: "pointer",
+        borderRadius: "2px",
+        padding: "1px 2px",
+        transition: "all 0.2s ease",
+    },
+
+    ".cm-external-link-valid": {
+        color: "#0066cc",
+        backgroundColor: "rgba(0, 102, 204, 0.05)",
+    },
+
+    ".cm-external-link-valid:hover, .cm-external-link-valid.cm-external-link-hover": {
+        backgroundColor: "rgba(0, 102, 204, 0.15)",
+        textDecoration: "underline",
+    },
+
+    ".cm-external-link-valid::after": {
+        content: '"↗"',
+        fontSize: "0.8em",
+        marginLeft: "2px",
+        opacity: "0.6",
+        display: "inline",
+    },
+
     // Wiki link syntax styling (for raw [[noteID]] text)
     ".cm-wiki-link-syntax": {
         color: syntaxComment,
