@@ -20,7 +20,7 @@ export const API_CONFIG = {
     ENTITIES: '/api/entities',
     THEMES: '/api/themes',
     TAGS: '/api/tags',
-    AI: '/ai',
+    AI: '/api/ai',
   },
 } as const;
 

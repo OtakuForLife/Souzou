@@ -64,8 +64,7 @@ export const NoteWidgetConfigSchema = BaseWidgetConfigSchema.extend({
 export const AIChatWidgetConfigSchema = BaseWidgetConfigSchema.extend({
   type: z.literal(WidgetType.AI_CHAT),
   config: z.object({
-    // AI Provider Settings
-    provider: z.string().min(1).optional(),
+    // Ollama Settings
     model: z.string().min(1),
     temperature: z.number().min(0).max(1),
     maxTokens: z.number().int().min(100).max(8000).optional(),

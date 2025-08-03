@@ -24,7 +24,6 @@ export interface ChatRequest {
   context_notes?: string[];
   conversation_history?: ChatMessage[];
   model?: string;
-  provider?: string;  // New: AI provider (ollama, openai, etc.)
   temperature?: number;
   max_tokens?: number;
 }
@@ -33,41 +32,10 @@ export interface ChatResponse {
   success: boolean;
   response?: string;
   model?: string;
-  provider?: string;  // New: Which provider was used
   error?: string;
   error_type?: string;
   total_duration?: number;
   eval_count?: number;
-}
-
-// Streaming types following the Medium article
-export interface StreamChunk {
-  content?: string;
-  worker?: string;
-  provider?: string;
-  model?: string;
-  done?: boolean;
-  full_response?: string;
-  error?: string;
-}
-
-export interface StreamCallbacks {
-  onChunk?: (chunk: StreamChunk) => void;
-  onComplete?: (fullResponse: string) => void;
-  onError?: (error: string) => void;
-}
-
-export interface StreamChunk {
-  type: 'content' | 'done' | 'error' | 'start' | 'complete' | 'chain_end' | 'routing' | 'worker_complete' | 'tool_start' | 'tool_result';
-  content?: string;
-  worker?: string;
-  provider?: string;
-  model?: string;
-  error?: string;
-  error_type?: string;
-  message?: string;
-  event_type?: string;
-  next_worker?: string;
 }
 
 export interface RelevantContextRequest {
@@ -83,29 +51,24 @@ export interface RelevantContextResponse {
   error?: string;
 }
 
+export interface AIModel {
+  name: string;
+  size: number;
+  modified_at: string;
+  digest: string;
+}
+
 export interface ModelsResponse {
   success: boolean;
-  models: string[];
-  error?: string;
-}
-
-export interface AIProvider {
-  name: string;
-  display_name: string;
-  available: boolean;
-  models: string[];
-}
-
-export interface ProvidersResponse {
-  success: boolean;
-  providers: AIProvider[];
+  models: AIModel[];
   error?: string;
 }
 
 export interface AIStatus {
   success: boolean;
-  provider: string;           // Backend returns provider name
-  provider_available: boolean; // Backend returns provider_available
+  ollama_available: boolean;
+  base_url: string;
+  default_model: string;
   error?: string;
 }
 
@@ -130,162 +93,58 @@ class AIService {
   private readonly endpoint = API_CONFIG.ENDPOINTS.AI;
 
   /**
-   * Chat with AI using WebSocket streaming (backend only supports WebSocket)
-   * This method now wraps the streaming functionality to provide a Promise-based interface
+   * Chat with AI using note context
    */
   async chat(request: ChatRequest): Promise<ChatResponse> {
-    return new Promise((resolve) => {
-      let fullResponse = '';
-      let hasError = false;
-
-      this.chatStream(request, {
-        onChunk: (chunk) => {
-          if (chunk.content) {
-            fullResponse += chunk.content;
-          }
-        },
-        onComplete: (response) => {
-          if (!hasError) {
-            resolve({
-              success: true,
-              response: fullResponse || response || '', // Use accumulated content
-              model: request.model,
-              provider: request.provider
-            });
-          }
-        },
-        onError: (error) => {
-          hasError = true;
-          resolve({
-            success: false,
-            error: error,
-            error_type: 'websocket_error'
-          });
-        }
-      });
-    });
-  }
-
-  /**
-   * Stream chat with AI using WebSocket connection (following Medium article pattern)
-   */
-  async chatStream(request: ChatRequest, callbacks: StreamCallbacks): Promise<void> {
     try {
-      log.info('Starting WebSocket streaming chat', {
+      log.info('Sending chat request to AI', {
         messageLength: request.message.length,
         contextNotes: request.context_notes?.length || 0,
-        model: request.model,
-        provider: request.provider
+        model: request.model
       });
 
-      // Create WebSocket connection - match backend routing pattern
-      // Backend expects 'ai/chat/' without leading slash
-      const baseWsUrl = API_CONFIG.BASE_URL.replace('http', 'ws');
-      const wsUrl = `${baseWsUrl}/ai/chat/`;
-      const socket = new WebSocket(wsUrl);
+      // Use extended timeout for AI chat requests (60 seconds)
+      const response = await api.post<ChatResponse>(
+        `${this.endpoint}/chat/`,
+        request,
+        { timeout: 60000 }
+      );
 
-      socket.onopen = () => {
-        log.info('WebSocket connection established');
+      if (response.data.success) {
+        log.info('AI chat completed successfully', {
+          model: response.data.model,
+          responseLength: response.data.response?.length || 0
+        });
+      } else {
+        log.error('AI chat failed', new Error(response.data.error || 'Unknown error'));
+      }
 
-        // Send chat request
-        const requestData = {
-          type: 'chat',
-          ...request
-        };
-        log.info('Sending chat request: ' + JSON.stringify(requestData));
-        socket.send(JSON.stringify(requestData));
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          log.info('WebSocket message received: ' + event.data);
-          const data = JSON.parse(event.data) as StreamChunk;
-          log.info('Parsed WebSocket data:', data);
-
-          // Handle error events
-          if (data.type === 'error') {
-            log.error('Received error from backend: ' + (data.error || 'Unknown error'));
-            callbacks.onError?.(data.error || 'Unknown error');
-            socket.close();
-            return;
-          }
-
-          // Handle content events (actual AI response text)
-          if (data.type === 'content' && data.content) {
-            log.info('Received content chunk: ' + data.content);
-            callbacks.onChunk?.(data);
-          }
-
-          // Handle tool results (web search results, etc.)
-          if (data.type === 'tool_result' && data.content) {
-            log.info('Received tool result: ' + data.content);
-            callbacks.onChunk?.(data);
-          }
-
-          // Handle completion events
-          if (data.type === 'complete' || data.type === 'done') {
-            log.info('Received completion signal');
-            callbacks.onComplete?.(''); // LangGraph doesn't provide full_response
-            socket.close();
-            return;
-          }
-
-          // Handle status/progress events - log for user feedback
-          if (data.type === 'start') {
-            log.info('AI processing started', { message: data.message, worker: data.worker });
-          }
-
-          if (data.type === 'routing') {
-            log.info('AI routing decision', { message: data.message, next_worker: data.next_worker });
-          }
-
-          if (data.type === 'tool_start') {
-            try {
-              log.info('AI tool execution', { message: data.message, worker: data.worker });
-            } catch (toolError) {
-              log.error('Error handling tool_start event: ' + toolError);
-            }
-          }
-
-          if (data.type === 'worker_complete') {
-            try {
-              log.info('AI worker completed', { message: data.message, worker: data.worker });
-            } catch (workerError) {
-              log.error('Error handling worker_complete event: ' + workerError);
-            }
-          }
-
-          // Log any unhandled event types
-          if (!['error', 'content', 'tool_result', 'complete', 'done', 'start', 'routing', 'tool_start', 'worker_complete'].includes(data.type)) {
-            log.warn('Unhandled event type: ' + data.type + ', data: ' + JSON.stringify(data));
-          }
-
-        } catch (parseError) {
-          log.error('Failed to parse WebSocket message', parseError as Error);
-          log.info('Raw message data: ' + event.data);
-
-          // Don't close connection for parse errors - just skip the message
-          // This makes the frontend more resilient to unexpected events
-          log.warn('Skipping malformed message, continuing...');
-        }
-      };
-
-      socket.onerror = (error) => {
-        log.error('WebSocket error occurred: ' + JSON.stringify(error));
-        callbacks.onError?.('WebSocket connection error: ' + (error as any)?.message || 'Unknown WebSocket error');
-      };
-
-      socket.onclose = (event) => {
-        log.info('WebSocket connection closed - Code: ' + event.code + ', Reason: ' + event.reason);
-        if (event.code !== 1000) { // 1000 = normal closure
-          log.warn('WebSocket closed unexpectedly with code: ' + event.code);
-          callbacks.onError?.('WebSocket connection closed unexpectedly (code: ' + event.code + ')');
-        }
-      };
-
+      return response.data;
     } catch (error) {
-      log.error('Failed to establish WebSocket connection', error as Error);
-      callbacks.onError?.('Failed to establish WebSocket connection');
+      log.error('Failed to send chat request', error as Error);
+
+      // Better error handling for different error types
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          return {
+            success: false,
+            error: 'Request timed out. The AI model may be busy or your message is too complex.',
+            error_type: 'timeout_error'
+          };
+        } else if (error.message.includes('Network Error')) {
+          return {
+            success: false,
+            error: 'Network connection failed. Please check your internet connection.',
+            error_type: 'network_error'
+          };
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Failed to communicate with AI service',
+        error_type: 'unknown_error'
+      };
     }
   }
 
@@ -331,45 +190,40 @@ class AIService {
   }
 
   /**
-   * List available AI providers
+   * List available AI models
    */
-  async listProviders(): Promise<ProvidersResponse> {
+  async listModels(): Promise<ModelsResponse> {
     try {
-      log.info('Fetching available AI providers');
+      log.info('Fetching available AI models');
 
-      const response = await api.get<ProvidersResponse>(`${this.endpoint}/providers/`);
-
-      log.info('AI providers fetched', {
-        providerCount: response.data.providers?.length || 0
+      const response = await api.get<ModelsResponse>(`${this.endpoint}/models/`);
+      
+      log.info('AI models fetched', { 
+        modelCount: response.data.models?.length || 0 
       });
 
       return response.data;
     } catch (error) {
-      log.error('Failed to fetch AI providers', error as Error);
+      log.error('Failed to fetch AI models', error as Error);
       return {
         success: false,
-        providers: [],
-        error: 'Failed to fetch available providers'
+        models: [],
+        error: 'Failed to fetch available models'
       };
     }
   }
 
   /**
-   * Check AI service status for a specific provider
+   * Check AI service status
    */
-  async getStatus(provider?: string): Promise<AIStatus> {
+  async getStatus(): Promise<AIStatus> {
     try {
-      log.info('Checking AI service status', { provider });
+      log.info('Checking AI service status');
 
-      const url = provider
-        ? `${this.endpoint}/status/?provider=${encodeURIComponent(provider)}`
-        : `${this.endpoint}/status/`;
-
-      const response = await api.get<AIStatus>(url);
-
-      log.info('AI service status checked', {
-        provider: response.data.provider,
-        available: response.data.provider_available
+      const response = await api.get<AIStatus>(`${this.endpoint}/status/`);
+      
+      log.info('AI service status checked', { 
+        available: response.data.ollama_available 
       });
 
       return response.data;
@@ -377,8 +231,9 @@ class AIService {
       log.error('Failed to check AI service status', error as Error);
       return {
         success: false,
-        provider: provider || 'unknown',
-        provider_available: false,
+        ollama_available: false,
+        base_url: '',
+        default_model: '',
         error: 'Failed to check service status'
       };
     }
