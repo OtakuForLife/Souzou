@@ -55,8 +55,8 @@ All options are optional.
 ### 🎨 render options supported
 
 * `format`: `list`, `table`, `full`
-* `columns`: List of fields to display (for `table` format)
-* `template`: Custom template for rendering (advanced)
+* `columns`: List of columns to display in a `table` format
+* `template`: Custom template for rendering (advanced). Entity fields can be included using `{{field_name}}` syntax.
 
 ---
 
@@ -91,12 +91,26 @@ render:
 {{{
 query:
   type: note
-  updated: 
+  updated:
     within_days: 7
 render:
   format: table
   columns: [Title, Updated at, Created at]
   template: | {{title}} | {{updated_at}} | {{created_at}} |
+}}}
+```
+
+### 🔗 3. Table with wiki links (alternative syntax to avoid conflicts):
+
+```markdown
+{{{
+query:
+  type: note
+  limit: 2
+render:
+  format: table
+  columns: [Note, Created]
+  template: | [{{title}}]({{id}}) | {{created_at}} |
 }}}
 ```
 
@@ -126,6 +140,29 @@ render:
 ```
 
 ---
+
+### 5. Table with Default Template
+```markdown
+{{{
+query:
+  type: note
+  limit: 2
+render:
+  format: table
+  columns: [Title, Created at]
+}}}
+```
+
+### 6. Simple List Query (Default Format)
+```markdown
+{{{
+query:
+  type: note
+  limit: 3
+render:
+  format: list
+}}}
+```
 
 ## 📝 Inline Query Syntax
 
