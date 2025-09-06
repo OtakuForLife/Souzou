@@ -21,7 +21,7 @@ interface WidgetErrorProps {
 /**
  * Skeleton patterns for different widget types
  */
-const SKELETON_PATTERNS = {
+const SKELETON_PATTERNS: { [K in WidgetType]?: React.ReactNode } = {
   [WidgetType.GRAPH]: (
     <div className="space-y-4">
       {/* Graph nodes simulation */}
@@ -44,6 +44,14 @@ const SKELETON_PATTERNS = {
       </div>
     </div>
   ),
+  [WidgetType.NOTE]: (
+    <div className="space-y-4">
+      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+      <div className="h-32 bg-gray-300 rounded"></div>
+      <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+    </div>
+    ),
 };
 
 /**
@@ -71,7 +79,7 @@ export const WidgetSkeleton: React.FC<WidgetSkeletonProps> = ({
   
   // Get skeleton pattern for widget type
   const skeletonPattern = widget?.type 
-    ? SKELETON_PATTERNS[widget.type] || DEFAULT_SKELETON
+    ? SKELETON_PATTERNS[widget?.type] || DEFAULT_SKELETON
     : DEFAULT_SKELETON;
 
   return (
