@@ -9,10 +9,12 @@ interface EntityTabContentProps {
   showSidePanel?: boolean;
   showProperties?: boolean;
   showTags?: boolean;
+  showOutgoingLinks?: boolean;
+  showIncomingLinks?: boolean;
   onSidePanelVisibilityChange?: (visible: boolean) => void;
 }
 
-function EntityTabContent({ entity, showSidePanel = true, showProperties = true, showTags = true, onSidePanelVisibilityChange }: EntityTabContentProps) {
+function EntityTabContent({ entity, showSidePanel = true, showProperties = true, showTags = true, showOutgoingLinks = false, showIncomingLinks = false, onSidePanelVisibilityChange }: EntityTabContentProps) {
   if (!showSidePanel) {
     return (
       <div className="h-full w-full">
@@ -47,6 +49,8 @@ function EntityTabContent({ entity, showSidePanel = true, showProperties = true,
           currentEntityId={entity.id}
           showProperties={showProperties}
           showTags={showTags}
+          showOutgoingLinks={showOutgoingLinks}
+          showIncomingLinks={showIncomingLinks}
         />
       </ResizablePanel>
     </ResizablePanelGroup>

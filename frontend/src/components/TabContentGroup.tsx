@@ -27,6 +27,8 @@ export default function TabContentGroup() {
   const [showSidePanel, setShowSidePanel] = useState(true);
   const [showProperties, setShowProperties] = useState(true);
   const [showTags, setShowTags] = useState(true);
+  const [showOutgoingLinks, setShowOutgoingLinks] = useState(false);
+  const [showIncomingLinks, setShowIncomingLinks] = useState(false);
 
   const openTabIDs: string[] = tabsState.openTabs;
 
@@ -71,7 +73,7 @@ export default function TabContentGroup() {
                   const next = Boolean(v);
                   if (next) {
                     // If enabling panel while no sections are selected, default to Properties
-                    if (!showProperties && !showTags) {
+                    if (!showProperties && !showTags && !showOutgoingLinks && !showIncomingLinks) {
                       setShowProperties(true);
                     }
                   }
@@ -86,7 +88,7 @@ export default function TabContentGroup() {
                 onCheckedChange={(v) => {
                   const next = Boolean(v);
                   setShowProperties(next);
-                  if (!next && !showTags) {
+                  if (!next && !showTags && !showOutgoingLinks && !showIncomingLinks) {
                     // Hide panel if no section is selected
                     setShowSidePanel(false);
                   } else if (next) {
@@ -102,7 +104,7 @@ export default function TabContentGroup() {
                 onCheckedChange={(v) => {
                   const next = Boolean(v);
                   setShowTags(next);
-                  if (!next && !showProperties) {
+                  if (!next && !showProperties && !showOutgoingLinks && !showIncomingLinks) {
                     setShowSidePanel(false);
                   } else if (next) {
                     setShowSidePanel(true);
@@ -111,6 +113,36 @@ export default function TabContentGroup() {
                 disabled={!showSidePanel}
               >
                 Show tags
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showOutgoingLinks}
+                onCheckedChange={(v) => {
+                  const next = Boolean(v);
+                  setShowOutgoingLinks(next);
+                  if (!next && !showProperties && !showTags && !showIncomingLinks) {
+                    setShowSidePanel(false);
+                  } else if (next) {
+                    setShowSidePanel(true);
+                  }
+                }}
+                disabled={!showSidePanel}
+              >
+                Show outgoing links
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showIncomingLinks}
+                onCheckedChange={(v) => {
+                  const next = Boolean(v);
+                  setShowIncomingLinks(next);
+                  if (!next && !showProperties && !showTags && !showOutgoingLinks) {
+                    setShowSidePanel(false);
+                  } else if (next) {
+                    setShowSidePanel(true);
+                  }
+                }}
+                disabled={!showSidePanel}
+              >
+                Show incoming links
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -130,6 +162,8 @@ export default function TabContentGroup() {
                 showSidePanel={showSidePanel}
                 showProperties={showProperties}
                 showTags={showTags}
+                showOutgoingLinks={showOutgoingLinks}
+                showIncomingLinks={showIncomingLinks}
                 onSidePanelVisibilityChange={(visible) => setShowSidePanel(visible)}
               />
             </TabsContent>
