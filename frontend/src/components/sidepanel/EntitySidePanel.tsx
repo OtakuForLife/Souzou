@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { fetchTags } from '@/store/slices/tagSlice';
-import { TagInput } from './TagInput';
+import { TagInput } from '../TagInput';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppDispatch } from '@/hooks';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,6 +25,8 @@ import { updateEntity } from '@/store/slices/entitySlice';
 
 interface EntitySidePanelProps {
   currentEntityId?: string;
+  showProperties?: boolean;
+  showTags?: boolean;
 }
 
 // Property types that can be added
@@ -46,7 +48,7 @@ const PROPERTY_TYPES: PropertyTypeDefinition[] = [
   { type: 'multitext', label: 'Multi-text', icon: MoreHorizontal, defaultValue: '' },
 ];
 
-export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityId }) => {
+export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityId, showProperties = true, showTags = true }) => {
   const dispatch = useAppDispatch();
   const { allTags } = useSelector((state: RootState) => state.tags);
   const { allEntities } = useSelector((state: RootState) => state.entities);
@@ -203,115 +205,122 @@ export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityI
     );
   };
 
+  const PropertiesSection = (
+    <ScrollArea className="flex-1">
+      <div className="p-3">
+        <h2 className="text-lg font-semibold mb-4 px-3">Properties</h2>
+        {currentEntity ? (
+          <div className="space-y-1">
+            {Object.entries(customProperties).map(([key, value]) =>
+              renderPropertyRow(key, value)
+            )}
+            {showAddProperty ? (
+              <div className="px-3 py-2 space-y-2 border rounded-md bg-muted/20">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Property name"
+                    value={newPropertyName}
+                    onChange={(e) => setNewPropertyName(e.target.value)}
+                    className="text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddProperty();
+                      } else if (e.key === 'Escape') {
+                        setShowAddProperty(false);
+                        setNewPropertyName('');
+                      }
+                    }}
+                  />
+                  <Select value={newPropertyType} onValueChange={(value: PropertyType) => setNewPropertyType(value)}>
+                    <SelectTrigger className="w-32 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className='theme-explorer-background theme-explorer-item-text'>
+                      {PROPERTY_TYPES.map(type => (
+                        <SelectItem key={type.type} value={type.type}>
+                          <div className="flex items-center gap-2">
+                            <type.icon className="w-3 h-3" />
+                            {type.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleAddProperty} disabled={!newPropertyName.trim()} className="text-xs">
+                    Add
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowAddProperty(false);
+                      setNewPropertyName('');
+                    }}
+                    className="text-xs"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAddProperty(true)}
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground mt-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add property
+              </Button>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground px-3">No entity selected</p>
+        )}
+      </div>
+    </ScrollArea>
+  );
+
+  const TagsSection = (
+    <ScrollArea className="flex-1 h-full">
+      <div className="p-3">
+        <h2 className="text-lg font-semibold mb-4 px-3">Tags</h2>
+        {currentEntity && (
+          <div className="mb-6 px-3">
+            <TagInput entityId={currentEntity.id} currentTags={currentEntityTags} />
+          </div>
+        )}
+      </div>
+    </ScrollArea>
+  );
+
+  const showBoth = showProperties && showTags;
+
   return (
     <div className="h-full flex flex-col theme-explorer-background theme-explorer-item-text">
-      <ResizablePanelGroup direction="vertical" tagName="div" className="h-full w-full">
-        <ResizablePanel className="theme-explorer-background border-r" minSize={30} maxSize={70} defaultSize={50} collapsible={true}>
-          {/* Properties */}
-          <ScrollArea className="flex-1">
-            <div className="p-3">
-              <h2 className="text-lg font-semibold mb-4 px-3">Properties</h2>
-              {currentEntity ? (
-                <div className="space-y-1">
-                  {/* Render existing properties */}
-                  {Object.entries(customProperties).map(([key, value]) =>
-                    renderPropertyRow(key, value)
-                  )}
-
-                  {/* Add Property Section */}
-                  {showAddProperty ? (
-                    <div className="px-3 py-2 space-y-2 border rounded-md bg-muted/20">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Property name"
-                          value={newPropertyName}
-                          onChange={(e) => setNewPropertyName(e.target.value)}
-                          className="text-sm"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleAddProperty();
-                            } else if (e.key === 'Escape') {
-                              setShowAddProperty(false);
-                              setNewPropertyName('');
-                            }
-                          }}
-                        />
-                        <Select value={newPropertyType} onValueChange={(value: PropertyType) => setNewPropertyType(value)}>
-                          <SelectTrigger className="w-32 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className='theme-explorer-background theme-explorer-item-text'>
-                            {PROPERTY_TYPES.map(type => (
-                              <SelectItem key={type.type} value={type.type}>
-                                <div className="flex items-center gap-2">
-                                  <type.icon className="w-3 h-3" />
-                                  {type.label}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={handleAddProperty}
-                          disabled={!newPropertyName.trim()}
-                          className="text-xs"
-                        >
-                          Add
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setShowAddProperty(false);
-                            setNewPropertyName('');
-                          }}
-                          className="text-xs"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowAddProperty(true)}
-                      className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground mt-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add property
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground px-3">No entity selected</p>
-              )}
+      {showBoth ? (
+        <ResizablePanelGroup direction="vertical" tagName="div" className="h-full w-full">
+          <ResizablePanel className="theme-explorer-background" minSize={30} maxSize={70} defaultSize={50} collapsible>
+            {PropertiesSection}
+          </ResizablePanel>
+          <ResizableHandle className="w-1 theme-explorer-background" />
+          <ResizablePanel className="theme-explorer-background" minSize={40} maxSize={70} defaultSize={60} collapsible>
+            {TagsSection}
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      ) : (
+        <div className="h-full w-full">
+          {showProperties && PropertiesSection}
+          {showTags && TagsSection}
+          {!showProperties && !showTags && (
+            <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
+              Side panel is hidden
             </div>
-          </ScrollArea>
-        </ResizablePanel>
-        <ResizableHandle className="w-1 theme-explorer-background" />
-        <ResizablePanel className="theme-explorer-background" minSize={40} maxSize={70} defaultSize={60} collapsible={true}>
-          {/* Tags Section */}
-          <ScrollArea className="flex-1 h-full">
-            <div className="p-3">
-              <h2 className="text-lg font-semibold mb-4 px-3">Tags</h2>
-
-              {/* Tag Input Component */}
-              {currentEntity && (
-                <div className="mb-6 px-3">
-                  <TagInput
-                    entityId={currentEntity.id}
-                    currentTags={currentEntityTags}
-                  />
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+          )}
+        </div>
+      )}
     </div>
   );
 };
