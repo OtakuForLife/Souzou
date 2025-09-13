@@ -33,8 +33,6 @@ services:
     environment:
       - FRONTEND_PORT=5173
       - NODE_ENV=development
-      - VITE_BACKEND_HOST=localhost
-      - VITE_BACKEND_PORT=8000
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
     networks:

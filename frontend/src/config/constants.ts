@@ -12,7 +12,6 @@ export const THEME_CONFIG = {
 
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: `http://${import.meta.env.VITE_BACKEND_HOST || 'localhost'}:${import.meta.env.VITE_BACKEND_PORT || '8000'}`,
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   ENDPOINTS: {

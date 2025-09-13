@@ -1,6 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { API_CONFIG, ERROR_MESSAGES } from '@/config/constants';
 import { log } from './logger';
+import { getBackendURL } from '@/lib/settings';
+
 
 /**
  * Enhanced API client with error handling, retries, and logging
@@ -11,7 +13,6 @@ class ApiClient {
 
   constructor() {
     this.instance = axios.create({
-      baseURL: API_CONFIG.BASE_URL,
       timeout: API_CONFIG.TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
@@ -25,6 +26,8 @@ class ApiClient {
     // Request interceptor
     this.instance.interceptors.request.use(
       (config) => {
+        // Ensure baseURL reflects current Settings on every request
+        config.baseURL = getBackendURL();
         log.debug('API Request', {
           method: config.method?.toUpperCase(),
           url: config.url,
