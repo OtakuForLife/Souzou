@@ -3,7 +3,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppDispatch } from "@/hooks";
 import { openTab } from "@/store/slices/tabsSlice";
 import { linkParsingService } from "@/services/linkParsingService";
-import { EntityType } from "@/models/Entity";
 import type { Entity } from "@/models/Entity";
 import { Link } from "lucide-react";
 
@@ -14,8 +13,7 @@ export interface IncomingLinksSectionProps {
 
 const IncomingLinksSection: React.FC<IncomingLinksSectionProps> = ({ currentEntity, allEntities }) => {
   const dispatch = useAppDispatch();
-  const isNote = currentEntity?.type === EntityType.NOTE;
-  const incomingLinks = isNote && currentEntity
+  const incomingLinks = currentEntity
     ? linkParsingService.getIncomingLinks(currentEntity.id, allEntities)
     : [];
 
@@ -23,7 +21,7 @@ const IncomingLinksSection: React.FC<IncomingLinksSectionProps> = ({ currentEnti
     <ScrollArea className="flex-1">
       <div className="p-3">
         <h2 className="text-lg font-semibold mb-4 px-3">Incoming links</h2>
-        {isNote && currentEntity ? (
+        {currentEntity ? (
           <div className="space-y-1 px-3">
             {incomingLinks.length === 0 ? (
               <p className="text-sm text-muted-foreground">No incoming links</p>

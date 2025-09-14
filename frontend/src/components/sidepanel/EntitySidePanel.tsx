@@ -60,7 +60,7 @@ export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityI
         <ResizablePanelGroup direction="vertical" tagName="div" className="h-full w-full">
           {enabledSections.map((section, idx) => (
             <React.Fragment key={idx}>
-              <ResizablePanel className="theme-explorer-background" minSize={15} defaultSize={defaultSize}>
+              <ResizablePanel className="theme-explorer-background" minSize={15} maxSize={100/enabledSections.length+5} defaultSize={defaultSize}>
                 {section}
               </ResizablePanel>
               {idx < enabledSections.length - 1 && (
