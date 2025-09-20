@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@r
 import { Tag, TagHierarchy } from '@/models/Tag';
 import { tagService, CreateTagRequest, UpdateTagRequest } from '@/services/tagService';
 import type { RootState } from '@/store';
+import { addTagsToEntity, removeTagsFromEntity } from './entitySlice';
 
 export const fetchTags = createAsyncThunk('tags/fetchTags', async () => {
   return await tagService.fetchTags();
@@ -98,6 +99,26 @@ export const tagSlice = createSlice({
       // Delete tag
       .addCase(deleteEntityTag.fulfilled, (state, action) => {
         delete state.allTags[action.payload];
+      })
+      // When tags are added to an entity, increment the entities_count for those tags
+      .addCase(addTagsToEntity.fulfilled, (state, action) => {
+        const { tagIds } = action.meta.arg as { entityId: string; tagIds: string[] };
+        tagIds.forEach((id) => {
+          const tag = state.allTags[id];
+          if (tag) {
+            tag.entities_count = (tag.entities_count ?? 0) + 1;
+          }
+        });
+      })
+      // When tags are removed from an entity, decrement the entities_count for those tags
+      .addCase(removeTagsFromEntity.fulfilled, (state, action) => {
+        const { tagIds } = action.meta.arg as { entityId: string; tagIds: string[] };
+        tagIds.forEach((id) => {
+          const tag = state.allTags[id];
+          if (tag) {
+            tag.entities_count = Math.max(0, (tag.entities_count ?? 0) - 1);
+          }
+        });
       })
   },
 });

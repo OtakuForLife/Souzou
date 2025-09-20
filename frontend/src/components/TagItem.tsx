@@ -86,7 +86,7 @@ export const TagItem: React.FC<TagItemProps> = ({
 
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                            {editingTag.entities_count} entities
+                            {tag.entities_count} entities
                         </span>
                         <Button
                             variant="ghost"
