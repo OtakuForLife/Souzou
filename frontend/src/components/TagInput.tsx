@@ -3,10 +3,11 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useAppDispatch } from '@/hooks';
 import { addTagsToEntity, removeTagsFromEntity } from '@/store/slices/entitySlice';
-import { fetchTags } from '@/store/slices/tagSlice';
+import { fetchTags, createTag } from '@/store/slices/tagSlice';
 import { TagBadge } from './TagBadge';
 import { Input } from '@/components/ui/input';
 import { Tag } from '@/models/Tag';
+import { Plus } from 'lucide-react';
 
 interface TagInputProps {
   entityId: string;
@@ -32,6 +33,8 @@ export const TagInput: React.FC<TagInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
+  const DEFAULT_TAG_COLOR = '#6B7280';
+
   // Load tags if not already loaded
   useEffect(() => {
     if (Object.keys(allTags).length === 0) {
@@ -41,6 +44,13 @@ export const TagInput: React.FC<TagInputProps> = ({
 
   // Get current tag IDs for easy lookup (memoized to prevent infinite re-renders)
   const currentTagIds = useMemo(() => new Set(currentTags.map(tag => tag.id)), [currentTags]);
+
+  // Whether the input corresponds to a brand-new tag name (case-insensitive exact match)
+  const createOptionVisible = useMemo(() => {
+    const name = inputValue.trim().toLowerCase();
+    if (!name) return false;
+    return !Object.values(allTags).some(t => t.name.toLowerCase() === name);
+  }, [inputValue, allTags]);
 
   // Search for tag suggestions (memoized to prevent unnecessary recalculations)
   const searchTags = useCallback((query: string): TagSuggestion[] => {
@@ -77,13 +87,14 @@ export const TagInput: React.FC<TagInputProps> = ({
     }).slice(0, 10); // Limit to 10 suggestions
   }, [allTags, currentTagIds]);
 
-  // Update suggestions when input changes
+  // Update suggestions when input changes and control dropdown visibility
   useEffect(() => {
     const newSuggestions = searchTags(inputValue);
     setSuggestions(newSuggestions);
     setSelectedSuggestionIndex(-1);
-    setShowSuggestions(newSuggestions.length > 0 && inputValue.trim().length > 0);
-  }, [inputValue, searchTags]);
+    const hasInput = inputValue.trim().length > 0;
+    setShowSuggestions(hasInput && (newSuggestions.length > 0 || createOptionVisible));
+  }, [inputValue, searchTags, createOptionVisible]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,6 +113,21 @@ export const TagInput: React.FC<TagInputProps> = ({
     }
   };
 
+  // Create a new tag with the current input and assign it
+  const handleCreateTag = async () => {
+    const name = inputValue.trim();
+    if (!name) return;
+    try {
+      const newTag = await (dispatch(createTag({ name, color: DEFAULT_TAG_COLOR })) as any).unwrap();
+      await dispatch(addTagsToEntity({ entityId, tagIds: [newTag.id] }));
+      setInputValue('');
+      setShowSuggestions(false);
+      inputRef.current?.focus();
+    } catch (error) {
+      console.error('Failed to create/assign tag:', error);
+    }
+  };
+
   // Handle tag removal
   const handleTagRemove = async (tagId: string) => {
     try {
@@ -113,25 +139,40 @@ export const TagInput: React.FC<TagInputProps> = ({
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || suggestions.length === 0) return;
+    if (!showSuggestions) return;
+
+    const totalOptions = suggestions.length + (createOptionVisible ? 1 : 0);
+    if (totalOptions === 0) return;
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : 0
-        );
+        setSelectedSuggestionIndex(prev => {
+          const next = prev < totalOptions - 1 ? prev + 1 : 0;
+          return next;
+        });
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
-          prev > 0 ? prev - 1 : suggestions.length - 1
-        );
+        setSelectedSuggestionIndex(prev => {
+          const next = prev > 0 ? prev - 1 : totalOptions - 1;
+          return next;
+        });
         break;
       case 'Enter':
         e.preventDefault();
-        if (selectedSuggestionIndex >= 0) {
+        if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < suggestions.length) {
           handleTagSelect(suggestions[selectedSuggestionIndex].tag);
+        } else if (createOptionVisible && (selectedSuggestionIndex === suggestions.length || suggestions.length === 0)) {
+          // If the create option is selected or there are no suggestions at all
+          handleCreateTag();
+        } else if (selectedSuggestionIndex === -1) {
+          // Default to first suggestion if available
+          if (suggestions.length > 0) {
+            handleTagSelect(suggestions[0].tag);
+          } else if (createOptionVisible) {
+            handleCreateTag();
+          }
         }
         break;
       case 'Escape':
@@ -189,11 +230,12 @@ export const TagInput: React.FC<TagInputProps> = ({
           </div>
         </div>
       {/* Suggestions Dropdown */}
-      {showSuggestions && suggestions.length > 0 && (
+      {showSuggestions && (suggestions.length > 0 || createOptionVisible) && (
         <div
           ref={suggestionsRef}
           className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto"
         >
+          {/* Existing tag suggestions */}
           {suggestions.map((suggestion, index) => (
             <div
               key={`${suggestion.tag.id}-${suggestion.matchType}`}
@@ -216,6 +258,20 @@ export const TagInput: React.FC<TagInputProps> = ({
               )}
             </div>
           ))}
+
+          {/* Create new tag option (shown when no exact-name match exists) */}
+          {createOptionVisible && (
+            <div
+              key="__create_new_tag__"
+              className={`px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground flex items-center gap-2 ${
+                selectedSuggestionIndex === suggestions.length ? 'bg-accent text-accent-foreground' : ''
+              }`}
+              onClick={handleCreateTag}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create tag "{inputValue.trim()}"</span>
+            </div>
+          )}
         </div>
       )}
     </div>
