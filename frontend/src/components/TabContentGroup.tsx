@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 
 import EntityTabTrigger from "./EntityTabTrigger";
 import EntityTabContent from "./EntityTabContent";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,11 +24,68 @@ export default function TabContentGroup() {
   const tabsState: TabsState = useSelector((state: RootState) => state.tabs);
   const allEntities = useSelector((state: RootState) => state.entities.allEntities);
 
-  const [showSidePanel, setShowSidePanel] = useState(true);
-  const [showProperties, setShowProperties] = useState(true);
-  const [showTags, setShowTags] = useState(true);
-  const [showOutgoingLinks, setShowOutgoingLinks] = useState(false);
-  const [showIncomingLinks, setShowIncomingLinks] = useState(false);
+  const STORAGE_KEY = "ui.sidepanelOptions";
+
+  type SidepanelOptions = {
+    showSidePanel: boolean;
+    showProperties: boolean;
+    showTags: boolean;
+    showOutgoingLinks: boolean;
+    showIncomingLinks: boolean;
+  };
+
+  const defaults: SidepanelOptions = {
+    showSidePanel: true,
+    showProperties: true,
+    showTags: true,
+    showOutgoingLinks: false,
+    showIncomingLinks: false,
+  };
+
+  const getStored = (): SidepanelOptions => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { ...defaults };
+      const parsed = JSON.parse(raw) as Partial<SidepanelOptions>;
+      const loaded: SidepanelOptions = { ...defaults, ...parsed };
+      if (
+        loaded.showSidePanel &&
+        !loaded.showProperties &&
+        !loaded.showTags &&
+        !loaded.showOutgoingLinks &&
+        !loaded.showIncomingLinks
+      ) {
+        loaded.showProperties = true;
+      }
+      return loaded;
+    } catch {
+      return { ...defaults };
+    }
+  };
+
+  const initial = getStored();
+
+  const [showSidePanel, setShowSidePanel] = useState<boolean>(initial.showSidePanel);
+  const [showProperties, setShowProperties] = useState<boolean>(initial.showProperties);
+  const [showTags, setShowTags] = useState<boolean>(initial.showTags);
+  const [showOutgoingLinks, setShowOutgoingLinks] = useState<boolean>(initial.showOutgoingLinks);
+  const [showIncomingLinks, setShowIncomingLinks] = useState<boolean>(initial.showIncomingLinks);
+
+  // Persist options on change
+  useEffect(() => {
+    const data: SidepanelOptions = {
+      showSidePanel,
+      showProperties,
+      showTags,
+      showOutgoingLinks,
+      showIncomingLinks,
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      // storage may be unavailable; ignore
+    }
+  }, [showSidePanel, showProperties, showTags, showOutgoingLinks, showIncomingLinks]);
 
   const openTabIDs: string[] = tabsState.openTabs;
 
