@@ -15,18 +15,25 @@ interface noteTabProps {
 
 function EntityTabTrigger({ entityID }: noteTabProps) {
   const entityState: EntityState = useSelector((state: RootState) => state.entities);
-  const entity: Entity = entityState.allEntities[entityID];
+  const entity: Entity | undefined = entityState.allEntities[entityID];
   const dispatch = useAppDispatch();
+
+  if (!entity) {
+    // Entity not available yet; avoid rendering a broken tab
+    return null;
+  }
 
   const onTabDropped = (active: Active, over: Over | null) => {
     const activeData = active.data.current;
     const overData = over? over.data.current: null;
 
     if (activeData && overData) {
-      const activeTab: Entity = entityState.allEntities[activeData.objectID];
-      const overTab: Entity = entityState.allEntities[overData.objectID];
+      const activeTab: Entity | undefined = entityState.allEntities[activeData.objectID];
+      const overTab: Entity | undefined = entityState.allEntities[overData.objectID];
 
-      dispatch(moveTabByData({ activeTab, overTab }));
+      if (activeTab && overTab) {
+        dispatch(moveTabByData({ activeTab, overTab }));
+      }
     }
   };
 

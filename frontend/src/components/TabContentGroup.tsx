@@ -88,6 +88,7 @@ export default function TabContentGroup() {
   }, [showSidePanel, showProperties, showTags, showOutgoingLinks, showIncomingLinks]);
 
   const openTabIDs: string[] = tabsState.openTabs;
+  const visibleTabIDs: string[] = openTabIDs.filter((id) => !!allEntities[id]);
 
   const onTabChange = (tabValue: string) => {
     const entity = allEntities[tabValue];
@@ -96,7 +97,9 @@ export default function TabContentGroup() {
     }
   };
 
-  const currentTabValue = tabsState.currentTab || openTabIDs[0];
+  const currentTabValue = (tabsState.currentTab && visibleTabIDs.includes(tabsState.currentTab))
+    ? tabsState.currentTab
+    : visibleTabIDs[0];
 
   return (
     <Tabs
@@ -106,8 +109,8 @@ export default function TabContentGroup() {
       activationMode="manual"
     >
       <TabsList className="flex-shrink-0 flex items-center justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
-        <SortableContext items={openTabIDs} strategy={rectSortingStrategy}>
-          {tabsState.openTabs.map((tabId: string) => (
+        <SortableContext items={visibleTabIDs} strategy={rectSortingStrategy}>
+          {visibleTabIDs.map((tabId: string) => (
             <EntityTabTrigger key={tabId} entityID={tabId} />
           ))}
         </SortableContext>

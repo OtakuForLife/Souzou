@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAppDispatch } from '@/hooks';
 import { fetchEntities } from '@/store/slices/entitySlice';
 import { API_CONFIG } from '@/config/constants';
+import api from '@/lib/api';
 
 interface FileUploadProps {
     onUploadComplete?: (entityId: string) => void;
@@ -33,7 +34,7 @@ function FileUpload({ onUploadComplete, parentId }: FileUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dispatch = useAppDispatch();
 
-    const generateId = () => Math.random().toString(36).substr(2, 9);
+    const generateId = () => Math.random().toString(36).slice(2, 11);
 
     const validateFile = (file: File): string | null => {
         if (file.size > MAX_FILE_SIZE) {
@@ -78,19 +79,25 @@ function FileUpload({ onUploadComplete, parentId }: FileUploadProps) {
                     : f
             ));
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}/api/entities/upload_file/`, {
-                method: 'POST',
-                body: formData,
-            });
+            const response = await api.post(
+                `${API_CONFIG.ENDPOINTS.ENTITIES}/upload_file/`,
+                formData,
+                {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    onUploadProgress: (event) => {
+                        const total = event.total || 0;
+                        const loaded = event.loaded || 0;
+                        const progress = total ? Math.round((loaded * 100) / total) : 0;
+                        setFiles(prev => prev.map(f =>
+                            f.id === uploadFile.id ? { ...f, progress } : f
+                        ));
+                    }
+                }
+            );
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Upload failed');
-            }
+            const result = response.data;
 
-            const result = await response.json();
-            
-            setFiles(prev => prev.map(f => 
+            setFiles(prev => prev.map(f =>
                 f.id === uploadFile.id 
                     ? { ...f, status: 'success', progress: 100, entityId: result.entity.id }
                     : f
