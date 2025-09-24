@@ -1,9 +1,4 @@
 import { EntityRendererProps } from "@/components/ContentRenderer";
-import { Input } from "@/components/Input";
-import { useAppDispatch } from "@/hooks";
-import { updateEntity } from "@/store/slices/entitySlice";
-import { validateNoteTitle } from "@/utils/common";
-import { useState } from "react";
 import { Entity } from "@/models/Entity";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -11,6 +6,7 @@ import ImageViewer from "./ImageViewer";
 import PDFViewer from "./PDFViewer";
 import TextViewer from "./TextViewer";
 import GenericFileViewer from "./GenericFileViewer";
+import EntityTitle from "@/components/EntityTitle";
 
 interface MediaContent {
     data: string;
@@ -21,8 +17,6 @@ interface MediaContent {
 
 function MediaRenderer({ entityID }: EntityRendererProps) {
     const entity: Entity = useSelector((state: RootState) => state.entities.allEntities[entityID]);
-    const dispatch = useAppDispatch();
-    const [titleError, setTitleError] = useState<string | undefined>();
 
     // Parse the media content
     let mediaContent: MediaContent | null = null;
@@ -61,42 +55,7 @@ function MediaRenderer({ entityID }: EntityRendererProps) {
     return (
         <div className="h-full overflow-y-scroll overflow-x-hidden">
             <div className="pb-10">
-                {/* Header with Title */}
-                <div className="flex items-center gap-2 p-4">
-                    <div className="flex-1">
-                        <Input
-                            className="text-4xl p-0 border-none bg-transparent focus:ring-0 focus:border-none"
-                            value={entity?.title}
-                            placeholder="Media title..."
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const newTitle = e.currentTarget.value;
-
-                                // Validate title
-                                const validation = validateNoteTitle(newTitle);
-                                if (!validation.isValid) {
-                                    setTitleError(validation.error);
-                                } else {
-                                    setTitleError(undefined);
-                                }
-
-                                // Update entity in store immediately for UI responsiveness
-                                dispatch(
-                                    updateEntity({
-                                        noteID: entity?.id,
-                                        title: newTitle,
-                                        content: entity?.content,
-                                        parent: entity?.parent,
-                                    }),
-                                );
-                            }}
-                        />
-                        {titleError && (
-                            <div className="text-sm text-red-500 mt-1">
-                                {titleError}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <EntityTitle entity={entity} editable/>
 
                 {/* File Info */}
                 <div className="px-4 pb-4">
