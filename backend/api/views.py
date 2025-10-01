@@ -1,9 +1,12 @@
 from .models import Entity, Theme, Tag
 from .serializers import EntitySerializer, ThemeSerializer, TagSerializer
+from .serializers import SyncEntitySerializer, SyncTagSerializer
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .services.vector_service import VectorService
+from rest_framework.views import APIView
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 import logging
 import base64
 import json
@@ -24,6 +27,7 @@ class EntityViewSet(viewsets.ModelViewSet):
             logger.info("=== GET_RELEVANT_CONTEXT REQUEST ===")
             logger.info(f"Request data: {request.data}")
 
+            from .services.vector_service import VectorService
             vector_service = VectorService()
             conversation = request.data.get('conversation', [])
             current_note_id = request.data.get('current_note_id')
@@ -70,6 +74,7 @@ class EntityViewSet(viewsets.ModelViewSet):
     def vector_stats(self, request):
         """Get vector index statistics"""
         try:
+            from .services.vector_service import VectorService
             vector_service = VectorService()
             stats = vector_service.get_stats()
             return Response({
@@ -295,4 +300,103 @@ class ThemeViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(default_theme)
             return Response(serializer.data)
         except Theme.DoesNotExist:
-            return Response({"error": "No default theme found"}, status=404)
+            return Response({"detail": "Default theme not set"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Failed to get default theme: {e}")
+            return Response({"success": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SyncPullView(APIView):
+    """Return changes since a cursor (ISO timestamp)."""
+    def get(self, request):
+        since = request.query_params.get('since')
+        try:
+            since_dt = parse_datetime(since) if since else None
+        except Exception:
+            since_dt = None
+
+        if since_dt is None:
+            # If no cursor provided, start from epoch so client gets all data
+            import datetime as dt
+            since_dt = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
+
+        # Entities
+        entity_upserts_qs = Entity.objects.filter(server_updated_at__gt=since_dt, deleted=False)
+        entity_deletes_qs = Entity.objects.filter(server_updated_at__gt=since_dt, deleted=True)
+        entities_upserts = SyncEntitySerializer(entity_upserts_qs, many=True).data
+        entities_deletes = [str(eid) for eid in entity_deletes_qs.values_list('id', flat=True)]
+
+        # Tags
+        tag_upserts_qs = Tag.objects.filter(server_updated_at__gt=since_dt, deleted=False)
+        tag_deletes_qs = Tag.objects.filter(server_updated_at__gt=since_dt, deleted=True)
+        tags_upserts = SyncTagSerializer(tag_upserts_qs, many=True).data
+        tags_deletes = [str(tid) for tid in tag_deletes_qs.values_list('id', flat=True)]
+
+        new_cursor = timezone.now().isoformat()
+        return Response({
+            "cursor": new_cursor,
+            "changes": {
+                "entities": {"upserts": entities_upserts, "deletes": entities_deletes},
+                "tags": {"upserts": tags_upserts, "deletes": tags_deletes},
+            },
+        })
+
+
+class SyncPushView(APIView):
+    """Apply client changes with basic rev-based conflict detection."""
+    def post(self, request):
+        payload = request.data or {}
+        results = {"entities": [], "tags": []}
+
+        def serialize_entity(o):
+            return SyncEntitySerializer(o).data
+
+        def serialize_tag(o):
+            return SyncTagSerializer(o).data
+
+        def apply_upsert(model_cls, item, serialize):
+            obj_id = item.get('id') or (item.get('data') or {}).get('id')
+            client_rev = item.get('client_rev', 0)
+            op = item.get('op', 'upsert')
+            data = item.get('data', {})
+
+            if not obj_id:
+                return {"status": "error", "error": "missing id"}
+
+            try:
+                obj = model_cls.objects.select_for_update().get(id=obj_id)
+                server_rev = obj.rev
+                if op == 'delete':
+                    if client_rev == server_rev:
+                        obj.deleted = True
+                        obj.deleted_at = timezone.now()
+                        obj.rev = server_rev + 1
+                        obj.save()
+                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at}
+                    else:
+                        return {"id": str(obj.id), "status": "conflict", "server": serialize(obj)}
+                else:
+                    if client_rev == server_rev:
+                        for k, v in data.items():
+                            setattr(obj, k, v)
+                        obj.rev = server_rev + 1
+                        obj.save()
+                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at}
+                    else:
+                        return {"id": str(obj.id), "status": "conflict", "server": serialize(obj)}
+            except model_cls.DoesNotExist:
+                if op == 'delete':
+                    return {"id": str(obj_id), "status": "applied", "rev": 0}
+                obj = model_cls(id=obj_id, **data)
+                obj.rev = 1 if client_rev == 0 else client_rev + 1
+                obj.save()
+                return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at}
+
+        for item in payload.get('entities', []):
+            results['entities'].append(apply_upsert(Entity, item, serialize_entity))
+
+        for item in payload.get('tags', []):
+            results['tags'].append(apply_upsert(Tag, item, serialize_tag))
+
+        return Response(results)
+

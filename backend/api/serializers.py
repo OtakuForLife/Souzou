@@ -77,3 +77,28 @@ class ThemeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f"Missing required text color field: text.{field}")
         """
         return value
+
+
+
+class SyncTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = [
+            "id", "name", "color", "description", "parent",
+            "rev", "server_updated_at", "deleted", "deleted_at",
+        ]
+
+
+class SyncEntitySerializer(serializers.ModelSerializer):
+    tags = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Entity
+        fields = [
+            "id", "type", "title", "content", "parent", "metadata",
+            "rev", "server_updated_at", "deleted", "deleted_at",
+            "tags",
+        ]
+
+    def get_tags(self, obj):
+        return [str(tag.id) for tag in obj.tags.all()]

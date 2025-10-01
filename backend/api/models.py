@@ -27,11 +27,19 @@ class Tag(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name="children")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Sync fields
+    rev = models.PositiveIntegerField(default=0)
+    server_updated_at = models.DateTimeField(auto_now=True)
+    deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
 
     class Meta:
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['parent']),
+            models.Index(fields=['server_updated_at']),
+            models.Index(fields=['deleted']),
         ]
 
     def __str__(self):
@@ -58,6 +66,12 @@ class Entity(models.Model):
     content = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
+    # Sync fields
+    rev = models.PositiveIntegerField(default=0)
+    server_updated_at = models.DateTimeField(auto_now=True)
+    deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name="children", editable=True)
 
     # Vector fields for semantic search
@@ -77,6 +91,8 @@ class Entity(models.Model):
             models.Index(fields=['parent']),
             models.Index(fields=['updated_at']),
             models.Index(fields=['embedding_updated_at']),
+            models.Index(fields=['server_updated_at']),
+            models.Index(fields=['deleted']),
         ]
 
     def __str__(self):
