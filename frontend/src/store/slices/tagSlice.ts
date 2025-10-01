@@ -51,7 +51,7 @@ export const selectAllTags = createSelector(
 );
 
 export const selectTagsByIds = createSelector(
-  [(state: RootState) => state.tags.allTags, (state: RootState, tagIds: string[]) => tagIds],
+  [(state: RootState) => state.tags.allTags, (_: RootState, tagIds: string[]) => tagIds],
   (allTags, tagIds) => tagIds.map(id => allTags[id]).filter(Boolean)
 );
 

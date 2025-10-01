@@ -20,6 +20,10 @@ yarn-error.log
 coverage/
 build/
 dist/
+dist-electron/
+release/
+release2/
+out/
 
 # Logs
 logs
@@ -30,6 +34,5 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-dist
-dist-ssr
-*.local
+
+

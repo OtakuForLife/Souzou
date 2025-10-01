@@ -123,8 +123,8 @@ export const entitySlice = createSlice({
       // Remove the tag ID from all entities that have it
       // Don't mark as dirty since the backend has already handled this change
       Object.values(state.allEntities).forEach(entity => {
-        if (entity.tags.includes(tagIdToRemove)) {
-          entity.tags = entity.tags.filter(tagId => tagId !== tagIdToRemove);
+        if (entity.tags?.includes(tagIdToRemove)) {
+          entity.tags = (entity.tags || []).filter(tagId => tagId !== tagIdToRemove);
           // Don't mark as dirty - the backend has already removed the tag relationship
         }
       });

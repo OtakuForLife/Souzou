@@ -62,7 +62,7 @@ class CheckboxWidget extends WidgetType {
         const checkboxMatch = lineText.match(/^(\s*[-*+]?\s*)\[([x\s])\]/);
         if (!checkboxMatch) return;
 
-        const [fullMatch, prefix, currentState] = checkboxMatch;
+        const [, prefix, currentState] = checkboxMatch;
         const newState = currentState.trim() === 'x' ? ' ' : 'x';
         const newText = lineText.replace(/^(\s*[-*+]?\s*)\[([x\s])\]/, `${prefix}[${newState}]`);
 
