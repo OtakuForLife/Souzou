@@ -73,7 +73,11 @@ describe('entitySlice', () => {
     expect(initialState).toEqual({
       allEntities: {},
       dirtyEntityIDs: [],
-      loading: false,
+      globalLoading: false,
+      pendingCreates: [],
+      pendingSaves: [],
+      pendingDeletes: [],
+      optimisticEntities: {},
       error: null
     });
   });
@@ -83,7 +87,11 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -105,7 +113,11 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -126,7 +138,11 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -143,7 +159,11 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: ['1'], // Entity '1' is already dirty
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -160,7 +180,11 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -185,7 +209,11 @@ describe('entitySlice', () => {
       const initialState: EntityState = {
         allEntities: { '1': mockNote1 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -203,7 +231,8 @@ describe('entitySlice', () => {
       const savedEntity = { ...afterUpdate.allEntities['1'] };
       const afterSave = reducer(afterUpdate, {
         type: saveEntity.fulfilled.type,
-        payload: { savedEntity }
+        payload: { savedEntity },
+        meta: { arg: mockNote1, requestId: 'test-request-id', requestStatus: 'fulfilled' }
       });
 
       expect(afterSave.dirtyEntityIDs).not.toContain('1');
@@ -226,7 +255,11 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: {},
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -262,7 +295,11 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockNote1, '2': mockNote2 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -271,6 +308,11 @@ describe('entitySlice', () => {
         payload: {
           parent: null,
           newNoteData: newNoteData
+        },
+        meta: {
+          arg: { tempId: 'temp-id', entity: newNoteData },
+          requestId: 'test-request-id',
+          requestStatus: 'fulfilled'
         }
       };
 
@@ -289,13 +331,18 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockRootNote1, '2': mockRootNote2, '3': mockNote3 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
       const action = {
         type: saveEntity.fulfilled.type,
-        payload: { savedEntity }
+        payload: { savedEntity },
+        meta: { arg: mockRootNote1, requestId: 'test-request-id', requestStatus: 'fulfilled' }
       };
 
       const nextState = reducer(previousState, action);
@@ -310,13 +357,18 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockRootNote1 },
         dirtyEntityIDs: ['1'], // Entity '1' is dirty
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
       const action = {
         type: saveEntity.fulfilled.type,
-        payload: { savedEntity }
+        payload: { savedEntity },
+        meta: { arg: mockRootNote1, requestId: 'test-request-id', requestStatus: 'fulfilled' }
       };
 
       const nextState = reducer(previousState, action);
@@ -333,13 +385,18 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockRootNote1, '2': mockRootNote2 },
         dirtyEntityIDs: ['1', '2'], // Both entities are dirty
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
       const action = {
         type: saveEntity.fulfilled.type,
-        payload: { savedEntity }
+        payload: { savedEntity },
+        meta: { arg: mockRootNote1, requestId: 'test-request-id', requestStatus: 'fulfilled' }
       };
 
       const nextState = reducer(previousState, action);
@@ -356,13 +413,18 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockRootNote1 },
         dirtyEntityIDs: [], // Entity '1' is not dirty
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
       const action = {
         type: saveEntity.fulfilled.type,
-        payload: { savedEntity }
+        payload: { savedEntity },
+        meta: { arg: mockRootNote1, requestId: 'test-request-id', requestStatus: 'fulfilled' }
       };
 
       const nextState = reducer(previousState, action);
@@ -387,7 +449,11 @@ describe('entitySlice', () => {
       let currentState: EntityState = {
         allEntities: { [mockEntity.id]: mockEntity },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
@@ -417,13 +483,18 @@ describe('entitySlice', () => {
       const previousState: EntityState = {
         allEntities: { '1': mockNote1, '2': mockNote2, '3': mockNote3 },
         dirtyEntityIDs: [],
-        loading: false,
+        globalLoading: false,
+        pendingCreates: [],
+        pendingSaves: [],
+        pendingDeletes: [],
+        optimisticEntities: {},
         error: null
       };
 
       const action = {
         type: deleteEntity.fulfilled.type,
-        payload: remainingNotes
+        payload: remainingNotes,
+        meta: { arg: '1', requestId: 'test-request-id', requestStatus: 'fulfilled' }
       };
 
       const nextState = reducer(previousState, action);
@@ -447,7 +518,11 @@ describe('entitySlice', () => {
             '3': mockChildNote
           },
           dirtyEntityIDs: [],
-          loading: false,
+          globalLoading: false,
+          pendingCreates: [],
+          pendingSaves: [],
+          pendingDeletes: [],
+          optimisticEntities: {},
           error: null
         }
       } as any;
@@ -470,7 +545,11 @@ describe('entitySlice', () => {
             '2': mockChildNote2
           },
           dirtyEntityIDs: [],
-          loading: false,
+          globalLoading: false,
+          pendingCreates: [],
+          pendingSaves: [],
+          pendingDeletes: [],
+          optimisticEntities: {},
           error: null
         }
       } as any;
