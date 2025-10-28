@@ -1,9 +1,16 @@
 from .models import Entity, Theme, Tag
 from .serializers import EntitySerializer, ThemeSerializer, TagSerializer
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from .services.vector_service import VectorService
+from .tasks import (
+    generate_embedding_for_entity,
+    generate_embeddings_batch,
+    regenerate_all_embeddings,
+    update_stale_embeddings
+)
 import logging
 import base64
 import json
@@ -296,3 +303,417 @@ class ThemeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except Theme.DoesNotExist:
             return Response({"error": "No default theme found"}, status=404)
+
+
+# ============================================================================
+# EMBEDDING MANAGEMENT VIEWS
+# ============================================================================
+
+@api_view(['POST'])
+def generate_entity_embedding(request, entity_id):
+    """
+    Trigger embedding generation for a specific entity.
+
+    POST /api/entities/{entity_id}/generate-embedding/
+
+    Returns:
+        - 202: Task queued successfully
+        - 404: Entity not found
+    """
+    entity = get_object_or_404(Entity, id=entity_id)
+
+    # Queue the task
+    task = generate_embedding_for_entity.delay(str(entity_id))
+
+    logger.info(f"Queued embedding generation for entity {entity_id}, task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'entity_id': str(entity_id),
+        'task_id': task.id,
+        'message': f'Embedding generation queued for "{entity.title}"'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['POST'])
+def generate_batch_embeddings(request):
+    """
+    Trigger embedding generation for multiple entities.
+
+    POST /api/embeddings/generate-batch/
+    Body: {
+        "entity_ids": ["uuid1", "uuid2", ...]
+    }
+
+    Returns:
+        - 202: Task queued successfully
+        - 400: Invalid request
+    """
+    entity_ids = request.data.get('entity_ids', [])
+
+    if not entity_ids:
+        return Response({
+            'error': 'entity_ids is required and must be a non-empty list'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if not isinstance(entity_ids, list):
+        return Response({
+            'error': 'entity_ids must be a list'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Validate that all entities exist
+    existing_count = Entity.objects.filter(id__in=entity_ids).count()
+    if existing_count != len(entity_ids):
+        return Response({
+            'error': f'Some entities not found. Requested: {len(entity_ids)}, Found: {existing_count}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Queue the batch task
+    task = generate_embeddings_batch.delay(entity_ids)
+
+    logger.info(f"Queued batch embedding generation for {len(entity_ids)} entities, task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'entity_count': len(entity_ids),
+        'task_id': task.id,
+        'message': f'Batch embedding generation queued for {len(entity_ids)} entities'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['POST'])
+def regenerate_all(request):
+    """
+    Trigger embedding regeneration for ALL entities.
+
+    POST /api/embeddings/regenerate-all/
+
+    Warning: This can be a long-running operation for large databases.
+
+    Returns:
+        - 202: Task queued successfully
+    """
+    # Queue the regeneration task
+    task = regenerate_all_embeddings.delay()
+
+    logger.info(f"Queued full embedding regeneration, task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'task_id': task.id,
+        'message': 'Full embedding regeneration queued. This may take a while.'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['POST'])
+def update_stale(request):
+    """
+    Update embeddings for entities that have been modified.
+
+    POST /api/embeddings/update-stale/
+    Body (optional): {
+        "hours": 24  // Consider embeddings stale if older than this
+    }
+
+    Returns:
+        - 202: Task queued successfully
+    """
+    hours = request.data.get('hours', 24)
+
+    try:
+        hours = int(hours)
+        if hours < 1:
+            raise ValueError("hours must be positive")
+    except (ValueError, TypeError):
+        return Response({
+            'error': 'hours must be a positive integer'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Queue the update task
+    task = update_stale_embeddings.delay(hours=hours)
+
+    logger.info(f"Queued stale embedding update (hours={hours}), task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'hours': hours,
+        'task_id': task.id,
+        'message': f'Stale embedding update queued (checking entities modified in last {hours} hours)'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['GET'])
+def embedding_status(request, entity_id):
+    """
+    Get embedding status for a specific entity.
+
+    GET /api/entities/{entity_id}/embedding-status/
+
+    Returns:
+        - 200: Status information
+        - 404: Entity not found
+    """
+    entity = get_object_or_404(Entity, id=entity_id)
+
+    has_embedding = entity.embedding is not None
+    embedding_dimension = len(entity.embedding) if has_embedding else 0
+
+    # Check if embedding is stale (entity updated after embedding)
+    is_stale = False
+    if has_embedding and entity.embedding_updated_at:
+        is_stale = entity.updated_at > entity.embedding_updated_at
+
+    return Response({
+        'entity_id': str(entity_id),
+        'entity_title': entity.title,
+        'has_embedding': has_embedding,
+        'embedding_dimension': embedding_dimension,
+        'embedding_model': entity.embedding_model,
+        'embedding_updated_at': entity.embedding_updated_at.isoformat() if entity.embedding_updated_at else None,
+        'entity_updated_at': entity.updated_at.isoformat(),
+        'is_stale': is_stale,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def embedding_stats(request):
+    """
+    Get overall embedding statistics.
+
+    GET /api/embeddings/stats/
+
+    Returns:
+        - 200: Statistics about embeddings
+    """
+    from django.db.models import Count, Q, F
+
+    total_entities = Entity.objects.count()
+    entities_with_embeddings = Entity.objects.filter(embedding__isnull=False).count()
+    entities_without_embeddings = total_entities - entities_with_embeddings
+
+    # Count stale embeddings (entity updated after embedding)
+    stale_embeddings = Entity.objects.filter(
+        embedding__isnull=False,
+        embedding_updated_at__isnull=False,
+        updated_at__gt=F('embedding_updated_at')
+    ).count()
+
+    return Response({
+        'total_entities': total_entities,
+        'entities_with_embeddings': entities_with_embeddings,
+        'entities_without_embeddings': entities_without_embeddings,
+        'stale_embeddings': stale_embeddings,
+        'coverage_percentage': round((entities_with_embeddings / total_entities * 100), 2) if total_entities > 0 else 0,
+    }, status=status.HTTP_200_OK)
+
+
+# ============================================================================
+# EMBEDDING MANAGEMENT VIEWS
+# ============================================================================
+
+from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
+from api.tasks import (
+    generate_embedding_for_entity,
+    generate_embeddings_batch,
+    regenerate_all_embeddings,
+    update_stale_embeddings
+)
+
+
+@api_view(['POST'])
+def generate_entity_embedding(request, entity_id):
+    """
+    Trigger embedding generation for a specific entity.
+
+    POST /api/entities/{entity_id}/generate-embedding/
+
+    Returns:
+        - 202: Task queued successfully
+        - 404: Entity not found
+    """
+    entity = get_object_or_404(Entity, id=entity_id)
+
+    # Queue the task
+    task = generate_embedding_for_entity.delay(str(entity_id))
+
+    logger.info(f"Queued embedding generation for entity {entity_id}, task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'entity_id': str(entity_id),
+        'task_id': task.id,
+        'message': f'Embedding generation queued for "{entity.title}"'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['POST'])
+def generate_batch_embeddings(request):
+    """
+    Trigger embedding generation for multiple entities.
+
+    POST /api/embeddings/generate-batch/
+    Body: {
+        "entity_ids": ["uuid1", "uuid2", ...]
+    }
+
+    Returns:
+        - 202: Task queued successfully
+        - 400: Invalid request
+    """
+    entity_ids = request.data.get('entity_ids', [])
+
+    if not entity_ids:
+        return Response({
+            'error': 'entity_ids is required and must be a non-empty list'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if not isinstance(entity_ids, list):
+        return Response({
+            'error': 'entity_ids must be a list'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Validate that all entities exist
+    existing_count = Entity.objects.filter(id__in=entity_ids).count()
+    if existing_count != len(entity_ids):
+        return Response({
+            'error': f'Some entities not found. Requested: {len(entity_ids)}, Found: {existing_count}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Queue the batch task
+    task = generate_embeddings_batch.delay(entity_ids)
+
+    logger.info(f"Queued batch embedding generation for {len(entity_ids)} entities, task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'entity_count': len(entity_ids),
+        'task_id': task.id,
+        'message': f'Batch embedding generation queued for {len(entity_ids)} entities'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['POST'])
+def regenerate_all(request):
+    """
+    Trigger embedding regeneration for ALL entities.
+
+    POST /api/embeddings/regenerate-all/
+
+    Warning: This can be a long-running operation for large databases.
+
+    Returns:
+        - 202: Task queued successfully
+    """
+    # Queue the regeneration task
+    task = regenerate_all_embeddings.delay()
+
+    logger.info(f"Queued full embedding regeneration, task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'task_id': task.id,
+        'message': 'Full embedding regeneration queued. This may take a while.'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['POST'])
+def update_stale(request):
+    """
+    Update embeddings for entities that have been modified.
+
+    POST /api/embeddings/update-stale/
+    Body (optional): {
+        "hours": 24  // Consider embeddings stale if older than this
+    }
+
+    Returns:
+        - 202: Task queued successfully
+    """
+    hours = request.data.get('hours', 24)
+
+    try:
+        hours = int(hours)
+        if hours < 1:
+            raise ValueError("hours must be positive")
+    except (ValueError, TypeError):
+        return Response({
+            'error': 'hours must be a positive integer'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Queue the update task
+    task = update_stale_embeddings.delay(hours=hours)
+
+    logger.info(f"Queued stale embedding update (hours={hours}), task_id: {task.id}")
+
+    return Response({
+        'status': 'queued',
+        'hours': hours,
+        'task_id': task.id,
+        'message': f'Stale embedding update queued (checking entities modified in last {hours} hours)'
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['GET'])
+def embedding_status(request, entity_id):
+    """
+    Get embedding status for a specific entity.
+
+    GET /api/entities/{entity_id}/embedding-status/
+
+    Returns:
+        - 200: Status information
+        - 404: Entity not found
+    """
+    entity = get_object_or_404(Entity, id=entity_id)
+
+    has_embedding = entity.embedding is not None
+    embedding_dimension = len(entity.embedding) if has_embedding else 0
+
+    # Check if embedding is stale (entity updated after embedding)
+    is_stale = False
+    if has_embedding and entity.embedding_updated_at:
+        is_stale = entity.updated_at > entity.embedding_updated_at
+
+    return Response({
+        'entity_id': str(entity_id),
+        'entity_title': entity.title,
+        'has_embedding': has_embedding,
+        'embedding_dimension': embedding_dimension,
+        'embedding_model': entity.embedding_model,
+        'embedding_updated_at': entity.embedding_updated_at.isoformat() if entity.embedding_updated_at else None,
+        'entity_updated_at': entity.updated_at.isoformat(),
+        'is_stale': is_stale,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def embedding_stats(request):
+    """
+    Get overall embedding statistics.
+
+    GET /api/embeddings/stats/
+
+    Returns:
+        - 200: Statistics about embeddings
+    """
+    from django.db.models import Count, Q, F
+
+    total_entities = Entity.objects.count()
+    entities_with_embeddings = Entity.objects.filter(embedding__isnull=False).count()
+    entities_without_embeddings = total_entities - entities_with_embeddings
+
+    # Count stale embeddings (entity updated after embedding)
+    stale_embeddings = Entity.objects.filter(
+        embedding__isnull=False,
+        embedding_updated_at__isnull=False,
+        updated_at__gt=F('embedding_updated_at')
+    ).count()
+
+    return Response({
+        'total_entities': total_entities,
+        'entities_with_embeddings': entities_with_embeddings,
+        'entities_without_embeddings': entities_without_embeddings,
+        'stale_embeddings': stale_embeddings,
+        'coverage_percentage': round((entities_with_embeddings / total_entities * 100), 2) if total_entities > 0 else 0,
+    }, status=status.HTTP_200_OK)

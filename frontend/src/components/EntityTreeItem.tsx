@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, StickyNote } from 'lucide-react';
+import { ChevronDown, ChevronRight, StickyNote, Loader2, CloudUpload } from 'lucide-react';
 import { Button } from "./ui/button";
 import {
   Collapsible,
@@ -22,6 +22,7 @@ import { openTab } from '@/store/slices/tabsSlice';
 import { useSelector } from 'react-redux';
 import { Entity } from '@/models/Entity';
 import { RootState } from '@/store';
+import { cn } from '@/lib/utils';
 
 interface TreeItemDroppableProps {
   noteID: string;
@@ -105,6 +106,37 @@ function VerticalLine({depth, maxDepth, lineSize, depthSize, children}: Vertical
 
 }
 
+/**
+ * Component to show pending operation indicator
+ */
+interface PendingIndicatorProps {
+  isCreating: boolean;
+  isSaving: boolean;
+  isDeleting: boolean;
+}
+
+function PendingIndicator({ isCreating, isSaving, isDeleting }: PendingIndicatorProps) {
+  if (isDeleting) {
+    return (
+      <Loader2 className="w-3 h-3 animate-spin text-red-500 mr-1" />
+    );
+  }
+
+  if (isCreating) {
+    return (
+      <Loader2 className="w-3 h-3 animate-spin text-blue-500 mr-1" />
+    );
+  }
+
+  if (isSaving) {
+    return (
+      <CloudUpload className="w-3 h-3 text-blue-500 mr-1 animate-pulse" />
+    );
+  }
+
+  return null;
+}
+
 interface NoteTreeItemProps {
   noteID: string;
   depth: number;
@@ -115,6 +147,13 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
   const noteState: EntityState = useSelector((state: RootState) => state.entities);
   const note: Entity = noteState.allEntities[noteID];
   const dispatch = useAppDispatch();
+
+  // Check if this entity has pending operations
+  const isCreating = noteState.pendingCreates.includes(noteID);
+  const isSaving = noteState.pendingSaves.includes(noteID);
+  const isDeleting = noteState.pendingDeletes.includes(noteID);
+  const hasPendingOperation = isCreating || isSaving || isDeleting;
+
   const onClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     dispatch(openTab(noteID));
@@ -130,7 +169,10 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
         <TreeItemDroppable noteID={note.id}>
           <TreeItemDraggable noteID={note.id} onDragStart={onDragStart}>
             <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-              <div className='w-full theme-explorer-item-background theme-explorer-item-text rounded-md'>
+              <div className={cn(
+                'w-full theme-explorer-item-background theme-explorer-item-text rounded-md',
+                hasPendingOperation && 'opacity-75'
+              )}>
                 <VerticalLine depth={0} maxDepth={depth} lineSize={1} depthSize={depthSize}>
                   <div className="flex flex-shrink items-center w-full h-7">
                     <CollapsibleTrigger asChild>
@@ -142,8 +184,13 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
                       </div>
                     </CollapsibleTrigger>
                     <StickyNote className="flex-none w-4 h-4 mr-2"/>
-                    <div className="cursor-pointer w-full truncate ... mr-1" onClick={onClick}>
+                    <div className="cursor-pointer w-full truncate ... mr-1 flex items-center" onClick={onClick}>
                       <span className='text-xs'>{note.title}</span>
+                      <PendingIndicator
+                        isCreating={isCreating}
+                        isSaving={isSaving}
+                        isDeleting={isDeleting}
+                      />
                     </div>
                   </div>
                 </VerticalLine>
@@ -163,12 +210,20 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
       <NoteTreeItemContextMenu note={note}>
         <TreeItemDroppable noteID={note.id}>
           <TreeItemDraggable noteID={note.id} onDragStart={onDragStart}>
-                <div className='w-full theme-explorer-item-background rounded-md'>
+                <div className={cn(
+                  'w-full theme-explorer-item-background rounded-md',
+                  hasPendingOperation && 'opacity-75'
+                )}>
                   <VerticalLine depth={0} maxDepth={depth} lineSize={1} depthSize={depthSize}>
                     <div className="pl-2 flex flex-shrink items-center w-full h-7 theme-explorer-item-text">
                         <StickyNote className="flex-none items-center w-4 h-4 mr-2"/>
-                        <div className='cursor-pointer w-full truncate ... mr-1' onClick={onClick}>
+                        <div className='cursor-pointer w-full truncate ... mr-1 flex items-center' onClick={onClick}>
                           <span className='text-xs'>{note.title}</span>
+                          <PendingIndicator
+                            isCreating={isCreating}
+                            isSaving={isSaving}
+                            isDeleting={isDeleting}
+                          />
                         </div>
                     </div>
                   </VerticalLine>
