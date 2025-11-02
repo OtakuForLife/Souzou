@@ -8,7 +8,7 @@ import { LoadingSpinner } from "@/components/common";
 
 export const NoteTree = () => {
   const notes: Entity[] = useSelector(selectRootEntities);
-  const { loading } = useSelector((state: RootState) => state.entities);
+  const { globalLoading } = useSelector((state: RootState) => state.entities);
 
   return (
     <div className="relative flex-initial justify-center w-full h-full theme-explorer-background">
@@ -18,8 +18,8 @@ export const NoteTree = () => {
         ))}
       </div>
 
-      {/* Loading overlay */}
-      {loading && (
+      {/* Loading overlay - only shown during initial fetch */}
+      {globalLoading && (
         <div className="absolute inset-0 bg-black/50 bg-opacity-30 flex items-center justify-center z-50">
             <LoadingSpinner size="md" text="Loading notes..." />
         </div>

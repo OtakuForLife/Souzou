@@ -7,7 +7,7 @@ import type { RootState } from '@/store';
 
 export const createEntity = createAsyncThunk(
   'entities/createEntity',
-  async (entity: CreateEntityRequest) => {
+  async (entity: CreateEntityRequest & { tempId?: string }) => {
     return await entityService.createEntity(entity);
   }
 );
@@ -50,14 +50,27 @@ export const removeTagsFromEntity = createAsyncThunk(
 interface EntityState {
   allEntities: { [id: string]: Entity; };
   dirtyEntityIDs: string[]; // IDs of entities that have been modified but not saved
-  loading: boolean;
+
+  // Granular loading states
+  globalLoading: boolean; // Only for initial fetch
+  pendingCreates: string[]; // Temporary IDs of entities being created
+  pendingSaves: string[]; // IDs of entities being saved
+  pendingDeletes: string[]; // IDs of entities being deleted
+
+  // Optimistic operation tracking
+  optimisticEntities: { [tempId: string]: Entity }; // Entities created optimistically
+
   error: string | null;
 }
 
 const initialState: EntityState = {
   allEntities: {},
   dirtyEntityIDs: [],
-  loading: false,
+  globalLoading: false,
+  pendingCreates: [],
+  pendingSaves: [],
+  pendingDeletes: [],
+  optimisticEntities: {},
   error: null,
 }
 
@@ -83,11 +96,11 @@ export const entitySlice = createSlice({
       var entity: Entity = state.allEntities[noteID];
       var isDirty = false;
       if (entity) {
-        if (action.payload.title !== undefined && action.payload.title !== entity.title) { 
+        if (action.payload.title !== undefined && action.payload.title !== entity.title) {
           entity.title = action.payload.title
           isDirty = true;
         };
-        if (action.payload.content !== undefined && action.payload.content !== entity.content) { 
+        if (action.payload.content !== undefined && action.payload.content !== entity.content) {
           entity.content = action.payload.content
           isDirty = true;
         };
@@ -111,13 +124,61 @@ export const entitySlice = createSlice({
         state.allEntities[noteID] = entity;
       }
     },
+
+    // Optimistic create - add entity immediately with temporary ID
+    optimisticCreateEntity: (state, action: PayloadAction<{
+      tempId: string;
+      entity: Omit<Entity, 'id' | 'created_at' | 'updated_at'>;
+    }>) => {
+      const { tempId, entity } = action.payload;
+      const optimisticEntity: Entity = {
+        ...entity,
+        id: tempId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Add to optimistic entities
+      state.optimisticEntities[tempId] = optimisticEntity;
+      if (!state.pendingCreates.includes(tempId)) {
+        state.pendingCreates.push(tempId);
+      }
+
+      // Also add to allEntities for immediate display
+      state.allEntities[tempId] = optimisticEntity;
+
+      // Add to parent's children if it has a parent
+      if (entity.parent) {
+        const parent = state.allEntities[entity.parent];
+        if (parent && !parent.children.includes(tempId)) {
+          parent.children.push(tempId);
+        }
+      }
+    },
+
+    // Optimistic save - mark entity as pending save
+    optimisticSaveEntity: (state, action: PayloadAction<string>) => {
+      const entityId = action.payload;
+      if (!state.pendingSaves.includes(entityId)) {
+        state.pendingSaves.push(entityId);
+      }
+    },
+
+    // Optimistic delete - mark entity as pending delete
+    optimisticDeleteEntity: (state, action: PayloadAction<string>) => {
+      const entityId = action.payload;
+      if (!state.pendingDeletes.includes(entityId)) {
+        state.pendingDeletes.push(entityId);
+      }
+    },
+
     changeEntityParent: (state, action: PayloadAction<{ noteID: string; newParent: string | null }>) => {
-      // TODO: Implement entity parent change logic
       const { noteID, newParent } = action.payload;
       if (state.allEntities[noteID]) {
         state.allEntities[noteID].parent = newParent;
       }
     },
+
     removeTagFromAllEntities: (state, action: PayloadAction<string>) => {
       const tagIdToRemove = action.payload;
       // Remove the tag ID from all entities that have it
@@ -132,54 +193,84 @@ export const entitySlice = createSlice({
   },
   extraReducers: builder => {
     builder
+      // Fetch entities - only operation that uses global loading
       .addCase(fetchEntities.pending, (state) => {
-        state.loading = true;
+        state.globalLoading = true;
         state.error = null;
       })
       .addCase(fetchEntities.fulfilled, (state, action) => {
-        state.loading = false;
+        state.globalLoading = false;
         state.error = null;
         state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
       })
       .addCase(fetchEntities.rejected, (state, action) => {
-        state.loading = false;
+        state.globalLoading = false;
         state.error = action.error.message || 'Failed to fetch entities';
       })
-      .addCase(createEntity.pending, (state) => {
-        state.loading = true;
+
+      // Create entity - optimistic update already happened, just replace temp ID with real ID
+      .addCase(createEntity.pending, (state, action) => {
+        // Optimistic update already happened via optimisticCreateEntity
+        // Just track that we're waiting for server response
         state.error = null;
       })
       .addCase(createEntity.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
         const newEntity = action.payload.newNoteData;
+        const tempId = action.meta.arg.tempId as string | undefined;
 
-        // Add the new entity to allEntities
-        state.allEntities[newEntity.id] = newEntity;
+        if (tempId) {
+          // Remove optimistic entity
+          delete state.optimisticEntities[tempId];
+          state.pendingCreates = state.pendingCreates.filter(id => id !== tempId);
 
-        // If it has a parent, add it to parent's children
-        if (newEntity.parent !== null) {
-          const parent = state.allEntities[newEntity.parent];
-          if (parent) {
-            if (!parent.children.includes(newEntity.id)) {
-              parent.children.push(newEntity.id);
+          // Remove temp entity from allEntities
+          delete state.allEntities[tempId];
+
+          // Remove temp ID from parent's children
+          if (newEntity.parent) {
+            const parent = state.allEntities[newEntity.parent];
+            if (parent) {
+              parent.children = parent.children.filter(id => id !== tempId);
             }
-            state.allEntities[newEntity.parent] = parent;
           }
         }
+
+        // Add the real entity
+        state.allEntities[newEntity.id] = newEntity;
+
+        // Add real ID to parent's children
+        if (newEntity.parent) {
+          const parent = state.allEntities[newEntity.parent];
+          if (parent && !parent.children.includes(newEntity.id)) {
+            parent.children.push(newEntity.id);
+          }
+        }
+
+        state.error = null;
       })
       .addCase(createEntity.rejected, (state, action) => {
-        state.loading = false;
+        const tempId = action.meta.arg.tempId as string | undefined;
+
+        if (tempId) {
+          // Keep the optimistic entity but remove from pending
+          state.pendingCreates = state.pendingCreates.filter(id => id !== tempId);
+          // Don't remove from allEntities - let user retry
+        }
+
         state.error = action.error.message || 'Failed to create entity';
       })
-      .addCase(saveEntity.pending, (state) => {
-        state.loading = true;
+      // Save entity - optimistic update already happened via updateEntity
+      .addCase(saveEntity.pending, (state, action) => {
+        const entityId = action.meta.arg.id;
+        if (!state.pendingSaves.includes(entityId)) {
+          state.pendingSaves.push(entityId);
+        }
         state.error = null;
       })
       .addCase(saveEntity.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
         const savedEntity = action.payload.savedEntity;
+        state.pendingSaves = state.pendingSaves.filter(id => id !== savedEntity.id);
+
         const oldEntity = state.allEntities[savedEntity.id] || { parent: null };
 
         // Handle parent changes
@@ -203,64 +294,93 @@ export const entitySlice = createSlice({
           }
         }
 
-        // Update the entity
+        // Update the entity with server data
         state.allEntities[savedEntity.id] = savedEntity;
 
         // Remove from dirty entities
         if (state.dirtyEntityIDs.includes(savedEntity.id)) {
           state.dirtyEntityIDs = state.dirtyEntityIDs.filter(id => id !== savedEntity.id);
         }
+
+        state.error = null;
       })
       .addCase(saveEntity.rejected, (state, action) => {
-        state.loading = false;
+        const entityId = action.meta.arg.id;
+        state.pendingSaves = state.pendingSaves.filter(id => id !== entityId);
         state.error = action.error.message || 'Failed to save entity';
       })
-      .addCase(deleteEntity.pending, (state) => {
-        state.loading = true;
+
+      // Delete entity
+      .addCase(deleteEntity.pending, (state, action) => {
+        const entityId = action.meta.arg;
+        if (!state.pendingDeletes.includes(entityId)) {
+          state.pendingDeletes.push(entityId);
+        }
         state.error = null;
       })
       .addCase(deleteEntity.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
+        const deletedId = action.meta.arg;
+        state.pendingDeletes = state.pendingDeletes.filter(id => id !== deletedId);
+
+        // Refresh all entities from server response
         state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
+        state.error = null;
       })
       .addCase(deleteEntity.rejected, (state, action) => {
-        state.loading = false;
+        const entityId = action.meta.arg;
+        state.pendingDeletes = state.pendingDeletes.filter(id => id !== entityId);
         state.error = action.error.message || 'Failed to delete entity';
       })
       // Add tags to entity
-      .addCase(addTagsToEntity.pending, (state) => {
-        state.loading = true;
+      .addCase(addTagsToEntity.pending, (state, action) => {
+        const entityId = action.meta.arg.entityId;
+        if (!state.pendingSaves.includes(entityId)) {
+          state.pendingSaves.push(entityId);
+        }
         state.error = null;
       })
       .addCase(addTagsToEntity.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
         const updatedEntity = action.payload;
+        state.pendingSaves = state.pendingSaves.filter(id => id !== updatedEntity.id);
         state.allEntities[updatedEntity.id] = updatedEntity;
+        state.error = null;
       })
       .addCase(addTagsToEntity.rejected, (state, action) => {
-        state.loading = false;
+        const entityId = action.meta.arg.entityId;
+        state.pendingSaves = state.pendingSaves.filter(id => id !== entityId);
         state.error = action.error.message || 'Failed to add tags to entity';
       })
+
       // Remove tags from entity
-      .addCase(removeTagsFromEntity.pending, (state) => {
-        state.loading = true;
+      .addCase(removeTagsFromEntity.pending, (state, action) => {
+        const entityId = action.meta.arg.entityId;
+        if (!state.pendingSaves.includes(entityId)) {
+          state.pendingSaves.push(entityId);
+        }
         state.error = null;
       })
       .addCase(removeTagsFromEntity.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
         const updatedEntity = action.payload;
+        state.pendingSaves = state.pendingSaves.filter(id => id !== updatedEntity.id);
         state.allEntities[updatedEntity.id] = updatedEntity;
+        state.error = null;
       })
       .addCase(removeTagsFromEntity.rejected, (state, action) => {
-        state.loading = false;
+        const entityId = action.meta.arg.entityId;
+        state.pendingSaves = state.pendingSaves.filter(id => id !== entityId);
         state.error = action.error.message || 'Failed to remove tags from entity';
       });
   },
 })
 
-export const { updateEntity, changeEntityParent, removeTagFromAllEntities } = entitySlice.actions;
+export const {
+  updateEntity,
+  changeEntityParent,
+  removeTagFromAllEntities,
+  optimisticCreateEntity,
+  optimisticSaveEntity,
+  optimisticDeleteEntity
+} = entitySlice.actions;
+
 export default entitySlice.reducer;
 export type { EntityState };

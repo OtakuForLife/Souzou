@@ -1,5 +1,17 @@
 
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -15,6 +27,32 @@ services:
       - DJANGO_SETTINGS_MODULE=backend.dev_settings
       - OLLAMA_BASE_URL=http://192.168.178.44:11434
       - OLLAMA_TIMEOUT=120
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - default
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    entrypoint: []
+    command: celery -A backend worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=backend.dev_settings
+      - OLLAMA_BASE_URL=http://192.168.178.44:11434
+      - OLLAMA_TIMEOUT=120
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
     networks:
       - default
 

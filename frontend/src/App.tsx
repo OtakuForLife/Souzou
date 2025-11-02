@@ -9,6 +9,7 @@ import { ErrorBoundary } from './components/common'
 import { log } from './lib/logger'
 import { DialogProvider } from './contexts/DialogContext'
 import FileUploadDialog from './components/FileUploadDialog'
+import { Toaster } from 'sonner'
 
 // Create a component to load theme
 const AppContent = () => {
@@ -42,6 +43,9 @@ const AppContent = () => {
 
         {/* Centralized Dialogs */}
         <FileUploadDialog />
+
+        {/* Toast Notifications */}
+        <Toaster position="bottom-right" richColors closeButton />
       </ErrorBoundary>
     </DialogProvider>
   )

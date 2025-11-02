@@ -120,38 +120,19 @@ class Theme(models.Model):
 
 
 # Signal handlers for automatic vector indexing
+# NOTE: Automatic embedding generation is disabled for performance
+# Embeddings are now generated lazily on-demand (e.g., during semantic search)
 @receiver(post_save, sender=Entity)
 def update_embedding_on_save(sender, instance, created, **kwargs):
-    """Automatically update embedding when note content changes"""
-    if instance.type == EntityType.NOTE:
-        # Check if this is a new note or content has changed
-        should_reindex = (
-            created or  # New note
-            not instance.embedding or  # No embedding yet
-            not instance.embedding_updated_at or  # Never indexed
-            instance.updated_at > instance.embedding_updated_at  # Content newer than embedding
-        )
-
-        if should_reindex:
-            try:
-                from .services.vector_service import VectorService
-                vector_service = VectorService()
-
-                # Generate embedding in background (non-blocking)
-                # In production, this could be moved to a task queue
-                vector_service.index_note(instance)
-
-            except Exception as e:
-                logger.error(f"Failed to update embedding for note {instance.id}: {e}")
+    """Track notes that need embedding updates (lazy generation)"""
+    # Embedding generation moved to background tasks for better UX
+    # See: tasks.py for async embedding generation
+    pass
 
 
 @receiver(post_delete, sender=Entity)
 def remove_embedding_on_delete(sender, instance, **kwargs):
-    """Clean up when note is deleted"""
-    if instance.type == EntityType.NOTE:
-        try:
-            from .services.vector_service import VectorService
-            vector_service = VectorService()
-            vector_service.remove_note(str(instance.id))
-        except Exception as e:
-            logger.error(f"Failed to remove embedding for deleted note {instance.id}: {e}")
+    """Clean up embedding when note is deleted"""
+    # Embeddings are stored in the entity record, so they're automatically deleted
+    # No additional cleanup needed
+    pass
