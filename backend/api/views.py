@@ -557,7 +557,7 @@ def embedding_status(request, entity_id):
     entity = get_object_or_404(Entity, id=entity_id)
 
     has_embedding = entity.embedding is not None
-    embedding_dimension = len(entity.embedding) if has_embedding else 0
+    embedding_dimension = len(entity.embedding) if entity.embedding is not None else 0
 
     # Check if embedding is stale (entity updated after embedding)
     is_stale = False
