@@ -66,8 +66,6 @@ services:
     # Port exposed for direct access if needed
     ports:
       - "5173:5173"
-    depends_on:
-      - backend
     environment:
       - FRONTEND_PORT=5173
       - NODE_ENV=development
