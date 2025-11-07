@@ -276,7 +276,8 @@ describe('entitySlice', () => {
       const nextState = reducer(previousState, action);
 
       expect(Object.keys(nextState.allEntities)).toHaveLength(3);
-      expect(nextState.allEntities['1']).toEqual({...mockNote1, parent: null});
+      // mockNote1 should have children array computed since mockNote3 has parent: '1'
+      expect(nextState.allEntities['1']).toEqual({...mockNote1, parent: null, children: ['3']});
       expect(nextState.allEntities['2']).toEqual({...mockNote2, parent: null});
       expect(nextState.allEntities['3']).toEqual(mockNote3);
     });

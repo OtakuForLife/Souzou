@@ -91,6 +91,7 @@ class SyncTagSerializer(serializers.ModelSerializer):
 
 class SyncEntitySerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
+    parent = serializers.SerializerMethodField()
 
     class Meta:
         model = Entity
@@ -102,3 +103,6 @@ class SyncEntitySerializer(serializers.ModelSerializer):
 
     def get_tags(self, obj):
         return [str(tag.id) for tag in obj.tags.all()]
+
+    def get_parent(self, obj):
+        return str(obj.parent.id) if obj.parent else None
