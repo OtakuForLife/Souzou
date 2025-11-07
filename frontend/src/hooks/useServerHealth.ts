@@ -20,7 +20,7 @@ interface ServerHealthResult {
   triggerFullSync: () => Promise<void>;
 }
 
-const DEFAULT_CHECK_INTERVAL = 10000; // 10 seconds
+const DEFAULT_CHECK_INTERVAL = 20000; // 10 seconds
 
 /**
  * Hook to periodically check server health status and trigger sync when server becomes available

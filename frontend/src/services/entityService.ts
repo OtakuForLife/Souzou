@@ -68,8 +68,8 @@ function repoToEntity(repo: RepoEntity): Entity {
     title: repo.title,
     content: repo.content,
     parent: repo.parent,
-    metadata: repo.metadata,
-    tags: repo.tags,
+    metadata: repo.metadata || {},
+    tags: repo.tags || [], // Ensure tags is always an array
     children: [], // Will be populated by Redux
     created_at: repo.created_at || new Date().toISOString(),
     updated_at: repo.updated_at || new Date().toISOString(),

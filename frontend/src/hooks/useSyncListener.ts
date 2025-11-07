@@ -18,7 +18,9 @@ export function useSyncListener() {
     // Subscribe to sync completion events
     const unsubscribe = syncManager.onSync(async (result) => {
       // Refresh Redux if any changes were pulled OR pushed
-      // We need to refresh after push because the local DB entities have updated rev values
+      // We need to refresh after push because:
+      // 1. Local DB entities have updated rev values after successful push
+      // 2. Conflicts may have been resolved by accepting server version
       if (result.pulled > 0 || result.pushed > 0) {
         log.info('Sync completed, refreshing entities in Redux', {
           pulled: result.pulled,

@@ -63,9 +63,12 @@ export class IndexedDbDriver implements IRepositoryDriver {
 
   async putEntity(entity: RepoEntity): Promise<void> {
     // Ensure updated_at is set (use server_updated_at as fallback, or current time)
+    // Ensure tags and metadata are always defined
     const entityToStore: RepoEntity = {
       ...entity,
       updated_at: entity.updated_at || entity.server_updated_at || new Date().toISOString(),
+      tags: entity.tags || [],
+      metadata: entity.metadata || {},
     };
 
     await this.db!.entities.put(entityToStore);

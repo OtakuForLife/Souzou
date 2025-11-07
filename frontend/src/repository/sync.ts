@@ -21,7 +21,7 @@ export class SyncOrchestrator {
 
     // Apply server upserts
     for (const e of pull.changes.entities.upserts) {
-      console.log('[Sync] Pulling entity:', e.id, 'rev:', e.rev, 'title:', e.title);
+      console.log('[Sync] Pulling entity:', e.id, 'rev:', e.rev, 'title:', e.title, 'content length:', e.content?.length || 0);
       await this.store.putEntity(e as RepoEntity);
       pulled++;
     }
@@ -55,6 +55,7 @@ export class SyncOrchestrator {
 
       // Update local entities with server rev and remove from outbox
       const appliedIds: string[] = [];
+      const conflictIds: string[] = [];
 
       for (const result of res.entities) {
         if (result.status === 'applied') {
@@ -66,6 +67,18 @@ export class SyncOrchestrator {
             await this.store.putEntity(entity);
           }
           appliedIds.push(result.id);
+        } else if (result.status === 'conflict' && result.server) {
+          // Conflict: server has a newer version
+          console.warn('[Sync] Conflict detected for entity:', result.id, 'server version:', result.server);
+
+          // Strategy: Accept server version (server wins)
+          // This prevents infinite conflict loops
+          await this.store.putEntity(result.server as RepoEntity);
+
+          // Remove from outbox since we accepted server version
+          conflictIds.push(result.id);
+
+          console.log('[Sync] Resolved conflict by accepting server version for entity:', result.id);
         }
       }
 
@@ -79,14 +92,30 @@ export class SyncOrchestrator {
             await this.store.putTag(tag);
           }
           appliedIds.push(result.id);
+        } else if (result.status === 'conflict' && result.server) {
+          // Conflict: server has a newer version
+          console.warn('[Sync] Conflict detected for tag:', result.id);
+
+          // Strategy: Accept server version (server wins)
+          await this.store.putTag(result.server as RepoTag);
+
+          // Remove from outbox since we accepted server version
+          conflictIds.push(result.id);
+
+          console.log('[Sync] Resolved conflict by accepting server version for tag:', result.id);
         }
       }
 
-      // Remove successfully applied items from outbox
-      if (appliedIds.length > 0) {
-        console.log('[Sync] Removing from outbox:', appliedIds);
-        await this.store.removeFromOutbox(appliedIds);
+      // Remove successfully applied items and resolved conflicts from outbox
+      const idsToRemove = [...appliedIds, ...conflictIds];
+      if (idsToRemove.length > 0) {
+        console.log('[Sync] Removing from outbox:', idsToRemove);
+        await this.store.removeFromOutbox(idsToRemove);
         console.log('[Sync] Removed from outbox successfully');
+      }
+
+      if (conflictIds.length > 0) {
+        console.warn('[Sync] Resolved', conflictIds.length, 'conflicts by accepting server version');
       }
     }
 

@@ -420,7 +420,15 @@ class SyncPushView(APIView):
                     if client_rev == server_rev + 1:
                         # Update fields from filtered data
                         for k, v in filtered_data.items():
-                            setattr(obj, k, v)
+                            # Handle ForeignKey fields specially for Entity model
+                            if model_cls.__name__ == 'Entity' and k == 'parent':
+                                # parent is a ForeignKey to Entity, need to set parent_id instead
+                                if v is None:
+                                    obj.parent = None
+                                else:
+                                    obj.parent_id = v
+                            else:
+                                setattr(obj, k, v)
                         obj.rev = server_rev + 1
                         obj.save()
 
@@ -441,7 +449,15 @@ class SyncPushView(APIView):
                     return {"id": str(obj_id), "status": "applied", "rev": 0}
                 # Create new object with filtered data
                 logger.info(f"Sync push: creating new {model_cls.__name__} {obj_id}")
-                obj = model_cls(id=obj_id, **filtered_data)
+
+                # Handle ForeignKey fields specially for Entity model
+                create_data = filtered_data.copy()
+                if model_cls.__name__ == 'Entity' and 'parent' in create_data:
+                    parent_id = create_data.pop('parent')
+                    obj = model_cls(id=obj_id, parent_id=parent_id, **create_data)
+                else:
+                    obj = model_cls(id=obj_id, **create_data)
+
                 obj.rev = 1 if client_rev == 0 else client_rev + 1
                 obj.save()
 
