@@ -74,6 +74,24 @@ const initialState: EntityState = {
   error: null,
 }
 
+// Helper function to compute children relationships from parent field
+const computeChildrenRelationships = (entities: Entity[]): { [id: string]: Entity } => {
+  // First, create a map with all entities having empty children arrays
+  const entityMap: { [id: string]: Entity } = {};
+  entities.forEach(entity => {
+    entityMap[entity.id] = { ...entity, children: [] };
+  });
+
+  // Then, populate children arrays based on parent relationships
+  entities.forEach(entity => {
+    if (entity.parent && entityMap[entity.parent]) {
+      entityMap[entity.parent].children.push(entity.id);
+    }
+  });
+
+  return entityMap;
+};
+
 // Selector to get root entities (entities with no parent)
 export const selectRootEntities = createSelector(
   [(state: RootState) => state.entities.allEntities],
@@ -201,7 +219,8 @@ export const entitySlice = createSlice({
       .addCase(fetchEntities.fulfilled, (state, action) => {
         state.globalLoading = false;
         state.error = null;
-        state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
+        // Compute children relationships from parent field
+        state.allEntities = computeChildrenRelationships(action.payload);
       })
       .addCase(fetchEntities.rejected, (state, action) => {
         state.globalLoading = false;
@@ -322,8 +341,8 @@ export const entitySlice = createSlice({
         const deletedId = action.meta.arg;
         state.pendingDeletes = state.pendingDeletes.filter(id => id !== deletedId);
 
-        // Refresh all entities from server response
-        state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
+        // Refresh all entities from server response and compute children relationships
+        state.allEntities = computeChildrenRelationships(action.payload);
         state.error = null;
       })
       .addCase(deleteEntity.rejected, (state, action) => {

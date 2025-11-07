@@ -21,6 +21,7 @@ export class SyncOrchestrator {
 
     // Apply server upserts
     for (const e of pull.changes.entities.upserts) {
+      console.log('[Sync] Pulling entity:', e.id, 'rev:', e.rev, 'title:', e.title);
       await this.store.putEntity(e as RepoEntity);
       pulled++;
     }
@@ -42,14 +43,51 @@ export class SyncOrchestrator {
 
     // 2) Push
     const pending = await this.store.peekOutbox(100);
+    console.log('[Sync] Outbox items to push:', pending.length, pending);
     if (pending.length > 0) {
       const entities = pending.filter((x: any) => x.data?.type || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoEntity>[];
       const tags = pending.filter((x: any) => x.data?.name || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoTag>[];
 
+      console.log('[Sync] Pushing entities:', entities.length, 'tags:', tags.length);
       const res: PushResults = await this.transport.push({ entities, tags });
       pushed = res.entities.length + res.tags.length;
+      console.log('[Sync] Push results:', res);
 
-      // TODO: remove successfully applied items from outbox (driver-specific IDs)
+      // Update local entities with server rev and remove from outbox
+      const appliedIds: string[] = [];
+
+      for (const result of res.entities) {
+        if (result.status === 'applied') {
+          // Update local entity with new rev from server
+          const entity = await this.store.getEntity(result.id);
+          if (entity) {
+            entity.rev = result.rev;
+            entity.server_updated_at = result.server_updated_at;
+            await this.store.putEntity(entity);
+          }
+          appliedIds.push(result.id);
+        }
+      }
+
+      for (const result of res.tags) {
+        if (result.status === 'applied') {
+          // Update local tag with new rev from server
+          const tag = await this.store.getTag(result.id);
+          if (tag) {
+            tag.rev = result.rev;
+            tag.server_updated_at = result.server_updated_at;
+            await this.store.putTag(tag);
+          }
+          appliedIds.push(result.id);
+        }
+      }
+
+      // Remove successfully applied items from outbox
+      if (appliedIds.length > 0) {
+        console.log('[Sync] Removing from outbox:', appliedIds);
+        await this.store.removeFromOutbox(appliedIds);
+        console.log('[Sync] Removed from outbox successfully');
+      }
     }
 
     return { pulled, pushed };

@@ -1,4 +1,4 @@
-import { Settings, ChevronDown } from "lucide-react";
+import { Settings, ChevronDown, Circle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 import {
@@ -19,10 +19,15 @@ import { Theme } from "@/types/themeTypes";
 import { Input } from "./ui/input";
 import { DialogClose } from "./ui/dialog";
 import { getBackendURL, setBackendURL } from "@/lib/settings";
+import { useServerHealth } from "@/hooks/useServerHealth";
 
 
 export default function SettingsDialog(){
     const [backendURL, setBackendURLState] = useState("");
+    const { status: serverStatus, checkHealth, triggerSync, triggerFullSync } = useServerHealth();
+    const [isTesting, setIsTesting] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [isFullSyncing, setIsFullSyncing] = useState(false);
 
     const { currentTheme, allThemes, switchTheme } = useTheme();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -59,6 +64,36 @@ export default function SettingsDialog(){
         switchTheme(newThemeId);
     };
 
+    const handleTestConnection = async () => {
+        setIsTesting(true);
+        await checkHealth();
+        setIsTesting(false);
+    };
+
+    const handleManualSync = async () => {
+        setIsSyncing(true);
+        try {
+            await triggerSync();
+            log.info('Manual sync completed');
+        } catch (error) {
+            log.error('Manual sync failed', error as Error);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+    const handleFullSync = async () => {
+        setIsFullSyncing(true);
+        try {
+            await triggerFullSync();
+            log.info('Full sync completed');
+        } catch (error) {
+            log.error('Full sync failed', error as Error);
+        } finally {
+            setIsFullSyncing(false);
+        }
+    };
+
     const handleSave = () => {
         const url = backendURL.trim();
         let finalUrl = url;
@@ -83,8 +118,54 @@ export default function SettingsDialog(){
                     {/* Server Settings */}
                     <div className="flex flex-col gap-2">
                         <Label className="text-right">Server</Label>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
                             <Input placeholder="Server URL (e.g., http://localhost:8000)" value={backendURL} onChange={(e) => setBackendURLState(e.target.value)} />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleTestConnection}
+                                disabled={isTesting}
+                            >
+                                {isTesting ? 'Testing...' : 'Test'}
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleManualSync}
+                                disabled={isSyncing || isFullSyncing || serverStatus !== 'healthy'}
+                            >
+                                {isSyncing ? 'Syncing...' : 'Sync'}
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleFullSync}
+                                disabled={isSyncing || isFullSyncing || serverStatus !== 'healthy'}
+                                title="Reset sync cursor and pull all data from server"
+                            >
+                                {isFullSyncing ? 'Full Syncing...' : 'Full Sync'}
+                            </Button>
+                            <div className="flex flex-col items-center gap-1">
+                                <Circle
+                                    className={`w-4 h-4 flex-shrink-0 ${
+                                        serverStatus === 'healthy'
+                                            ? 'fill-green-500 text-green-500'
+                                            : serverStatus === 'unhealthy'
+                                            ? 'fill-yellow-500 text-yellow-500'
+                                            : 'fill-gray-400 text-gray-400'
+                                    }`}
+                                />
+                                <span className="text-xs whitespace-nowrap">
+                                    {serverStatus === 'healthy'
+                                        ? 'Reachable'
+                                        : serverStatus === 'unhealthy'
+                                        ? 'Not reachable'
+                                        : 'Checking...'}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

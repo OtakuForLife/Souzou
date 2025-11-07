@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Tag,
   Upload,
+  Circle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,6 +26,7 @@ import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 import { EntityType } from "@/models/Entity";
 import { createDefaultViewContent } from "@/types/widgetTypes";
 import { useDialog } from "@/contexts/DialogContext";
+import { useServerHealth } from "@/hooks/useServerHealth";
 
 interface AppSidebarProps {
   onIconOneClick: () => void;
@@ -34,6 +36,7 @@ interface AppSidebarProps {
 export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppSidebarProps) {
   const dispatch = useAppDispatch();
   const { openFileUpload } = useDialog();
+  const { status: serverStatus } = useServerHealth();
 
   return (
     <Sidebar
@@ -124,6 +127,30 @@ export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppS
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="p-1 m-0">
               <SettingsDialog />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="p-1 m-0">
+                <div
+                  className="w-full h-full m-0 p-0 flex flex-col items-center gap-1"
+                  title={
+                    serverStatus === 'healthy'
+                      ? 'Server is reachable'
+                      : serverStatus === 'unhealthy'
+                      ? 'Server is not reachable'
+                      : 'Checking server status...'
+                  }
+                >
+                  <Circle
+                    className={`w-full h-full m-0 p-0 ${
+                      serverStatus === 'healthy'
+                        ? 'fill-green-500 text-green-500'
+                        : serverStatus === 'unhealthy'
+                        ? 'fill-yellow-500 text-yellow-500'
+                        : 'fill-gray-400 text-gray-400'
+                    }`}
+                  />
+                </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

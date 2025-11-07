@@ -7,7 +7,8 @@ from .views import (
     update_stale,
     embedding_status,
     embedding_stats,
-    SyncPullView, 
+    health_check,
+    SyncPullView,
     SyncPushView
 )
 from rest_framework.routers import DefaultRouter
@@ -19,6 +20,8 @@ router.register(r'tags', TagViewSet, basename='tag')
 
 urlpatterns = [
     path('', include(router.urls)),
+    # Health check endpoint
+    path('health/', health_check, name='health-check'),
     # Embedding management endpoints
     path('entities/<uuid:entity_id>/generate-embedding/', generate_entity_embedding, name='generate-entity-embedding'),
     path('entities/<uuid:entity_id>/embedding-status/', embedding_status, name='embedding-status'),

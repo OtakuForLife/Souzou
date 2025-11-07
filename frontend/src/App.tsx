@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import { useTheme } from './hooks/useTheme'
+import { useSyncListener } from '@/hooks/useSyncListener'
 import { ErrorBoundary } from './components/common'
 import { log } from './lib/logger'
 import { DialogProvider } from './contexts/DialogContext'
@@ -14,6 +15,9 @@ import { Toaster } from 'sonner'
 // Create a component to load theme
 const AppContent = () => {
   const { refreshThemes, currentTheme } = useTheme()
+
+  // Listen to sync events and refresh Redux state
+  useSyncListener();
 
   useEffect(() => {
     log.info('Application starting');

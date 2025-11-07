@@ -23,6 +23,23 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 logger = logging.getLogger(__name__)
 
+
+@api_view(['GET'])
+def health_check(request):
+    """
+    Simple health check endpoint to verify server is reachable.
+
+    GET /api/health/
+
+    Returns:
+        - 200: Server is healthy
+    """
+    return Response({
+        'status': 'ok',
+        'timestamp': timezone.now().isoformat()
+    }, status=status.HTTP_200_OK)
+
+
 class EntityViewSet(viewsets.ModelViewSet):
     serializer_class = EntitySerializer
     queryset = Entity.objects.all()
@@ -354,6 +371,7 @@ class SyncPushView(APIView):
     """Apply client changes with basic rev-based conflict detection."""
     def post(self, request):
         payload = request.data or {}
+        logger.info(f"Sync push: received {len(payload.get('entities', []))} entities, {len(payload.get('tags', []))} tags")
         results = {"entities": [], "tags": []}
 
         def serialize_entity(o):
@@ -369,42 +387,87 @@ class SyncPushView(APIView):
             data = item.get('data', {})
 
             if not obj_id:
+                logger.error(f"Sync push: missing id in item: {item}")
                 return {"status": "error", "error": "missing id"}
 
+            # Fields that should not be set from client data
+            # These are auto-managed by Django or the sync logic
+            skip_fields = {'id', 'created_at', 'updated_at', 'server_updated_at', 'rev', 'tags'}
+
+            # Filter out fields that shouldn't be set
+            filtered_data = {k: v for k, v in data.items() if k not in skip_fields}
+
             try:
+                logger.info(f"Sync push: processing {op} for {model_cls.__name__} {obj_id}, client_rev={client_rev}")
                 obj = model_cls.objects.select_for_update().get(id=obj_id)
                 server_rev = obj.rev
+                logger.info(f"Sync push: server has {model_cls.__name__} {obj_id} with rev={server_rev}")
+
                 if op == 'delete':
-                    if client_rev == server_rev:
+                    # Client sends client_rev = expected_new_rev (server_rev + 1)
+                    if client_rev == server_rev + 1:
                         obj.deleted = True
                         obj.deleted_at = timezone.now()
                         obj.rev = server_rev + 1
                         obj.save()
-                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at}
+                        logger.info(f"Sync push: applied delete to {model_cls.__name__} {obj_id}, new_rev={obj.rev}")
+                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at.isoformat()}
                     else:
+                        logger.warning(f"Sync push: delete conflict for {model_cls.__name__} {obj_id}, client_rev={client_rev}, expected={server_rev + 1}")
                         return {"id": str(obj.id), "status": "conflict", "server": serialize(obj)}
                 else:
-                    if client_rev == server_rev:
-                        for k, v in data.items():
+                    # Client sends client_rev = expected_new_rev (server_rev + 1)
+                    if client_rev == server_rev + 1:
+                        # Update fields from filtered data
+                        for k, v in filtered_data.items():
                             setattr(obj, k, v)
                         obj.rev = server_rev + 1
                         obj.save()
-                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at}
+
+                        # Handle tags separately for Entity model (ManyToMany relationship)
+                        if model_cls.__name__ == 'Entity' and 'tags' in data:
+                            tag_ids = data.get('tags', [])
+                            if isinstance(tag_ids, list):
+                                obj.tags.set(tag_ids)
+
+                        logger.info(f"Sync push: applied update to {model_cls.__name__} {obj_id}, new_rev={obj.rev}")
+                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at.isoformat()}
                     else:
+                        logger.warning(f"Sync push: update conflict for {model_cls.__name__} {obj_id}, client_rev={client_rev}, expected={server_rev + 1}")
                         return {"id": str(obj.id), "status": "conflict", "server": serialize(obj)}
             except model_cls.DoesNotExist:
                 if op == 'delete':
+                    logger.info(f"Sync push: delete for non-existent {model_cls.__name__} {obj_id}")
                     return {"id": str(obj_id), "status": "applied", "rev": 0}
-                obj = model_cls(id=obj_id, **data)
+                # Create new object with filtered data
+                logger.info(f"Sync push: creating new {model_cls.__name__} {obj_id}")
+                obj = model_cls(id=obj_id, **filtered_data)
                 obj.rev = 1 if client_rev == 0 else client_rev + 1
                 obj.save()
-                return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at}
+
+                # Handle tags separately for Entity model (ManyToMany relationship)
+                if model_cls.__name__ == 'Entity' and 'tags' in data:
+                    tag_ids = data.get('tags', [])
+                    if isinstance(tag_ids, list):
+                        obj.tags.set(tag_ids)
+
+                logger.info(f"Sync push: created {model_cls.__name__} {obj_id}, rev={obj.rev}")
+                return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at.isoformat()}
+            except Exception as e:
+                logger.error(f"Sync push: error processing {model_cls.__name__} {obj_id}: {str(e)}", exc_info=True)
+                return {"id": str(obj_id), "status": "error", "error": str(e)}
 
         for item in payload.get('entities', []):
             results['entities'].append(apply_upsert(Entity, item, serialize_entity))
 
         for item in payload.get('tags', []):
             results['tags'].append(apply_upsert(Tag, item, serialize_tag))
+
+        # Log summary
+        applied_entities = sum(1 for r in results['entities'] if r.get('status') == 'applied')
+        conflict_entities = sum(1 for r in results['entities'] if r.get('status') == 'conflict')
+        error_entities = sum(1 for r in results['entities'] if r.get('status') == 'error')
+        logger.info(f"Sync push: completed - entities: {applied_entities} applied, {conflict_entities} conflicts, {error_entities} errors")
 
         return Response(results)
 
