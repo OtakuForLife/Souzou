@@ -28,6 +28,8 @@ export interface RepoTag extends BaseSyncFields {
   color: string;
   description?: string;
   parent?: UUID | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type ChangeOp<T> =
