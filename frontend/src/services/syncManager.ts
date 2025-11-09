@@ -17,7 +17,11 @@ import { HttpSyncTransport } from '@/repository/transport';
 import { log } from '@/lib/logger';
 import { getPlatformDisplayName } from '@/lib/platform';
 
-export type SyncStatus = 'idle' | 'syncing' | 'error';
+export enum SyncStatus {
+  IDLE = 'idle',
+  SYNCING = 'syncing',
+  ERROR = 'error',
+}
 
 export interface SyncResult {
   pulled: number;
@@ -35,7 +39,7 @@ class SyncManager {
   private lastSyncResult: SyncResult | null = null;
   private syncListeners: Set<(result: SyncResult) => void> = new Set();
   private statusListeners: Set<(status: SyncStatus) => void> = new Set();
-  private currentStatus: SyncStatus = 'idle';
+  private currentStatus: SyncStatus = SyncStatus.IDLE;
 
   /**
    * Initialize the sync manager with repository driver and transport
@@ -79,7 +83,7 @@ class SyncManager {
     }
 
     this.isSyncing = true;
-    this.updateStatus('syncing');
+    this.updateStatus(SyncStatus.SYNCING);
 
     try {
       log.info('Starting sync...');
@@ -92,7 +96,7 @@ class SyncManager {
       };
 
       this.lastSyncResult = syncResult;
-      this.updateStatus('idle');
+      this.updateStatus(SyncStatus.IDLE);
 
       log.info('Sync completed successfully', {
         pulled: result.pulled,
@@ -105,7 +109,7 @@ class SyncManager {
       return syncResult;
     } catch (error) {
       log.error('Sync failed', error as Error);
-      this.updateStatus('error');
+      this.updateStatus(SyncStatus.ERROR);
       return null;
     } finally {
       this.isSyncing = false;

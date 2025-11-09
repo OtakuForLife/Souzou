@@ -4,7 +4,11 @@ import { log } from '@/lib/logger';
 import { syncManager } from '@/services/syncManager';
 import { connectionState } from '@/lib/connectionState';
 
-export type ServerHealthStatus = 'healthy' | 'unhealthy' | 'checking';
+export enum ServerHealthStatusType {
+  HEALTHY = 'healthy',
+  UNHEALTHY = 'unhealthy',
+  CHECKING = 'checking',
+}
 
 interface UseServerHealthOptions {
   checkInterval?: number; // in milliseconds
@@ -13,7 +17,7 @@ interface UseServerHealthOptions {
 }
 
 interface ServerHealthResult {
-  status: ServerHealthStatus;
+  status: ServerHealthStatusType;
   lastChecked: Date | null;
   checkHealth: () => Promise<void>;
   triggerSync: () => Promise<void>;
@@ -28,9 +32,9 @@ const DEFAULT_CHECK_INTERVAL = 20000; // 10 seconds
 export function useServerHealth(options: UseServerHealthOptions = {}): ServerHealthResult {
   const { checkInterval = DEFAULT_CHECK_INTERVAL, enabled = true, autoSync = true } = options;
 
-  const [status, setStatus] = useState<ServerHealthStatus>('checking');
+  const [status, setStatus] = useState<ServerHealthStatusType>(ServerHealthStatusType.CHECKING);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
-  const previousStatus = useRef<ServerHealthStatus>('checking');
+  const previousStatus = useRef<ServerHealthStatusType>(ServerHealthStatusType.CHECKING);
 
   const checkHealth = useCallback(async () => {
     if (!enabled) return;
@@ -48,16 +52,16 @@ export function useServerHealth(options: UseServerHealthOptions = {}): ServerHea
       clearTimeout(timeoutId);
 
       if (response.ok) {
-        setStatus('healthy');
+        setStatus(ServerHealthStatusType.HEALTHY);
         connectionState.setOnline(true);
         log.debug('Server health check: healthy');
       } else {
-        setStatus('unhealthy');
+        setStatus(ServerHealthStatusType.UNHEALTHY);
         connectionState.setOnline(false);
         log.warn('Server health check: unhealthy', { status: response.status });
       }
     } catch (error) {
-      setStatus('unhealthy');
+      setStatus(ServerHealthStatusType.UNHEALTHY);
       connectionState.setOnline(false);
       log.warn('Server health check: failed', { error });
     } finally {

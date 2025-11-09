@@ -19,7 +19,7 @@ import { Theme } from "@/types/themeTypes";
 import { Input } from "./ui/input";
 import { DialogClose } from "./ui/dialog";
 import { getBackendURL, setBackendURL } from "@/lib/settings";
-import { useServerHealth } from "@/hooks/useServerHealth";
+import { ServerHealthStatusType, useServerHealth } from "@/hooks/useServerHealth";
 
 
 export default function SettingsDialog(){
@@ -134,7 +134,7 @@ export default function SettingsDialog(){
                                 variant="outline"
                                 size="sm"
                                 onClick={handleManualSync}
-                                disabled={isSyncing || isFullSyncing || serverStatus !== 'healthy'}
+                                disabled={isSyncing || isFullSyncing || serverStatus !== ServerHealthStatusType.HEALTHY}
                             >
                                 {isSyncing ? 'Syncing...' : 'Sync'}
                             </Button>
@@ -143,7 +143,7 @@ export default function SettingsDialog(){
                                 variant="outline"
                                 size="sm"
                                 onClick={handleFullSync}
-                                disabled={isSyncing || isFullSyncing || serverStatus !== 'healthy'}
+                                disabled={isSyncing || isFullSyncing || serverStatus !== ServerHealthStatusType.HEALTHY}
                                 title="Reset sync cursor and pull all data from server"
                             >
                                 {isFullSyncing ? 'Full Syncing...' : 'Full Sync'}
@@ -151,17 +151,17 @@ export default function SettingsDialog(){
                             <div className="flex flex-col items-center gap-1">
                                 <Circle
                                     className={`w-4 h-4 flex-shrink-0 ${
-                                        serverStatus === 'healthy'
+                                        serverStatus === ServerHealthStatusType.HEALTHY
                                             ? 'fill-green-500 text-green-500'
-                                            : serverStatus === 'unhealthy'
+                                            : serverStatus === ServerHealthStatusType.UNHEALTHY
                                             ? 'fill-yellow-500 text-yellow-500'
                                             : 'fill-gray-400 text-gray-400'
                                     }`}
                                 />
                                 <span className="text-xs whitespace-nowrap">
-                                    {serverStatus === 'healthy'
+                                    {serverStatus === ServerHealthStatusType.HEALTHY
                                         ? 'Reachable'
-                                        : serverStatus === 'unhealthy'
+                                        : serverStatus === ServerHealthStatusType.UNHEALTHY
                                         ? 'Not reachable'
                                         : 'Checking...'}
                                 </span>

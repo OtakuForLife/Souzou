@@ -26,7 +26,7 @@ import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 import { EntityType } from "@/models/Entity";
 import { createDefaultViewContent } from "@/types/widgetTypes";
 import { useDialog } from "@/contexts/DialogContext";
-import { useServerHealth } from "@/hooks/useServerHealth";
+import { ServerHealthStatusType, useServerHealth } from "@/hooks/useServerHealth";
 
 interface AppSidebarProps {
   onIconOneClick: () => void;
@@ -134,18 +134,18 @@ export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppS
                 <div
                   className="w-full h-full m-0 p-0 flex flex-col items-center gap-1"
                   title={
-                    serverStatus === 'healthy'
+                    serverStatus === ServerHealthStatusType.HEALTHY
                       ? 'Server is reachable'
-                      : serverStatus === 'unhealthy'
+                      : serverStatus === ServerHealthStatusType.UNHEALTHY
                       ? 'Server is not reachable'
                       : 'Checking server status...'
                   }
                 >
                   <Circle
                     className={`w-full h-full m-0 p-0 ${
-                      serverStatus === 'healthy'
+                      serverStatus === ServerHealthStatusType.HEALTHY
                         ? 'fill-green-500 text-green-500'
-                        : serverStatus === 'unhealthy'
+                        : serverStatus === ServerHealthStatusType.UNHEALTHY
                         ? 'fill-yellow-500 text-yellow-500'
                         : 'fill-gray-400 text-gray-400'
                     }`}
