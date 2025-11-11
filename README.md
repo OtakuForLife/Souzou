@@ -68,7 +68,7 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
 
 *Coming soon...*
 
-### Electron
+### Desktop Windows
 
 ```bash
 # Install dependencies
@@ -87,6 +87,13 @@ npm run forge:make
 # On Windows
 ./out/production/Souzou-win32-x64/Souzou.exe
 ```
+
+### Android
+
+For Production:
+
+⚠️ Change  androidScheme back to 'https' (or remove it to use default)
+⚠️ Remove or restrict the cleartext traffic permissions
 
 ---
 

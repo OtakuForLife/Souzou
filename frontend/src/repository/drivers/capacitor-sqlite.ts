@@ -8,11 +8,12 @@ import type { IRepositoryDriver, RepoEntity, RepoTag, UUID, ChangeOp, Cursor } f
 import { getDatabaseName } from '@/lib/platform';
 
 type SQLiteDBConnection = any;
+type SQLiteConnection = any;
 
 export class CapacitorSqliteDriver implements IRepositoryDriver {
   private db: SQLiteDBConnection | null = null;
   private dbName: string = '';
-  private CapacitorSQLite: any = null;
+  private sqlite: SQLiteConnection | null = null;
 
   async init(): Promise<void> {
     try {
@@ -20,37 +21,31 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
       console.log('[CapacitorSQLite] Initializing database:', this.dbName);
 
       // Import the Capacitor SQLite plugin
-      const sqlite = await import('@capacitor-community/sqlite');
-      this.CapacitorSQLite = sqlite.CapacitorSQLite;
+      const { CapacitorSQLite, SQLiteConnection } = await import('@capacitor-community/sqlite');
+      this.sqlite = new SQLiteConnection(CapacitorSQLite);
 
-      if (!this.CapacitorSQLite) {
+      if (!this.sqlite) {
         throw new Error('Failed to load @capacitor-community/sqlite plugin');
       }
 
-      console.log('[CapacitorSQLite] Plugin loaded, creating connection...');
+      console.log('[CapacitorSQLite] Creating connection...');
 
-      // Create connection
-      const createResult = await this.CapacitorSQLite.createConnection({
-        database: this.dbName,
-        version: 1,
-        encrypted: false,
-        mode: 'no-encryption',
-        readonly: false
-      });
+      // Create connection with positional parameters
+      // Signature: createConnection(database, encrypted, mode, version, readonly)
+      this.db = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
 
-      console.log('[CapacitorSQLite] Connection created:', createResult);
-
-      // Open database
-      const openResult = await this.CapacitorSQLite.open({ database: this.dbName, readonly: false });
-      console.log('[CapacitorSQLite] Database opened:', openResult);
-
-      // Get the connection object
-      this.db = await this.CapacitorSQLite.retrieveConnection({ database: this.dbName, readonly: false });
-      console.log('[CapacitorSQLite] Connection retrieved:', this.db);
+      console.log('[CapacitorSQLite] Connection created:', this.db);
 
       if (!this.db) {
-        throw new Error('Failed to retrieve database connection');
+        throw new Error('Failed to create database connection');
       }
+
+      console.log('[CapacitorSQLite] Opening database...');
+
+      // Open database
+      await this.db.open();
+
+      console.log('[CapacitorSQLite] Database opened');
 
       // Create tables
       await this.createTables();
@@ -146,8 +141,8 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
   }
 
   async close(): Promise<void> {
-    if (this.db && this.CapacitorSQLite) {
-      await this.CapacitorSQLite.close({ database: this.dbName });
+    if (this.db) {
+      await this.db.close();
       this.db = null;
     }
   }

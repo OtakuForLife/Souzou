@@ -4,6 +4,11 @@ const config: CapacitorConfig = {
   appId: 'cc.lskl.souzou',
   appName: 'souzou',
   webDir: 'dist',
+  server: {
+    // Allow cleartext traffic and disable HTTPS requirement
+    cleartext: true,
+    androidScheme: 'http'
+  },
   plugins: {
     CapacitorSQLite: {
       // iOS configuration

@@ -70,6 +70,7 @@
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.2",
+    "@capacitor/android": "^7.4.4",
     "@codemirror/lang-markdown": "^6.3.4",
     "@codemirror/language": "^6.11.3",
     "@codemirror/language-data": "^6.5.1",
