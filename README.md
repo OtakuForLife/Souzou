@@ -90,10 +90,37 @@ npm run forge:make
 
 ### Android
 
+For Development:
+
+```bash
+# Install dependencies
+npm install
+
+# Build the Vite app
+npm run build
+
+# Sync the Capacitor app
+npx cap sync android
+
+# Run the Capacitor app
+npx cap run android
+```
+
 For Production:
 
 ⚠️ Change  androidScheme back to 'https' (or remove it to use default)
 ⚠️ Remove or restrict the cleartext traffic permissions
+
+```bash
+# Install dependencies
+npm install
+
+# Build the Vite app
+npm run build
+
+# Build the Capacitor app
+npx cap build --keystorepath <path> --keystorepass <keystore-password> --keystorealias <alias> --keystorealiaspass <alias-password> android
+```
 
 ---
 
