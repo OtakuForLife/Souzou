@@ -68,7 +68,25 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
 
 *Coming soon...*
 
-Step-by-step instructions to build and run Souzou locally will be added here.
+### Electron
+
+```bash
+# Install dependencies
+npm install
+
+# rebuild native modules
+npx electron-rebuild -f -w better-sqlite3
+
+# Build the Vite app
+npm run build
+
+# Create the Electron executable
+npm run forge:make
+
+# Run the Electron executable
+# On Windows
+./out/production/Souzou-win32-x64/Souzou.exe
+```
 
 ---
 

@@ -3,7 +3,11 @@
  * Detects the current platform (Web, Electron, Capacitor/Android)
  */
 
-export type Platform = 'web' | 'electron' | 'capacitor';
+export enum Platform {
+  WEB = 'web',
+  ELECTRON = 'electron',
+  CAPACITOR = 'capacitor',
+}
 
 /**
  * Detect if running in Electron
@@ -44,12 +48,12 @@ export function isWeb(): boolean {
  */
 export function getPlatform(): Platform {
   if (isElectron()) {
-    return 'electron';
+    return Platform.ELECTRON;
   }
   if (isCapacitor()) {
-    return 'capacitor';
+    return Platform.CAPACITOR;
   }
-  return 'web';
+  return Platform.WEB;
 }
 
 /**
@@ -59,29 +63,16 @@ export function getDatabaseName(): string {
   const platform = getPlatform();
   
   switch (platform) {
-    case 'electron':
+    case Platform.ELECTRON:
       return 'souzou-electron.db';
-    case 'capacitor':
+    case Platform.CAPACITOR:
       return 'souzou-mobile.db';
-    case 'web':
+    case Platform.WEB:
     default:
       return 'souzou-web';
   }
 }
 
-/**
- * Check if the platform supports SQLite
- */
-export function supportsSQLite(): boolean {
-  return isElectron() || isCapacitor();
-}
-
-/**
- * Check if the platform supports IndexedDB
- */
-export function supportsIndexedDB(): boolean {
-  return typeof window !== 'undefined' && 'indexedDB' in window;
-}
 
 /**
  * Get platform display name
@@ -90,11 +81,11 @@ export function getPlatformDisplayName(): string {
   const platform = getPlatform();
   
   switch (platform) {
-    case 'electron':
+    case Platform.ELECTRON:
       return 'Desktop (Electron)';
-    case 'capacitor':
+    case Platform.CAPACITOR:
       return 'Mobile (Android)';
-    case 'web':
+    case Platform.WEB:
     default:
       return 'Web Browser';
   }
@@ -105,9 +96,6 @@ declare global {
   interface Window {
     process?: any;
     Capacitor?: any;
-    nativeDB?: {
-      exec: (sql: string, params?: any[]) => Promise<any>;
-    };
   }
 }
 
@@ -117,8 +105,6 @@ export default {
   isWeb,
   getPlatform,
   getDatabaseName,
-  supportsSQLite,
-  supportsIndexedDB,
   getPlatformDisplayName,
 };
 

@@ -38,6 +38,7 @@
     "@tailwindcss/vite": "^4.1.13",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.15.3",
@@ -51,6 +52,7 @@
     "dexie": "^4.2.0",
     "dexie-react-hooks": "^4.2.0",
     "electron": "^38.2.0",
+    "electron-rebuild": "^3.2.9",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
@@ -67,6 +69,7 @@
     "vitest": "^3.1.2"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.2",
     "@codemirror/lang-markdown": "^6.3.4",
     "@codemirror/language": "^6.11.3",
     "@codemirror/language-data": "^6.5.1",
@@ -99,6 +102,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@uiw/react-codemirror": "^4.25.2",
     "axios": "^1.12.2",
+    "better-sqlite3": "^12.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cytoscape": "^3.33.1",

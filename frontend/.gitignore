@@ -25,6 +25,10 @@ release/
 release2/
 out/
 
+*.db
+*.db-shm
+*.db-wal
+
 # Logs
 logs
 *.log

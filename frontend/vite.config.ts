@@ -23,9 +23,13 @@ export default defineConfig(async () => {
           onstart() {
             // No-op: start Electron manually via `npm run electron:start`
           },
-        },
-        {
-          entry: 'electron/preload.ts',
+          vite: {
+            build: {
+              rollupOptions: {
+                external: ['better-sqlite3'],
+              },
+            },
+          },
         },
       ]),
     ],
@@ -36,6 +40,14 @@ export default defineConfig(async () => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+      },
+    },
+    optimizeDeps: {
+      exclude: ['better-sqlite3'],
+    },
+    build: {
+      rollupOptions: {
+        external: ['better-sqlite3'],
       },
     },
   }

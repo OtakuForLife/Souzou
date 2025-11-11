@@ -1,5 +1,12 @@
-// Electron main process skeleton (not wired yet)
-import { app, BrowserWindow, ipcMain } from 'electron';
+/**
+ * Electron main process
+ *
+ * This file handles:
+ * - Window creation and lifecycle
+ * - Capacitor SQLite plugin initialization
+ */
+
+import { app, BrowserWindow } from 'electron';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -11,11 +18,14 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
+      contextIsolation: false,
+      nodeIntegration: true,
     },
+  });
+
+  // Log when preload script should be loaded
+  win.webContents.on('did-finish-load', () => {
+    console.log('[Main] Page loaded');
   });
 
   // In dev, Vite serves; in prod, load the built index.html
@@ -36,10 +46,5 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
-});
-
-// Placeholder IPC for future SQLite access
-ipcMain.handle('db:exec', async (_event, _sql: string, _params?: any[]) => {
-  return { ok: true };
 });
 
