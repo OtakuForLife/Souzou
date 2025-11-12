@@ -50,6 +50,16 @@ export async function getRepositoryDriver(): Promise<IRepositoryDriver> {
   return driverInstance!;
 }
 
+/**
+ * Clear all local data (entities, tags, outbox, sync cursor)
+ * This will reset the local database to empty state
+ */
+export async function clearAllLocalData(): Promise<void> {
+  const driver = await getRepositoryDriver();
+  await driver.clearAllData();
+  log.info('All local data cleared');
+}
+
 export * from './types';
 export { SyncOrchestrator } from './sync';
 

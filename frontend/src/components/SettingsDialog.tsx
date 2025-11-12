@@ -18,16 +18,24 @@ import { Theme } from "@/types/themeTypes";
 
 import { Input } from "./ui/input";
 import { DialogClose } from "./ui/dialog";
-import { getBackendURL, setBackendURL } from "@/lib/settings";
+import { getBackendURL, setBackendURL, getSyncEnabled, setSyncEnabled } from "@/lib/settings";
 import { ServerHealthStatusType, useServerHealth } from "@/hooks/useServerHealth";
+import { Checkbox } from "./ui/checkbox";
+import { clearAllLocalData } from "@/repository";
+import { fetchEntities } from "@/store/slices/entitySlice";
+import { useAppDispatch } from "@/hooks";
+import { toast } from "sonner";
 
 
 export default function SettingsDialog(){
-    const [backendURL, setBackendURLState] = useState("");
-    const { status: serverStatus, checkHealth, triggerSync, triggerFullSync } = useServerHealth();
+    const dispatch = useAppDispatch();
+    const [backendURL, setBackendURLState] = useState(getBackendURL());
+    const [syncEnabled, setSyncEnabledState] = useState(getSyncEnabled());
+    const { status: serverStatus, checkHealth, triggerSync, triggerFullSync } = useServerHealth({ enabled: syncEnabled });
     const [isTesting, setIsTesting] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [isFullSyncing, setIsFullSyncing] = useState(false);
+    const [isClearing, setIsClearing] = useState(false);
 
     const { currentTheme, allThemes, switchTheme } = useTheme();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -45,10 +53,7 @@ export default function SettingsDialog(){
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Initialize server settings from storage
-    useEffect(() => {
-        setBackendURLState(getBackendURL());
-    }, []);
+
 
     const handleThemeChange = (newThemeId: string) => {
         const newTheme = allThemes.find((t: Theme) => t.id === newThemeId);
@@ -94,12 +99,32 @@ export default function SettingsDialog(){
         }
     };
 
+    const handleClearLocalData = async () => {
+        if (!confirm('Are you sure you want to erase all local data? This cannot be undone.')) {
+            return;
+        }
+
+        setIsClearing(true);
+        try {
+            await clearAllLocalData();
+            await dispatch(fetchEntities()); // Refresh Redux to show empty state
+            toast.success('All local data has been cleared');
+            log.info('Local data cleared successfully');
+        } catch (error) {
+            toast.error('Failed to clear local data');
+            log.error('Failed to clear local data', error as Error);
+        } finally {
+            setIsClearing(false);
+        }
+    };
+
     const handleSave = () => {
         const url = backendURL.trim();
         let finalUrl = url;
         try { new URL(url); } catch { finalUrl = 'http://localhost:8000'; }
         setBackendURL(finalUrl);
-        log.info('Updated backend URL', { url: finalUrl });
+        setSyncEnabled(syncEnabled);
+        log.info('Updated settings', { url: finalUrl, syncEnabled });
     };
     return (
         <Dialog>
@@ -116,59 +141,73 @@ export default function SettingsDialog(){
 
                 <div className="space-y-4">
                     {/* Server Settings */}
-                    <div className="flex flex-col gap-2">
-                        <Label className="text-right">Server</Label>
-                        <div className="flex gap-2 items-center">
-                            <Input placeholder="Server URL (e.g., http://localhost:8000)" value={backendURL} onChange={(e) => setBackendURLState(e.target.value)} />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={handleTestConnection}
-                                disabled={isTesting}
-                            >
-                                {isTesting ? 'Testing...' : 'Test'}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={handleManualSync}
-                                disabled={isSyncing || isFullSyncing || serverStatus !== ServerHealthStatusType.HEALTHY}
-                            >
-                                {isSyncing ? 'Syncing...' : 'Sync'}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={handleFullSync}
-                                disabled={isSyncing || isFullSyncing || serverStatus !== ServerHealthStatusType.HEALTHY}
-                                title="Reset sync cursor and pull all data from server"
-                            >
-                                {isFullSyncing ? 'Full Syncing...' : 'Full Sync'}
-                            </Button>
-                            <div className="flex flex-col items-center gap-1">
-                                <Circle
-                                    className={`w-4 h-4 flex-shrink-0 ${
-                                        serverStatus === ServerHealthStatusType.HEALTHY
-                                            ? 'fill-green-500 text-green-500'
-                                            : serverStatus === ServerHealthStatusType.UNHEALTHY
-                                            ? 'fill-yellow-500 text-yellow-500'
-                                            : 'fill-gray-400 text-gray-400'
-                                    }`}
-                                />
-                                <span className="text-xs whitespace-nowrap">
-                                    {serverStatus === ServerHealthStatusType.HEALTHY
-                                        ? 'Reachable'
-                                        : serverStatus === ServerHealthStatusType.UNHEALTHY
-                                        ? 'Not reachable'
-                                        : 'Checking...'}
-                                </span>
-                            </div>
-                        </div>
+                    <div className="flex flex-row items-center justify-left gap-2">
+                        <Checkbox
+                            checked={syncEnabled}
+                            onCheckedChange={(checked) => setSyncEnabledState(checked as boolean)}
+                        />
+                        <Label className="cursor-pointer" onClick={() => setSyncEnabledState(!syncEnabled)}>
+                            Sync with Server
+                        </Label>
                     </div>
 
+                    {syncEnabled && (
+                        <div className="flex flex-row items-center justify-between">
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    placeholder="Server URL (e.g., http://localhost:8000)"
+                                    value={backendURL}
+                                    onChange={(e) => setBackendURLState(e.target.value)}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleTestConnection}
+                                    disabled={isTesting}
+                                >
+                                    {isTesting ? 'Testing...' : 'Test'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleManualSync}
+                                    disabled={isSyncing || isFullSyncing || serverStatus !== ServerHealthStatusType.HEALTHY}
+                                >
+                                    {isSyncing ? 'Syncing...' : 'Sync'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleFullSync}
+                                    disabled={isSyncing || isFullSyncing || serverStatus !== ServerHealthStatusType.HEALTHY}
+                                    title="Reset sync cursor and pull all data from server"
+                                >
+                                    {isFullSyncing ? 'Full Syncing...' : 'Full Sync'}
+                                </Button>
+                                <div className="flex flex-col items-center gap-1">
+                                    <Circle
+                                        className={`w-4 h-4 flex-shrink-0 ${
+                                            serverStatus === ServerHealthStatusType.HEALTHY
+                                                ? 'fill-green-500 text-green-500'
+                                                : serverStatus === ServerHealthStatusType.UNHEALTHY
+                                                ? 'fill-yellow-500 text-yellow-500'
+                                                : 'fill-gray-400 text-gray-400'
+                                        }`}
+                                    />
+                                    <span className="text-xs whitespace-nowrap">
+                                        {serverStatus === ServerHealthStatusType.HEALTHY
+                                            ? 'Reachable'
+                                            : serverStatus === ServerHealthStatusType.UNHEALTHY
+                                            ? 'Not reachable'
+                                            : 'Checking...'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {/* Theme Setting */}
                     <div className="flex flex-row items-center justify-between">
                         <Label className="text-right">Theme</Label>
@@ -198,6 +237,26 @@ export default function SettingsDialog(){
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Danger Zone */}
+                    <div className="pt-4 border-t">
+                        <Label className="text-red-500 font-semibold mb-2 block">Danger Zone</Label>
+                        <div className="flex flex-row items-center justify-between gap-2">
+                            <div className="flex-1">
+                                <p className="text-sm">Clear all local data (entities, tags, sync state)</p>
+                                <p className="text-xs text-gray-500">This will erase everything stored locally. Cannot be undone.</p>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={handleClearLocalData}
+                                disabled={isClearing}
+                            >
+                                {isClearing ? 'Clearing...' : 'Clear Local Data'}
+                            </Button>
                         </div>
                     </div>
                 </div>

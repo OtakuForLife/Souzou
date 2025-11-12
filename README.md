@@ -70,6 +70,8 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
 
 ### Desktop Windows
 
+For Production:
+
 ```bash
 # Install dependencies
 npm install

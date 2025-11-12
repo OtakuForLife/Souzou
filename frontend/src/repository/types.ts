@@ -62,6 +62,7 @@ export interface IRepositoryDriver {
   // Storage lifecycle
   init(): Promise<void>;
   close(): Promise<void>;
+  clearAllData(): Promise<void>; // Clear all local data (entities, tags, outbox, sync cursor)
 
   // Entities
   getEntity(id: UUID): Promise<RepoEntity | undefined>;

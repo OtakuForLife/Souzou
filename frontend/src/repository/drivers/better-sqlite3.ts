@@ -108,6 +108,14 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
     }
   }
 
+  async clearAllData(): Promise<void> {
+    if (!this.db) return;
+    this.db.exec('DELETE FROM entities');
+    this.db.exec('DELETE FROM tags');
+    this.db.exec('DELETE FROM outbox');
+    this.db.exec('DELETE FROM sync_meta');
+  }
+
   // Entities
   async getEntity(id: UUID): Promise<RepoEntity | undefined> {
     const stmt = this.db.prepare('SELECT * FROM entities WHERE id = ?');

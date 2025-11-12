@@ -14,6 +14,8 @@ Build the Vite app:
 npm run build
 ```
 
+## Windows
+
 Create the Electron executable:
 ```bash
 npm run forge:make

@@ -24,7 +24,7 @@ interface ServerHealthResult {
   triggerFullSync: () => Promise<void>;
 }
 
-const DEFAULT_CHECK_INTERVAL = 20000; // 10 seconds
+const DEFAULT_CHECK_INTERVAL = 20000; // 20 seconds
 
 /**
  * Hook to periodically check server health status and trigger sync when server becomes available
@@ -95,7 +95,7 @@ export function useServerHealth(options: UseServerHealthOptions = {}): ServerHea
 
   // Trigger sync when server becomes healthy or periodically when healthy
   useEffect(() => {
-    if (!autoSync) return;
+    if (!autoSync || !enabled) return;
 
     const wasUnhealthy = previousStatus.current === 'unhealthy';
     const isNowHealthy = status === 'healthy';
@@ -111,8 +111,8 @@ export function useServerHealth(options: UseServerHealthOptions = {}): ServerHea
         });
     }
 
-    // Periodic sync when server is healthy
-    if (status === 'healthy') {
+    // Periodic sync when server is healthy AND enabled
+    if (status === 'healthy' && enabled) {
       const syncInterval = setInterval(() => {
         log.debug('Periodic sync triggered');
         syncManager.initialize()
@@ -126,7 +126,7 @@ export function useServerHealth(options: UseServerHealthOptions = {}): ServerHea
     }
 
     previousStatus.current = status;
-  }, [status, autoSync, checkInterval]);
+  }, [status, autoSync, checkInterval, enabled]);
 
   // Initial check
   useEffect(() => {

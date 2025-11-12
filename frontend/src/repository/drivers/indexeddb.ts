@@ -56,6 +56,14 @@ export class IndexedDbDriver implements IRepositoryDriver {
     }
   }
 
+  async clearAllData(): Promise<void> {
+    if (!this.db) return;
+    await this.db.entities.clear();
+    await this.db.tags.clear();
+    await this.db.outbox.clear();
+    await this.db.syncMeta.clear();
+  }
+
   // Entities
   async getEntity(id: UUID): Promise<RepoEntity | undefined> {
     return await this.db!.entities.get(id);

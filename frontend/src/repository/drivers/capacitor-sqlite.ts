@@ -147,6 +147,14 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
     }
   }
 
+  async clearAllData(): Promise<void> {
+    if (!this.db) return;
+    await this.executeSQL('DELETE FROM entities');
+    await this.executeSQL('DELETE FROM tags');
+    await this.executeSQL('DELETE FROM outbox');
+    await this.executeSQL('DELETE FROM sync_meta');
+  }
+
   // Entities
   async getEntity(id: UUID): Promise<RepoEntity | undefined> {
     const rows = await this.executeSQL('SELECT * FROM entities WHERE id = ?', [id]);
