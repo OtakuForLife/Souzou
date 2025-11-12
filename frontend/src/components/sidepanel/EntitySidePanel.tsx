@@ -1,8 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { fetchTags } from '@/store/slices/tagSlice';
-import { useAppDispatch } from '@/hooks';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 
 import PropertiesSection from './PropertiesSection';
@@ -21,17 +19,13 @@ interface EntitySidePanelProps {
 
 
 export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityId, showProperties = true, showTags = true, showOutgoingLinks = false, showIncomingLinks = false }) => {
-  const dispatch = useAppDispatch();
   const { allTags } = useSelector((state: RootState) => state.tags);
   const { allEntities } = useSelector((state: RootState) => state.entities);
 
   const currentEntity = currentEntityId ? allEntities[currentEntityId] : null;
 
-  useEffect(() => {
-    if (Object.keys(allTags).length === 0) {
-      dispatch(fetchTags());
-    }
-  }, [dispatch]); // Remove allTags from dependency array to prevent infinite loop
+  // Tags are loaded from local DB on app start via useSyncListener
+  // No need to fetch here
 
   const currentEntityTagIds = currentEntity?.tags || [];
   // Convert tag IDs to Tag objects for display

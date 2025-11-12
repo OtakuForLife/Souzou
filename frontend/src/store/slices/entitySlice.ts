@@ -1,6 +1,5 @@
 import { Entity } from '@/models/Entity';
 import { CreateEntityRequest, entityService } from '@/services';
-import { tagService } from '@/services/tagService';
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '@/store';
 
@@ -33,17 +32,23 @@ export const fetchEntities = createAsyncThunk(
   }
 );
 
+/**
+ * Add tags to an entity in local database (queued for sync)
+ */
 export const addTagsToEntity = createAsyncThunk(
   'entities/addTagsToEntity',
   async ({ entityId, tagIds }: { entityId: string; tagIds: string[] }) => {
-    return await tagService.addTagsToEntity(entityId, tagIds);
+    return await entityService.addTagsToEntity(entityId, tagIds);
   }
 );
 
+/**
+ * Remove tags from an entity in local database (queued for sync)
+ */
 export const removeTagsFromEntity = createAsyncThunk(
   'entities/removeTagsFromEntity',
   async ({ entityId, tagIds }: { entityId: string; tagIds: string[] }) => {
-    return await tagService.removeTagsFromEntity(entityId, tagIds);
+    return await entityService.removeTagsFromEntity(entityId, tagIds);
   }
 );
 

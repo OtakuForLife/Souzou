@@ -1,45 +1,46 @@
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { Tag, TagHierarchy } from '@/models/Tag';
+import { Tag } from '@/models/Tag';
 import { tagService, CreateTagRequest, UpdateTagRequest } from '@/services/tagService';
 import type { RootState } from '@/store';
-import { addTagsToEntity, removeTagsFromEntity } from './entitySlice';
 
+/**
+ * Fetch all tags from local database
+ */
 export const fetchTags = createAsyncThunk('tags/fetchTags', async () => {
   return await tagService.fetchTags();
 });
 
-export const fetchTagHierarchy = createAsyncThunk('tags/fetchTagHierarchy', async () => {
-  return await tagService.fetchTagHierarchy();
-});
-
+/**
+ * Create a new tag in local database (queued for sync)
+ */
 export const createTag = createAsyncThunk('tags/createTag', async (tagData: CreateTagRequest) => {
   return await tagService.createTag(tagData);
 });
 
+/**
+ * Update an existing tag in local database (queued for sync)
+ */
 export const updateTag = createAsyncThunk('tags/updateTag', async (payload: { id: string; tagData: UpdateTagRequest }) => {
   const { id, tagData } = payload;
   return await tagService.updateTag(id, tagData);
 });
 
+/**
+ * Delete a tag from local database (queued for sync)
+ */
 export const deleteEntityTag = createAsyncThunk('tags/deleteTag', async (id: string) => {
   await tagService.deleteTag(id);
   return id;
 });
 
-export const getEntitiesByTags = createAsyncThunk('tags/getEntitiesByTags', async (tagIds: string[]) => {
-  return await tagService.getEntitiesByTags(tagIds);
-});
-
 interface TagState {
   allTags: { [id: string]: Tag };
-  tagHierarchy: TagHierarchy[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: TagState = {
   allTags: {},
-  tagHierarchy: [],
   loading: false,
   error: null,
 };
@@ -84,10 +85,6 @@ export const tagSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch tags';
       })
-      // Fetch tag hierarchy
-      .addCase(fetchTagHierarchy.fulfilled, (state, action) => {
-        state.tagHierarchy = action.payload;
-      })
       // Create tag
       .addCase(createTag.fulfilled, (state, action) => {
         state.allTags[action.payload.id] = action.payload;
@@ -99,27 +96,7 @@ export const tagSlice = createSlice({
       // Delete tag
       .addCase(deleteEntityTag.fulfilled, (state, action) => {
         delete state.allTags[action.payload];
-      })
-      // When tags are added to an entity, increment the entities_count for those tags
-      .addCase(addTagsToEntity.fulfilled, (state, action) => {
-        const { tagIds } = action.meta.arg as { entityId: string; tagIds: string[] };
-        tagIds.forEach((id) => {
-          const tag = state.allTags[id];
-          if (tag) {
-            tag.entities_count = (tag.entities_count ?? 0) + 1;
-          }
-        });
-      })
-      // When tags are removed from an entity, decrement the entities_count for those tags
-      .addCase(removeTagsFromEntity.fulfilled, (state, action) => {
-        const { tagIds } = action.meta.arg as { entityId: string; tagIds: string[] };
-        tagIds.forEach((id) => {
-          const tag = state.allTags[id];
-          if (tag) {
-            tag.entities_count = Math.max(0, (tag.entities_count ?? 0) - 1);
-          }
-        });
-      })
+      });
   },
 });
 

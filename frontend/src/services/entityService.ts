@@ -263,6 +263,98 @@ class EntityService {
     return repoToEntity(updatedEntity);
   }
 
+  /**
+   * Add tags to an entity in local database
+   * Changes are queued in outbox for sync
+   */
+  async addTagsToEntity(entityId: string, tagIds: string[]): Promise<Entity> {
+    await this.ensureInitialized();
+
+    // Get existing entity
+    const existing = await this.driver!.getEntity(entityId);
+    if (!existing) {
+      throw new Error(`Entity not found: ${entityId}`);
+    }
+
+    // Add new tags (avoid duplicates)
+    const currentTags = new Set(existing.tags || []);
+    tagIds.forEach(tagId => currentTags.add(tagId));
+
+    // Update entity with new tags
+    const updatedEntity: RepoEntity = {
+      ...existing,
+      tags: Array.from(currentTags),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save to local DB
+    await this.driver!.putEntity(updatedEntity);
+
+    const client_rev = (existing.rev || 0) + 1;
+
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'upsert',
+      id: entityId,
+      client_rev: client_rev,
+      data: updatedEntity,
+    });
+
+    log.info('Tags added to entity in local DB and queued for sync', {
+      id: entityId,
+      addedTags: tagIds,
+      totalTags: updatedEntity.tags.length
+    });
+
+    return repoToEntity(updatedEntity);
+  }
+
+  /**
+   * Remove tags from an entity in local database
+   * Changes are queued in outbox for sync
+   */
+  async removeTagsFromEntity(entityId: string, tagIds: string[]): Promise<Entity> {
+    await this.ensureInitialized();
+
+    // Get existing entity
+    const existing = await this.driver!.getEntity(entityId);
+    if (!existing) {
+      throw new Error(`Entity not found: ${entityId}`);
+    }
+
+    // Remove tags
+    const tagsToRemove = new Set(tagIds);
+    const updatedTags = (existing.tags || []).filter(tagId => !tagsToRemove.has(tagId));
+
+    // Update entity with remaining tags
+    const updatedEntity: RepoEntity = {
+      ...existing,
+      tags: updatedTags,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save to local DB
+    await this.driver!.putEntity(updatedEntity);
+
+    const client_rev = (existing.rev || 0) + 1;
+
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'upsert',
+      id: entityId,
+      client_rev: client_rev,
+      data: updatedEntity,
+    });
+
+    log.info('Tags removed from entity in local DB and queued for sync', {
+      id: entityId,
+      removedTags: tagIds,
+      remainingTags: updatedEntity.tags.length
+    });
+
+    return repoToEntity(updatedEntity);
+  }
+
 }
 // Export singleton instance
 export const entityService = new EntityService();
