@@ -1,9 +1,9 @@
 import {
   StickyNote,
-  Menu,
   LayoutDashboard,
   Tag,
   Upload,
+  Menu,
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,11 +27,11 @@ import { createDefaultViewContent } from "@/types/widgetTypes";
 import { useDialog } from "@/contexts/DialogContext";
 
 interface AppSidebarProps {
-  onIconOneClick: () => void;
-  isNoteTreeCollapsed: boolean;
+  onToggleNoteTree: () => void;
+  isNoteTreeVisible: boolean;
 }
 
-export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppSidebarProps) {
+export default function AppSidebar({ onToggleNoteTree, isNoteTreeVisible }: AppSidebarProps) {
   const dispatch = useAppDispatch();
   const { openFileUpload } = useDialog();
 
@@ -42,13 +42,13 @@ export default function AppSidebar({ onIconOneClick, isNoteTreeCollapsed }: AppS
     >
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem className="">
+          <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               className="cursor-pointer p-1 m-0"
-              onClick={onIconOneClick}
+              onClick={onToggleNoteTree}
             >
-              {isNoteTreeCollapsed ? <Menu className="rotate-90" />: <Menu className="" />}
+              <Menu className={isNoteTreeVisible ? "" : "rotate-90"} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

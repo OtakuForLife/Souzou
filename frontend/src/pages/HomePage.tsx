@@ -14,7 +14,11 @@ import {
     ResizablePanelGroup,
   } from "../components/ui/resizable";
 import {ImperativePanelHandle}  from "react-resizable-panels"
-import { SidebarInset, SidebarProvider } from "../components/ui/sidebar"
+import {
+    SidebarInset,
+    SidebarProvider
+} from "../components/ui/sidebar"
+import { Pin, PinOff } from "lucide-react";
 
 import { fetchEntities, EntityState, createEntity, saveEntity } from "@/store/slices/entitySlice";
 import { NoteTree } from "../components/EntityTree";
@@ -31,7 +35,10 @@ import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 import { openTab } from "@/store/slices/tabsSlice";
 import { EntityType } from "@/models/Entity";
 import { createDefaultViewContent } from "@/types/widgetTypes";
+import { Button } from "@/components/ui/button";
 
+
+const NOTE_TREE_PIN_KEY = "note_tree_pinned";
 
 function Home() {
     const dispatch = useAppDispatch();
@@ -57,8 +64,24 @@ function Home() {
     }, [notesError, dispatch]);
 
     const [activeDrag, setActiveDrag] = useState<Active|null>(null);
-    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    // Note tree visibility and pin state
+    const [isNoteTreeVisible, setIsNoteTreeVisible] = useState(true);
+    const [isNoteTreePinned, setIsNoteTreePinned] = useState(() => {
+        const stored = localStorage.getItem(NOTE_TREE_PIN_KEY);
+        return stored !== "false"; // Default to true (pinned)
+    });
     const navigationRef = useRef<ImperativePanelHandle>(null);
+
+    const toggleNoteTreeVisibility = () => {
+        setIsNoteTreeVisible(!isNoteTreeVisible);
+    };
+
+    const toggleNoteTreePin = () => {
+        const newPinned = !isNoteTreePinned;
+        setIsNoteTreePinned(newPinned);
+        localStorage.setItem(NOTE_TREE_PIN_KEY, String(newPinned));
+    };
 
 
     // Keyboard shortcuts
@@ -149,40 +172,84 @@ function Home() {
 
     };
 
-    const toggleNavigationBar = () => {
-        if(isCollapsed){
-            navigationRef.current?.expand();
-            setIsCollapsed(false);
-        }else {
-            navigationRef.current?.collapse();
-            setIsCollapsed(true);
-        }
-    };
-
     return (
         <div className="flex h-full w-full min-h-screen min-w-screen max-h-screen max-w-screen">
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]} sensors={sensors}>
                 <SidebarProvider>
-                    <AppSidebar onIconOneClick={toggleNavigationBar} isNoteTreeCollapsed={isCollapsed}/>
-                    <SidebarInset>
-                        <ResizablePanelGroup direction="horizontal" tagName="div" className="h-full w-full">
-                            <ResizablePanel ref={navigationRef}
-                            className=""
-                            minSize={10}
-                            maxSize={25}
-                            defaultSize={15}
-                            collapsible={true}
-                            onCollapse={()=>{setIsCollapsed(true)}}
-                            onExpand={()=>{setIsCollapsed(false)}}
-                            >
-                                <NoteTree/>
-                            </ResizablePanel>
-                            <ResizableHandle className="w-1 theme-explorer-background"/>
-                            <ResizablePanel className="theme-main-content-background" defaultSize={60}>
-                                <ContentFrame/>
-                            </ResizablePanel>
+                    <AppSidebar
+                        onToggleNoteTree={toggleNoteTreeVisibility}
+                        isNoteTreeVisible={isNoteTreeVisible}
+                    />
 
-                        </ResizablePanelGroup>
+                    <SidebarInset>
+                        {/* Pinned Mode: ResizablePanel Layout (like before) */}
+                        {isNoteTreePinned && isNoteTreeVisible && (
+                            <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+                                <ResizablePanel
+                                    ref={navigationRef}
+                                    className="theme-explorer-background"
+                                    minSize={10}
+                                    maxSize={25}
+                                    defaultSize={15}
+                                    collapsible={false}
+                                >
+                                    <div className="h-full flex flex-col theme-explorer-item-text">
+                                        <div className="flex items-center justify-between px-2 py-1.5 border-b theme-explorer-background">
+                                            <span className="text-sm font-semibold">Notes</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 p-0"
+                                                onClick={toggleNoteTreePin}
+                                                title="Unpin sidebar (floating overlay)"
+                                            >
+                                                <Pin className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="flex-1 overflow-auto">
+                                            <NoteTree/>
+                                        </div>
+                                    </div>
+                                </ResizablePanel>
+                                <ResizableHandle className="w-1 theme-explorer-background"/>
+                                <ResizablePanel className="theme-main-content-background" defaultSize={85}>
+                                    <ContentFrame/>
+                                </ResizablePanel>
+                            </ResizablePanelGroup>
+                        )}
+
+                        {/* Pinned Mode but Hidden */}
+                        {isNoteTreePinned && !isNoteTreeVisible && (
+                            <div className="h-full w-full theme-main-content-background">
+                                <ContentFrame/>
+                            </div>
+                        )}
+
+                        {/* Floating Mode: Overlay */}
+                        {!isNoteTreePinned && (
+                            <div className="relative h-full w-full theme-main-content-background">
+                                <ContentFrame/>
+                                {isNoteTreeVisible && (
+                                    <div className="absolute top-0 left-0 h-full w-64 z-50 theme-explorer-background border-r shadow-lg flex flex-col">
+                                        <div className="flex items-center justify-between px-2 py-1.5 border-b theme-explorer-background theme-explorer-item-text">
+                                            <span className="text-sm font-semibold">Notes</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 p-0"
+                                                onClick={toggleNoteTreePin}
+                                                title="Pin sidebar"
+                                            >
+                                                <PinOff className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="flex-1 overflow-auto">
+                                            <NoteTree/>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </SidebarInset>
                 </SidebarProvider>
                 <DragOverlay dropAnimation={null}>
