@@ -68,7 +68,61 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
 
 *Coming soon...*
 
-Step-by-step instructions to build and run Souzou locally will be added here.
+### Desktop Windows
+
+For Production:
+
+```bash
+# Install dependencies
+npm install
+
+# rebuild native modules
+npx electron-rebuild -f -w better-sqlite3
+
+# Build the Vite app
+npm run build
+
+# Create the Electron executable
+npm run forge:make
+
+# Run the Electron executable
+# On Windows
+./out/production/Souzou-win32-x64/Souzou.exe
+```
+
+### Android
+
+For Development:
+
+```bash
+# Install dependencies
+npm install
+
+# Build the Vite app
+npm run build
+
+# Sync the Capacitor app
+npx cap sync android
+
+# Run the Capacitor app
+npx cap run android
+```
+
+For Production:
+
+⚠️ Change  androidScheme back to 'https' (or remove it to use default)
+⚠️ Remove or restrict the cleartext traffic permissions
+
+```bash
+# Install dependencies
+npm install
+
+# Build the Vite app
+npm run build
+
+# Build the Capacitor app
+npx cap build --keystorepath <path> --keystorepass <keystore-password> --keystorealias <alias> --keystorealiaspass <alias-password> android
+```
 
 ---
 

@@ -86,7 +86,8 @@ class ApiClient {
   private handleError(error: AxiosError): Error {
     if (error.response) {
       // Server responded with error status
-      const message = error.response.data?.message || error.message;
+      const data: any = error.response.data as any;
+      const message = (data && (data.message || data.detail)) || error.message || 'Request failed';
       return new Error(`API Error (${error.response.status}): ${message}`);
     } else if (error.request) {
       // Network error

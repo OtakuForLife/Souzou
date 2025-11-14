@@ -1,8 +1,12 @@
 from .models import Entity, Theme, Tag
 from .serializers import EntitySerializer, ThemeSerializer, TagSerializer
+from .serializers import SyncEntitySerializer, SyncTagSerializer
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.shortcuts import get_object_or_404
 from .services.vector_service import VectorService
 from .tasks import (
@@ -19,6 +23,23 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 logger = logging.getLogger(__name__)
 
+
+@api_view(['GET'])
+def health_check(request):
+    """
+    Simple health check endpoint to verify server is reachable.
+
+    GET /api/health/
+
+    Returns:
+        - 200: Server is healthy
+    """
+    return Response({
+        'status': 'ok',
+        'timestamp': timezone.now().isoformat()
+    }, status=status.HTTP_200_OK)
+
+
 class EntityViewSet(viewsets.ModelViewSet):
     serializer_class = EntitySerializer
     queryset = Entity.objects.all()
@@ -31,6 +52,7 @@ class EntityViewSet(viewsets.ModelViewSet):
             logger.info("=== GET_RELEVANT_CONTEXT REQUEST ===")
             logger.info(f"Request data: {request.data}")
 
+            from .services.vector_service import VectorService
             vector_service = VectorService()
             conversation = request.data.get('conversation', [])
             current_note_id = request.data.get('current_note_id')
@@ -77,6 +99,7 @@ class EntityViewSet(viewsets.ModelViewSet):
     def vector_stats(self, request):
         """Get vector index statistics"""
         try:
+            from .services.vector_service import VectorService
             vector_service = VectorService()
             stats = vector_service.get_stats()
             return Response({
@@ -302,12 +325,169 @@ class ThemeViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(default_theme)
             return Response(serializer.data)
         except Theme.DoesNotExist:
-            return Response({"error": "No default theme found"}, status=404)
+            return Response({"detail": "Default theme not set"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Failed to get default theme: {e}")
+            return Response({"success": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# ============================================================================
-# EMBEDDING MANAGEMENT VIEWS
-# ============================================================================
+class SyncPullView(APIView):
+    """Return changes since a cursor (ISO timestamp)."""
+    def get(self, request):
+        since = request.query_params.get('since')
+        try:
+            since_dt = parse_datetime(since) if since else None
+        except Exception:
+            since_dt = None
+
+        if since_dt is None:
+            # If no cursor provided, start from epoch so client gets all data
+            import datetime as dt
+            since_dt = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
+
+        # Entities
+        entity_upserts_qs = Entity.objects.filter(server_updated_at__gt=since_dt, deleted=False)
+        entity_deletes_qs = Entity.objects.filter(server_updated_at__gt=since_dt, deleted=True)
+        entities_upserts = SyncEntitySerializer(entity_upserts_qs, many=True).data
+        entities_deletes = [str(eid) for eid in entity_deletes_qs.values_list('id', flat=True)]
+
+        # Tags
+        tag_upserts_qs = Tag.objects.filter(server_updated_at__gt=since_dt, deleted=False)
+        tag_deletes_qs = Tag.objects.filter(server_updated_at__gt=since_dt, deleted=True)
+        tags_upserts = SyncTagSerializer(tag_upserts_qs, many=True).data
+        tags_deletes = [str(tid) for tid in tag_deletes_qs.values_list('id', flat=True)]
+
+        new_cursor = timezone.now().isoformat()
+        return Response({
+            "cursor": new_cursor,
+            "changes": {
+                "entities": {"upserts": entities_upserts, "deletes": entities_deletes},
+                "tags": {"upserts": tags_upserts, "deletes": tags_deletes},
+            },
+        })
+
+
+class SyncPushView(APIView):
+    """Apply client changes with basic rev-based conflict detection."""
+    def post(self, request):
+        payload = request.data or {}
+        logger.info(f"Sync push: received {len(payload.get('entities', []))} entities, {len(payload.get('tags', []))} tags")
+        results = {"entities": [], "tags": []}
+
+        def serialize_entity(o):
+            return SyncEntitySerializer(o).data
+
+        def serialize_tag(o):
+            return SyncTagSerializer(o).data
+
+        def apply_upsert(model_cls, item, serialize):
+            obj_id = item.get('id') or (item.get('data') or {}).get('id')
+            client_rev = item.get('client_rev', 0)
+            op = item.get('op', 'upsert')
+            data = item.get('data', {})
+
+            if not obj_id:
+                logger.error(f"Sync push: missing id in item: {item}")
+                return {"status": "error", "error": "missing id"}
+
+            # Fields that should not be set from client data
+            # These are auto-managed by Django or the sync logic
+            skip_fields = {'id', 'created_at', 'updated_at', 'server_updated_at', 'rev', 'tags'}
+
+            # Filter out fields that shouldn't be set
+            filtered_data = {k: v for k, v in data.items() if k not in skip_fields}
+
+            try:
+                logger.info(f"Sync push: processing {op} for {model_cls.__name__} {obj_id}, client_rev={client_rev}")
+                obj = model_cls.objects.select_for_update().get(id=obj_id)
+                server_rev = obj.rev
+                logger.info(f"Sync push: server has {model_cls.__name__} {obj_id} with rev={server_rev}")
+
+                if op == 'delete':
+                    # Client sends client_rev = expected_new_rev (server_rev + 1)
+                    if client_rev == server_rev + 1:
+                        obj.deleted = True
+                        obj.deleted_at = timezone.now()
+                        obj.rev = server_rev + 1
+                        obj.save()
+                        logger.info(f"Sync push: applied delete to {model_cls.__name__} {obj_id}, new_rev={obj.rev}")
+                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at.isoformat()}
+                    else:
+                        logger.warning(f"Sync push: delete conflict for {model_cls.__name__} {obj_id}, client_rev={client_rev}, expected={server_rev + 1}")
+                        return {"id": str(obj.id), "status": "conflict", "server": serialize(obj)}
+                else:
+                    # Client sends client_rev = expected_new_rev (server_rev + 1)
+                    if client_rev == server_rev + 1:
+                        # Update fields from filtered data
+                        for k, v in filtered_data.items():
+                            # Handle ForeignKey fields specially for Entity model
+                            if model_cls.__name__ == 'Entity' and k == 'parent':
+                                # parent is a ForeignKey to Entity, need to set parent_id instead
+                                if v is None:
+                                    obj.parent = None
+                                else:
+                                    obj.parent_id = v
+                            else:
+                                setattr(obj, k, v)
+                        obj.rev = server_rev + 1
+                        obj.save()
+
+                        # Handle tags separately for Entity model (ManyToMany relationship)
+                        if model_cls.__name__ == 'Entity' and 'tags' in data:
+                            tag_ids = data.get('tags', [])
+                            if isinstance(tag_ids, list):
+                                obj.tags.set(tag_ids)
+
+                        logger.info(f"Sync push: applied update to {model_cls.__name__} {obj_id}, new_rev={obj.rev}")
+                        return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at.isoformat()}
+                    else:
+                        logger.warning(f"Sync push: update conflict for {model_cls.__name__} {obj_id}, client_rev={client_rev}, expected={server_rev + 1}")
+                        return {"id": str(obj.id), "status": "conflict", "server": serialize(obj)}
+            except model_cls.DoesNotExist:
+                if op == 'delete':
+                    logger.info(f"Sync push: delete for non-existent {model_cls.__name__} {obj_id}")
+                    return {"id": str(obj_id), "status": "applied", "rev": 0}
+                # Create new object with filtered data
+                logger.info(f"Sync push: creating new {model_cls.__name__} {obj_id}")
+
+                # Handle ForeignKey fields specially for Entity model
+                create_data = filtered_data.copy()
+                if model_cls.__name__ == 'Entity' and 'parent' in create_data:
+                    parent_id = create_data.pop('parent')
+                    obj = model_cls(id=obj_id, parent_id=parent_id, **create_data)
+                else:
+                    obj = model_cls(id=obj_id, **create_data)
+
+                obj.rev = 1 if client_rev == 0 else client_rev + 1
+                obj.save()
+
+                # Handle tags separately for Entity model (ManyToMany relationship)
+                if model_cls.__name__ == 'Entity' and 'tags' in data:
+                    tag_ids = data.get('tags', [])
+                    if isinstance(tag_ids, list):
+                        obj.tags.set(tag_ids)
+
+                logger.info(f"Sync push: created {model_cls.__name__} {obj_id}, rev={obj.rev}")
+                return {"id": str(obj.id), "status": "applied", "rev": obj.rev, "server_updated_at": obj.server_updated_at.isoformat()}
+            except Exception as e:
+                logger.error(f"Sync push: error processing {model_cls.__name__} {obj_id}: {str(e)}", exc_info=True)
+                return {"id": str(obj_id), "status": "error", "error": str(e)}
+
+        for item in payload.get('entities', []):
+            results['entities'].append(apply_upsert(Entity, item, serialize_entity))
+
+        for item in payload.get('tags', []):
+            results['tags'].append(apply_upsert(Tag, item, serialize_tag))
+
+        # Log summary
+        applied_entities = sum(1 for r in results['entities'] if r.get('status') == 'applied')
+        conflict_entities = sum(1 for r in results['entities'] if r.get('status') == 'conflict')
+        error_entities = sum(1 for r in results['entities'] if r.get('status') == 'error')
+        logger.info(f"Sync push: completed - entities: {applied_entities} applied, {conflict_entities} conflicts, {error_entities} errors")
+
+        return Response(results)
+
+
 
 @api_view(['POST'])
 def generate_entity_embedding(request, entity_id):
@@ -456,219 +636,7 @@ def embedding_status(request, entity_id):
     entity = get_object_or_404(Entity, id=entity_id)
 
     has_embedding = entity.embedding is not None
-    embedding_dimension = len(entity.embedding) if has_embedding else 0
-
-    # Check if embedding is stale (entity updated after embedding)
-    is_stale = False
-    if has_embedding and entity.embedding_updated_at:
-        is_stale = entity.updated_at > entity.embedding_updated_at
-
-    return Response({
-        'entity_id': str(entity_id),
-        'entity_title': entity.title,
-        'has_embedding': has_embedding,
-        'embedding_dimension': embedding_dimension,
-        'embedding_model': entity.embedding_model,
-        'embedding_updated_at': entity.embedding_updated_at.isoformat() if entity.embedding_updated_at else None,
-        'entity_updated_at': entity.updated_at.isoformat(),
-        'is_stale': is_stale,
-    }, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-def embedding_stats(request):
-    """
-    Get overall embedding statistics.
-
-    GET /api/embeddings/stats/
-
-    Returns:
-        - 200: Statistics about embeddings
-    """
-    from django.db.models import Count, Q, F
-
-    total_entities = Entity.objects.count()
-    entities_with_embeddings = Entity.objects.filter(embedding__isnull=False).count()
-    entities_without_embeddings = total_entities - entities_with_embeddings
-
-    # Count stale embeddings (entity updated after embedding)
-    stale_embeddings = Entity.objects.filter(
-        embedding__isnull=False,
-        embedding_updated_at__isnull=False,
-        updated_at__gt=F('embedding_updated_at')
-    ).count()
-
-    return Response({
-        'total_entities': total_entities,
-        'entities_with_embeddings': entities_with_embeddings,
-        'entities_without_embeddings': entities_without_embeddings,
-        'stale_embeddings': stale_embeddings,
-        'coverage_percentage': round((entities_with_embeddings / total_entities * 100), 2) if total_entities > 0 else 0,
-    }, status=status.HTTP_200_OK)
-
-
-# ============================================================================
-# EMBEDDING MANAGEMENT VIEWS
-# ============================================================================
-
-from rest_framework.decorators import api_view
-from django.shortcuts import get_object_or_404
-from api.tasks import (
-    generate_embedding_for_entity,
-    generate_embeddings_batch,
-    regenerate_all_embeddings,
-    update_stale_embeddings
-)
-
-
-@api_view(['POST'])
-def generate_entity_embedding(request, entity_id):
-    """
-    Trigger embedding generation for a specific entity.
-
-    POST /api/entities/{entity_id}/generate-embedding/
-
-    Returns:
-        - 202: Task queued successfully
-        - 404: Entity not found
-    """
-    entity = get_object_or_404(Entity, id=entity_id)
-
-    # Queue the task
-    task = generate_embedding_for_entity.delay(str(entity_id))
-
-    logger.info(f"Queued embedding generation for entity {entity_id}, task_id: {task.id}")
-
-    return Response({
-        'status': 'queued',
-        'entity_id': str(entity_id),
-        'task_id': task.id,
-        'message': f'Embedding generation queued for "{entity.title}"'
-    }, status=status.HTTP_202_ACCEPTED)
-
-
-@api_view(['POST'])
-def generate_batch_embeddings(request):
-    """
-    Trigger embedding generation for multiple entities.
-
-    POST /api/embeddings/generate-batch/
-    Body: {
-        "entity_ids": ["uuid1", "uuid2", ...]
-    }
-
-    Returns:
-        - 202: Task queued successfully
-        - 400: Invalid request
-    """
-    entity_ids = request.data.get('entity_ids', [])
-
-    if not entity_ids:
-        return Response({
-            'error': 'entity_ids is required and must be a non-empty list'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    if not isinstance(entity_ids, list):
-        return Response({
-            'error': 'entity_ids must be a list'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    # Validate that all entities exist
-    existing_count = Entity.objects.filter(id__in=entity_ids).count()
-    if existing_count != len(entity_ids):
-        return Response({
-            'error': f'Some entities not found. Requested: {len(entity_ids)}, Found: {existing_count}'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    # Queue the batch task
-    task = generate_embeddings_batch.delay(entity_ids)
-
-    logger.info(f"Queued batch embedding generation for {len(entity_ids)} entities, task_id: {task.id}")
-
-    return Response({
-        'status': 'queued',
-        'entity_count': len(entity_ids),
-        'task_id': task.id,
-        'message': f'Batch embedding generation queued for {len(entity_ids)} entities'
-    }, status=status.HTTP_202_ACCEPTED)
-
-
-@api_view(['POST'])
-def regenerate_all(request):
-    """
-    Trigger embedding regeneration for ALL entities.
-
-    POST /api/embeddings/regenerate-all/
-
-    Warning: This can be a long-running operation for large databases.
-
-    Returns:
-        - 202: Task queued successfully
-    """
-    # Queue the regeneration task
-    task = regenerate_all_embeddings.delay()
-
-    logger.info(f"Queued full embedding regeneration, task_id: {task.id}")
-
-    return Response({
-        'status': 'queued',
-        'task_id': task.id,
-        'message': 'Full embedding regeneration queued. This may take a while.'
-    }, status=status.HTTP_202_ACCEPTED)
-
-
-@api_view(['POST'])
-def update_stale(request):
-    """
-    Update embeddings for entities that have been modified.
-
-    POST /api/embeddings/update-stale/
-    Body (optional): {
-        "hours": 24  // Consider embeddings stale if older than this
-    }
-
-    Returns:
-        - 202: Task queued successfully
-    """
-    hours = request.data.get('hours', 24)
-
-    try:
-        hours = int(hours)
-        if hours < 1:
-            raise ValueError("hours must be positive")
-    except (ValueError, TypeError):
-        return Response({
-            'error': 'hours must be a positive integer'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    # Queue the update task
-    task = update_stale_embeddings.delay(hours=hours)
-
-    logger.info(f"Queued stale embedding update (hours={hours}), task_id: {task.id}")
-
-    return Response({
-        'status': 'queued',
-        'hours': hours,
-        'task_id': task.id,
-        'message': f'Stale embedding update queued (checking entities modified in last {hours} hours)'
-    }, status=status.HTTP_202_ACCEPTED)
-
-
-@api_view(['GET'])
-def embedding_status(request, entity_id):
-    """
-    Get embedding status for a specific entity.
-
-    GET /api/entities/{entity_id}/embedding-status/
-
-    Returns:
-        - 200: Status information
-        - 404: Entity not found
-    """
-    entity = get_object_or_404(Entity, id=entity_id)
-
-    has_embedding = entity.embedding is not None
-    embedding_dimension = len(entity.embedding) if has_embedding else 0
+    embedding_dimension = len(entity.embedding) if entity.embedding is not None else 0
 
     # Check if embedding is stale (entity updated after embedding)
     is_stale = False

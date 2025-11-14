@@ -3,7 +3,7 @@
  * Tests cover all link parsing functionality, edge cases, and error handling
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { linkParsingService } from '../linkParsingService';
 import { Entity, EntityType } from '@/models/Entity';
 
@@ -456,7 +456,7 @@ describe('LinkParsingService', () => {
 
   describe('Performance and stress tests', () => {
     it('should handle many links efficiently', () => {
-      const manyLinks = Array.from({ length: 100 }, (_, i) => `[[note-1]]`).join(' ');
+      const manyLinks = Array.from({ length: 100 }, () => `[[note-1]]`).join(' ');
       const start = performance.now();
       const result = linkParsingService.parseLinks(manyLinks, mockNotes);
       const end = performance.now();

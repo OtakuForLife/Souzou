@@ -1,11 +1,15 @@
 /**
- * Service layer for note-related API operations
+ * Service layer for entity operations
+ * Implements offline-first architecture:
+ * - ALL CRUD operations work with local database (IndexedDB/SQLite) only
+ * - Changes are queued in outbox
+ * - Sync with server happens periodically (via health check) or manually
  */
 
-import api from '@/lib/api';
 import { Entity, EntityType } from '@/models/Entity';
-import { API_CONFIG } from '@/config/constants';
 import { log } from '@/lib/logger';
+import { getRepositoryDriver } from '@/repository';
+import type { IRepositoryDriver, RepoEntity } from '@/repository/types';
 
 export interface CreateEntityRequest {
   title: string;
@@ -32,123 +36,323 @@ export interface SaveEntityResponse {
   savedEntity: Entity;
 }
 
+/**
+ * Convert Entity to RepoEntity format
+ */
+function entityToRepo(entity: Entity): RepoEntity {
+  return {
+    id: entity.id,
+    type: entity.type,
+    title: entity.title,
+    content: entity.content,
+    parent: entity.parent,
+    metadata: entity.metadata || {},
+    tags: entity.tags || [],
+    created_at: entity.created_at,
+    updated_at: entity.updated_at,
+    // Preserve sync fields
+    rev: entity.rev,
+    server_updated_at: entity.server_updated_at,
+    deleted: entity.deleted,
+    deleted_at: entity.deleted_at,
+  };
+}
+
+/**
+ * Convert RepoEntity to Entity format
+ */
+function repoToEntity(repo: RepoEntity): Entity {
+  return {
+    id: repo.id,
+    type: repo.type as EntityType,
+    title: repo.title,
+    content: repo.content,
+    parent: repo.parent,
+    metadata: repo.metadata || {},
+    tags: repo.tags || [], // Ensure tags is always an array
+    children: [], // Will be populated by Redux
+    created_at: repo.created_at || new Date().toISOString(),
+    updated_at: repo.updated_at || new Date().toISOString(),
+    // Preserve sync fields
+    rev: repo.rev,
+    server_updated_at: repo.server_updated_at,
+    deleted: repo.deleted,
+    deleted_at: repo.deleted_at,
+  };
+}
+
 class EntityService {
-  private readonly endpoint = API_CONFIG.ENDPOINTS.ENTITIES;
+  private driver: IRepositoryDriver | null = null;
+  private initPromise: Promise<void> | null = null;
 
   /**
-   * Fetch all notes
+   * Initialize the repository driver (uses singleton)
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (this.driver) return;
+
+    if (!this.initPromise) {
+      this.initPromise = (async () => {
+        this.driver = await getRepositoryDriver();
+        log.info('EntityService using repository driver singleton');
+      })();
+    }
+
+    await this.initPromise;
+  }
+
+  /**
+   * Fetch all entities from local database
    */
   async fetchEntities(): Promise<Entity[]> {
-    try {
-      log.info('Fetching notes');
-      const response = await api.get<Entity[]>(`${this.endpoint}/`);
-      log.info('Notes fetched successfully', { count: response.data.length });
-      return response.data;
-    } catch (error) {
-      log.error('Failed to fetch notes', error as Error);
-      throw error;
-    }
+    await this.ensureInitialized();
+
+    log.info('Fetching entities from local database');
+    const repoEntities = await this.driver!.listEntitiesUpdatedSince('1970-01-01T00:00:00.000Z');
+    const entities = repoEntities
+      .filter(e => !e.deleted)
+      .map(repoToEntity);
+
+    log.info('Entities fetched from local DB', { count: entities.length });
+    return entities;
   }
 
   /**
-   * Create a new note
+   * Create a new entity in local database
+   * Changes are queued in outbox for sync
    */
   async createEntity(noteData: CreateEntityRequest): Promise<CreateEntityResponse> {
-    try {
-      log.info('Creating note', { title: noteData.title, parent: noteData.parent });
+    await this.ensureInitialized();
 
-      const createResponse = await api.post<Entity>(`${this.endpoint}/`, noteData);
+    // Generate ID
+    const entityId = crypto.randomUUID();
 
-      if (createResponse.status !== 201) {
-        throw new Error(`Failed to create note: ${createResponse.status}`);
-      }
+    const localEntity: Entity = {
+      id: entityId,
+      title: noteData.title,
+      content: noteData.content,
+      parent: noteData.parent,
+      type: (noteData.type || 'note') as EntityType,
+      children: [],
+      tags: [],
+      metadata: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-      const newNoteData = createResponse.data;
-      log.info('Note created successfully', { id: newNoteData.id, title: newNoteData.title });
+    // Save to local DB
+    const repoEntity = entityToRepo(localEntity);
+    await this.driver!.putEntity(repoEntity);
 
-      return {
-        parent: noteData.parent,
-        newNoteData,
-      };
-    } catch (error) {
-      log.error('Failed to create note', error as Error, { noteData });
-      throw error;
-    }
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'upsert',
+      id: entityId,
+      client_rev: 1,
+      data: repoEntity,
+    });
+
+    log.info('Entity created in local DB and queued for sync', {
+      id: entityId,
+      title: noteData.title
+    });
+
+    return {
+      parent: noteData.parent,
+      newNoteData: localEntity,
+    };
   }
 
   /**
-   * Save/update an existing note
+   * Save/update an existing entity in local database
+   * Changes are queued in outbox for sync
    */
   async saveEntity(note: Entity): Promise<SaveEntityResponse> {
-    try {
-      log.info('Saving note', { id: note.id, title: note.title });
+    await this.ensureInitialized();
 
-      // Transform the entity for the backend - tags are already IDs
-      const entityData = {
-        ...note,
-        tag_ids: note.tags, // Tags are already tag IDs
-        tags: undefined // Remove tags field since backend uses tag_ids
-      };
+    // Update timestamp
+    const updatedEntity: Entity = {
+      ...note,
+      updated_at: new Date().toISOString(),
+    };
 
-      const response = await api.put<Entity>(`${this.endpoint}/${note.id}/`, entityData);
+    // Save to local DB
+    const repoEntity = entityToRepo(updatedEntity);
+    await this.driver!.putEntity(repoEntity);
 
-      if (response.status !== 200) {
-        throw new Error(`Failed to save note: ${response.status}`);
-      }
+    const client_rev = (repoEntity.rev || 0) + 1;
 
-      const savedEntity = response.data;
-      log.info('Note saved successfully', { id: savedEntity.id });
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'upsert',
+      id: note.id,
+      client_rev: client_rev,
+      data: repoEntity,
+    });
 
-      return { savedEntity };
-    } catch (error) {
-      log.error('Failed to save note', error as Error, { noteId: note.id });
-      throw error;
-    }
+    log.info('Entity updated in local DB and queued for sync', {
+      id: note.id,
+      title: note.title,
+      current_rev: repoEntity.rev,
+      client_rev: client_rev,
+    });
+
+    return { savedEntity: updatedEntity };
   }
 
   /**
-   * Delete a note
+   * Delete an entity from local database
+   * Changes are queued in outbox for sync
    */
   async deleteEntity(noteId: string): Promise<Entity[]> {
-    try {
-      log.info('Deleting note', { id: noteId });
+    await this.ensureInitialized();
 
-      const response = await api.delete(`${this.endpoint}/${noteId}/`);
+    // Mark as deleted in local DB
+    await this.driver!.deleteEntity(noteId);
 
-      if (response.status !== 200 && response.status !== 204) {
-        throw new Error(`Failed to delete note: ${response.status}`);
-      }
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'delete',
+      id: noteId,
+      client_rev: 1,
+    });
 
-      log.info('Note deleted successfully', { id: noteId });
+    log.info('Entity deleted from local DB and queued for sync', { id: noteId });
 
-      // Fetch updated notes list
-      const updatedNotes = await this.fetchEntities();
-      return updatedNotes;
-    } catch (error) {
-      log.error('Failed to delete note', error as Error, { noteId });
-      throw error;
-    }
+    // Return updated list
+    return this.fetchEntities();
   }
 
   /**
-   * Update note metadata (title, parent, etc.)
+   * Update entity metadata in local database
+   * Changes are queued in outbox for sync
    */
   async updateEntity(updateData: UpdateEntityRequest): Promise<Entity> {
-    try {
-      log.info('Updating note', { id: updateData.noteID });
+    await this.ensureInitialized();
 
-      const response = await api.patch<Entity>(`${this.endpoint}/${updateData.noteID}/`, updateData);
-
-      if (response.status !== 200) {
-        throw new Error(`Failed to update note: ${response.status}`);
-      }
-
-      log.info('Note updated successfully', { id: updateData.noteID });
-      return response.data;
-    } catch (error) {
-      log.error('Failed to update note', error as Error, { updateData });
-      throw error;
+    // Get existing entity
+    const existing = await this.driver!.getEntity(updateData.noteID);
+    if (!existing) {
+      throw new Error(`Entity not found: ${updateData.noteID}`);
     }
+
+    // Update entity
+    const updatedEntity: RepoEntity = {
+      ...existing,
+      title: updateData.title ?? existing.title,
+      content: updateData.content ?? existing.content,
+      parent: updateData.parent !== undefined ? updateData.parent : existing.parent,
+      metadata: updateData.metadata ?? existing.metadata,
+      tags: updateData.tags ?? existing.tags,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save to local DB
+    await this.driver!.putEntity(updatedEntity);
+
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'upsert',
+      id: updateData.noteID,
+      client_rev: (existing.rev || 0) + 1,
+      data: updatedEntity,
+    });
+
+    log.info('Entity updated in local DB and queued for sync', { id: updateData.noteID });
+
+    return repoToEntity(updatedEntity);
+  }
+
+  /**
+   * Add tags to an entity in local database
+   * Changes are queued in outbox for sync
+   */
+  async addTagsToEntity(entityId: string, tagIds: string[]): Promise<Entity> {
+    await this.ensureInitialized();
+
+    // Get existing entity
+    const existing = await this.driver!.getEntity(entityId);
+    if (!existing) {
+      throw new Error(`Entity not found: ${entityId}`);
+    }
+
+    // Add new tags (avoid duplicates)
+    const currentTags = new Set(existing.tags || []);
+    tagIds.forEach(tagId => currentTags.add(tagId));
+
+    // Update entity with new tags
+    const updatedEntity: RepoEntity = {
+      ...existing,
+      tags: Array.from(currentTags),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save to local DB
+    await this.driver!.putEntity(updatedEntity);
+
+    const client_rev = (existing.rev || 0) + 1;
+
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'upsert',
+      id: entityId,
+      client_rev: client_rev,
+      data: updatedEntity,
+    });
+
+    log.info('Tags added to entity in local DB and queued for sync', {
+      id: entityId,
+      addedTags: tagIds,
+      totalTags: updatedEntity.tags.length
+    });
+
+    return repoToEntity(updatedEntity);
+  }
+
+  /**
+   * Remove tags from an entity in local database
+   * Changes are queued in outbox for sync
+   */
+  async removeTagsFromEntity(entityId: string, tagIds: string[]): Promise<Entity> {
+    await this.ensureInitialized();
+
+    // Get existing entity
+    const existing = await this.driver!.getEntity(entityId);
+    if (!existing) {
+      throw new Error(`Entity not found: ${entityId}`);
+    }
+
+    // Remove tags
+    const tagsToRemove = new Set(tagIds);
+    const updatedTags = (existing.tags || []).filter(tagId => !tagsToRemove.has(tagId));
+
+    // Update entity with remaining tags
+    const updatedEntity: RepoEntity = {
+      ...existing,
+      tags: updatedTags,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save to local DB
+    await this.driver!.putEntity(updatedEntity);
+
+    const client_rev = (existing.rev || 0) + 1;
+
+    // Queue for sync
+    await this.driver!.enqueueEntity({
+      op: 'upsert',
+      id: entityId,
+      client_rev: client_rev,
+      data: updatedEntity,
+    });
+
+    log.info('Tags removed from entity in local DB and queued for sync', {
+      id: entityId,
+      removedTags: tagIds,
+      remainingTags: updatedEntity.tags.length
+    });
+
+    return repoToEntity(updatedEntity);
   }
 
 }

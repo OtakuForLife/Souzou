@@ -1,6 +1,5 @@
 import { Entity } from '@/models/Entity';
 import { CreateEntityRequest, entityService } from '@/services';
-import { tagService } from '@/services/tagService';
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '@/store';
 
@@ -33,17 +32,23 @@ export const fetchEntities = createAsyncThunk(
   }
 );
 
+/**
+ * Add tags to an entity in local database (queued for sync)
+ */
 export const addTagsToEntity = createAsyncThunk(
   'entities/addTagsToEntity',
   async ({ entityId, tagIds }: { entityId: string; tagIds: string[] }) => {
-    return await tagService.addTagsToEntity(entityId, tagIds);
+    return await entityService.addTagsToEntity(entityId, tagIds);
   }
 );
 
+/**
+ * Remove tags from an entity in local database (queued for sync)
+ */
 export const removeTagsFromEntity = createAsyncThunk(
   'entities/removeTagsFromEntity',
   async ({ entityId, tagIds }: { entityId: string; tagIds: string[] }) => {
-    return await tagService.removeTagsFromEntity(entityId, tagIds);
+    return await entityService.removeTagsFromEntity(entityId, tagIds);
   }
 );
 
@@ -73,6 +78,24 @@ const initialState: EntityState = {
   optimisticEntities: {},
   error: null,
 }
+
+// Helper function to compute children relationships from parent field
+const computeChildrenRelationships = (entities: Entity[]): { [id: string]: Entity } => {
+  // First, create a map with all entities having empty children arrays
+  const entityMap: { [id: string]: Entity } = {};
+  entities.forEach(entity => {
+    entityMap[entity.id] = { ...entity, children: [] };
+  });
+
+  // Then, populate children arrays based on parent relationships
+  entities.forEach(entity => {
+    if (entity.parent && entityMap[entity.parent]) {
+      entityMap[entity.parent].children.push(entity.id);
+    }
+  });
+
+  return entityMap;
+};
 
 // Selector to get root entities (entities with no parent)
 export const selectRootEntities = createSelector(
@@ -184,8 +207,8 @@ export const entitySlice = createSlice({
       // Remove the tag ID from all entities that have it
       // Don't mark as dirty since the backend has already handled this change
       Object.values(state.allEntities).forEach(entity => {
-        if (entity.tags.includes(tagIdToRemove)) {
-          entity.tags = entity.tags.filter(tagId => tagId !== tagIdToRemove);
+        if (entity.tags?.includes(tagIdToRemove)) {
+          entity.tags = (entity.tags || []).filter(tagId => tagId !== tagIdToRemove);
           // Don't mark as dirty - the backend has already removed the tag relationship
         }
       });
@@ -201,7 +224,8 @@ export const entitySlice = createSlice({
       .addCase(fetchEntities.fulfilled, (state, action) => {
         state.globalLoading = false;
         state.error = null;
-        state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
+        // Compute children relationships from parent field
+        state.allEntities = computeChildrenRelationships(action.payload);
       })
       .addCase(fetchEntities.rejected, (state, action) => {
         state.globalLoading = false;
@@ -322,8 +346,8 @@ export const entitySlice = createSlice({
         const deletedId = action.meta.arg;
         state.pendingDeletes = state.pendingDeletes.filter(id => id !== deletedId);
 
-        // Refresh all entities from server response
-        state.allEntities = Object.fromEntries(action.payload.map((entity: Entity) => [entity.id, entity]));
+        // Refresh all entities from server response and compute children relationships
+        state.allEntities = computeChildrenRelationships(action.payload);
         state.error = null;
       })
       .addCase(deleteEntity.rejected, (state, action) => {

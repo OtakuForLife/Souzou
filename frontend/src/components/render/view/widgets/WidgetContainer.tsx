@@ -2,7 +2,7 @@
  * WidgetContainer - Wrapper component for individual widgets with header and controls
  */
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Settings, X} from 'lucide-react';
 import { WidgetConfig} from '@/types/widgetTypes';
 import { Button } from '@/components/ui/button';

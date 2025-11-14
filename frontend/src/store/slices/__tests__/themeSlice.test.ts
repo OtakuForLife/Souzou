@@ -16,8 +16,17 @@ const {
 type ThemeState = ThemeSlice.ThemeState;
 
 // Mock localStorage
-const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
-const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+
+global.localStorage = localStorageMock as any;
+
+const getItemSpy = localStorageMock.getItem;
+const setItemSpy = localStorageMock.setItem;
 
 // Mock theme service
 vi.mock('@/services/themeService', () => ({

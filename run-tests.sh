@@ -4,15 +4,24 @@
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Running StoryTeller Tests${NC}"
+echo -e "${YELLOW}Running Souzou Tests${NC}"
 echo "=============================="
+
+# Check if containers are running
+echo -e "\n${CYAN}Checking Docker containers...${NC}"
+if ! docker-compose ps | grep -q "backend.*Up"; then
+    echo -e "${YELLOW}Starting Docker containers...${NC}"
+    docker-compose up -d
+    sleep 5
+fi
 
 # Run backend tests
 echo -e "\n${YELLOW}Running Backend Tests...${NC}"
 echo "------------------------------"
-docker-compose exec backend pytest -v
+docker-compose exec backend pytest -v --tb=short
 BACKEND_EXIT_CODE=$?
 
 if [ $BACKEND_EXIT_CODE -eq 0 ]; then
@@ -26,7 +35,7 @@ fi
 # Run frontend tests
 echo -e "\n${YELLOW}Running Frontend Tests...${NC}"
 echo "------------------------------"
-docker-compose exec frontend npm test
+docker-compose exec frontend npm test -- --run
 FRONTEND_EXIT_CODE=$?
 
 if [ $FRONTEND_EXIT_CODE -eq 0 ]; then
@@ -51,6 +60,10 @@ if [ "$FRONTEND_SUCCESS" = true ]; then
 else
     echo -e "${RED}✗ Frontend: FAILED${NC}"
 fi
+
+echo -e "\n${CYAN}Test Coverage:${NC}"
+echo "- Backend: Sync push/pull, entity management, file upload"
+echo "- Frontend: Sync orchestration, entity service, IndexedDB driver"
 
 # Exit with error if any tests failed
 if [ "$BACKEND_SUCCESS" = true ] && [ "$FRONTEND_SUCCESS" = true ]; then

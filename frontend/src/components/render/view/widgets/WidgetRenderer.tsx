@@ -5,7 +5,6 @@
  * No need to modify this file when adding new widgets!
  */
 
-import React from 'react';
 import { WidgetConfig} from '@/types/widgetTypes';
 import { WidgetRegistry, WidgetProps } from './WidgetRegistry';
 

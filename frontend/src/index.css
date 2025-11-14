@@ -1,6 +1,23 @@
 @import "tailwindcss";
 
 @layer base {
+  /* Prevent scrolling on mobile - app should fit viewport exactly */
+  html, body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    /* Set background to match theme or fallback to black */
+    background-color: var(--color-main-content-background, #000000);
+  }
+
+  #root {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--color-main-content-background, #000000);
+  }
+
   :root {
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;

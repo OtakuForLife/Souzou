@@ -49,11 +49,8 @@ export const TagManager: React.FC<TagManagerProps> = ({ children }) => {
     parent: null,
   });
 
-  useEffect(() => {
-    if (open && Object.keys(allTags).length === 0) {
-      dispatch(fetchTags());
-    }
-  }, [open, dispatch]); // Remove allTags from dependency array to prevent infinite loop
+  // Tags are loaded from local DB on app start via useSyncListener
+  // No need to fetch here
 
 
   const createNewTag = async () => {

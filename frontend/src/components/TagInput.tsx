@@ -35,12 +35,8 @@ export const TagInput: React.FC<TagInputProps> = ({
 
   const DEFAULT_TAG_COLOR = '#6B7280';
 
-  // Load tags if not already loaded
-  useEffect(() => {
-    if (Object.keys(allTags).length === 0) {
-      dispatch(fetchTags());
-    }
-  }, [dispatch]); // Remove allTags from dependency array to prevent infinite loop
+  // Tags are loaded from local DB on app start via useSyncListener
+  // No need to fetch here
 
   // Get current tag IDs for easy lookup (memoized to prevent infinite re-renders)
   const currentTagIds = useMemo(() => new Set(currentTags.map(tag => tag.id)), [currentTags]);
