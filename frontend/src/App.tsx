@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import { useTheme } from './hooks/useTheme'
 import { useSyncListener } from '@/hooks/useSyncListener'
+import { useAutosave } from '@/hooks/useAutosave'
 import { ErrorBoundary } from './components/common'
 import { log } from './lib/logger'
 import { DialogProvider } from './contexts/DialogContext'
@@ -19,6 +20,9 @@ const AppContent = () => {
 
   // Listen to sync events and refresh Redux state
   useSyncListener();
+
+  // Enable autosave for dirty entities
+  useAutosave();
 
   useEffect(() => {
     log.info('Application starting');
