@@ -11,6 +11,7 @@ import { log } from './lib/logger'
 import { DialogProvider } from './contexts/DialogContext'
 import FileUploadDialog from './components/FileUploadDialog'
 import { Toaster } from 'sonner'
+import { isCapacitor } from './lib/platform'
 
 // Create a component to load theme
 const AppContent = () => {
@@ -29,6 +30,31 @@ const AppContent = () => {
     if (currentTheme) {
       log.info('Theme loaded', { theme: currentTheme.name, id: currentTheme.id });
     }
+  }, [currentTheme])
+
+  // Update edge-to-edge background color when theme changes (Android only)
+  useEffect(() => {
+    if (!isCapacitor()) return;
+
+    const updateEdgeToEdgeColor = async () => {
+      try {
+        // Dynamically import the plugin (only available on Capacitor/Android)
+        const { EdgeToEdge } = await import('@capawesome/capacitor-android-edge-to-edge-support');
+
+        // Get the computed background color from the root element
+        const rootElement = document.documentElement;
+        const computedStyle = getComputedStyle(rootElement);
+        const backgroundColor = computedStyle.getPropertyValue('--color-main-content-background').trim() || '#1a1a1a';
+
+        log.info('Updating edge-to-edge background color', { backgroundColor });
+        await EdgeToEdge.setBackgroundColor({ color: backgroundColor });
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        log.error('Failed to update edge-to-edge background color', err);
+      }
+    };
+
+    updateEdgeToEdgeColor();
   }, [currentTheme])
 
   return (

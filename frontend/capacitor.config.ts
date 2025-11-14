@@ -1,3 +1,5 @@
+/// <reference types="@capawesome/capacitor-android-edge-to-edge-support" />
+
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -26,6 +28,11 @@ const config: CapacitorConfig = {
         biometricTitle: 'Biometric login for Souzou',
         biometricSubTitle: 'Log in using your biometric'
       }
+    },
+    EdgeToEdge: {
+      // Use the theme's main content background color
+      // This will be dynamically updated based on the current theme
+      backgroundColor: '#1a1a1a'
     }
   }
 };

@@ -173,7 +173,7 @@ function Home() {
     };
 
     return (
-        <div className="flex h-full w-full min-h-screen min-w-screen max-h-screen max-w-screen">
+        <div className="flex w-full h-screen theme-main-content-background">
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]} sensors={sensors}>
                 <SidebarProvider>
                     <AppSidebar
