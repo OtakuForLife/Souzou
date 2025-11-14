@@ -152,13 +152,17 @@ export default function SettingsDialog(){
                     </div>
 
                     {syncEnabled && (
-                        <div className="flex flex-row items-center justify-between">
-                            <div className="flex gap-2 items-center">
-                                <Input
-                                    placeholder="Server URL (e.g., http://localhost:8000)"
-                                    value={backendURL}
-                                    onChange={(e) => setBackendURLState(e.target.value)}
-                                />
+                        <div className="flex flex-col gap-2">
+                            {/* Server URL Input - Full width on all devices */}
+                            <Input
+                                placeholder="Server URL (e.g., http://localhost:8000)"
+                                value={backendURL}
+                                onChange={(e) => setBackendURLState(e.target.value)}
+                                className="w-full"
+                            />
+
+                            {/* Buttons Row */}
+                            <div className="flex gap-2 items-center flex-wrap">
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -187,7 +191,7 @@ export default function SettingsDialog(){
                                 >
                                     {isFullSyncing ? 'Full Syncing...' : 'Full Sync'}
                                 </Button>
-                                <div className="flex flex-col items-center gap-1">
+                                <div className="flex flex-col items-center gap-1 ml-auto">
                                     <Circle
                                         className={`w-4 h-4 flex-shrink-0 ${
                                             serverStatus === ServerHealthStatusType.HEALTHY
