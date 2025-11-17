@@ -26,6 +26,7 @@ import {
 import { applyTheme, applyColors, getNestedValue } from '@/utils/themeManager';
 import { ThemeColors, Theme } from '@/types/themeTypes';
 import { useAppDispatch, useAppSelector } from '@/hooks';
+import { STORAGE_KEYS } from '@/config/constants';
 
 export function useTheme() {
   const dispatch = useAppDispatch();
@@ -94,7 +95,7 @@ export function useTheme() {
   // Load saved theme from localStorage on mount (only once when themes are loaded)
   useEffect(() => {
     if (allThemes.length > 0 && !currentTheme) {
-      const savedThemeId = localStorage.getItem('currentThemeId');
+      const savedThemeId = localStorage.getItem(STORAGE_KEYS.THEME);
       if (savedThemeId) {
         const savedTheme = allThemes.find((t: Theme) => t.id === savedThemeId);
         if (savedTheme) {

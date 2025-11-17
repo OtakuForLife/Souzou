@@ -54,7 +54,9 @@ function repoToTag(repo: RepoTag): Tag {
     name: repo.name,
     color: repo.color || '#6B7280',
     description: repo.description,
-    parent: repo.parent,
+    parent: repo.parent ?? undefined,
+    aliases: [],
+    entities_count: 0,
     created_at: repo.created_at || new Date().toISOString(),
     updated_at: repo.updated_at || new Date().toISOString(),
     // Preserve sync fields
@@ -116,7 +118,9 @@ class TagService {
       name: tagData.name,
       color: tagData.color || '#6B7280',
       description: tagData.description,
-      parent: tagData.parent || null,
+      parent: tagData.parent ?? undefined,
+      aliases: [],
+      entities_count: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

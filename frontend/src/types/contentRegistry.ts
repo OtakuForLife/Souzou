@@ -6,6 +6,7 @@ import NoteRenderer from '@/components/render/note/NoteRenderer';
 import ViewRenderer from '@/components/render/view/ViewRenderer';
 import MediaRenderer from '@/components/render/media/MediaRenderer';
 import {EntityRendererProps} from '@/components/ContentRenderer'
+import { CONTENT_TYPE_CONFIG } from '@/config/constants';
 
 // Content type metadata
 interface EntityTypeMetadata {
@@ -22,15 +23,15 @@ interface ContentTypeRegistryEntry {
 const entityTypeMetadata: Record<EntityType, EntityTypeMetadata> = {
   [EntityType.NOTE]: {
     type: EntityType.NOTE,
-    defaultCreationTitle: 'New Note'
+    defaultCreationTitle: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_TITLE,
   },
   [EntityType.VIEW]: {
     type: EntityType.VIEW,
-    defaultCreationTitle: 'New Dashboard'
+    defaultCreationTitle: CONTENT_TYPE_CONFIG.VIEW.DEFAULT_TITLE,
   },
   [EntityType.MEDIA]: {
     type: EntityType.MEDIA,
-    defaultCreationTitle: 'New Media'
+    defaultCreationTitle: CONTENT_TYPE_CONFIG.MEDIA.DEFAULT_TITLE,
   }
 };
 

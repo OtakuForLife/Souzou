@@ -1,9 +1,5 @@
-export const DEFAULT_BACKEND_URL = 'http://localhost:8000';
+import { STORAGE_KEYS, API_CONFIG } from '@/config/constants';
 
-const BACKEND_URL_KEY = 'backend_url';
-const BACKEND_HOST_KEY = 'backend_host';
-const BACKEND_PORT_KEY = 'backend_port';
-const SYNC_ENABLED_KEY = 'sync_enabled';
 
 function isValidAbsoluteUrl(url: string): boolean {
   try {
@@ -16,25 +12,25 @@ function isValidAbsoluteUrl(url: string): boolean {
 
 export function getBackendURL(): string {
   try {
-    const stored = window.localStorage.getItem(BACKEND_URL_KEY);
+    const stored = window.localStorage.getItem(STORAGE_KEYS.BACKEND_URL_KEY);
     if (stored && isValidAbsoluteUrl(stored)) return stored;
 
     // Backward compatibility: migrate host/port if present
-    const host = window.localStorage.getItem(BACKEND_HOST_KEY) || 'localhost';
-    const portStr = window.localStorage.getItem(BACKEND_PORT_KEY) || '8000';
+    const host = window.localStorage.getItem(STORAGE_KEYS.BACKEND_HOST_KEY) || 'localhost';
+    const portStr = window.localStorage.getItem(STORAGE_KEYS.BACKEND_PORT_KEY) || '8000';
     const port = parseInt(portStr, 10);
     const fallback = `http://${host}:${Number.isFinite(port) ? port : 8000}`;
-    return isValidAbsoluteUrl(fallback) ? fallback : DEFAULT_BACKEND_URL;
+    return isValidAbsoluteUrl(fallback) ? fallback : API_CONFIG.DEFAULT_BACKEND_URL;
   } catch {
-    return DEFAULT_BACKEND_URL;
+    return API_CONFIG.DEFAULT_BACKEND_URL;
   }
 }
 
 export function setBackendURL(url: string): void {
   try {
     const value = (url || '').trim();
-    const finalUrl = isValidAbsoluteUrl(value) ? value : DEFAULT_BACKEND_URL;
-    window.localStorage.setItem(BACKEND_URL_KEY, finalUrl);
+    const finalUrl = isValidAbsoluteUrl(value) ? value : API_CONFIG.DEFAULT_BACKEND_URL;
+    window.localStorage.setItem(STORAGE_KEYS.BACKEND_URL_KEY, finalUrl);
   } catch {
     // no-op
   }
@@ -42,7 +38,7 @@ export function setBackendURL(url: string): void {
 
 export function getSyncEnabled(): boolean {
   try {
-    const stored = window.localStorage.getItem(SYNC_ENABLED_KEY);
+    const stored = window.localStorage.getItem(STORAGE_KEYS.SYNC_ENABLED_KEY);
     // Default to true if not set
     return stored === null ? true : stored === 'true';
   } catch {
@@ -52,7 +48,7 @@ export function getSyncEnabled(): boolean {
 
 export function setSyncEnabled(enabled: boolean): void {
   try {
-    window.localStorage.setItem(SYNC_ENABLED_KEY, enabled.toString());
+    window.localStorage.setItem(STORAGE_KEYS.SYNC_ENABLED_KEY, enabled.toString());
   } catch {
     // no-op
   }

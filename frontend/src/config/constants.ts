@@ -2,18 +2,12 @@
  * Application-wide constants and configuration
  */
 
-// Theme Configuration
-export const THEME_CONFIG = {
-  DEFAULT_THEME: 'default', // currently not used!
-  LOCAL_STORAGE_KEY: 'theme',
-} as const;
-
-
 
 // API Configuration
 export const API_CONFIG = {
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
+  DEFAULT_BACKEND_URL: 'http://localhost:8000',
   ENDPOINTS: {
     BASE: '/api',
     ENTITIES: '/api/entities',
@@ -54,6 +48,10 @@ export const CONTENT_TYPE_CONFIG = {
     DEFAULT_TITLE: 'Graph View',
     ICON: 'Network',
   },
+  MEDIA: {
+    DEFAULT_TITLE: 'New Media',
+    ICON: 'File',
+  },
 } as const;
 
 // Error Messages
@@ -91,7 +89,12 @@ export const VALIDATION_RULES = {
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
-  THEME: THEME_CONFIG.LOCAL_STORAGE_KEY,
+  BACKEND_URL_KEY: 'backend_url',
+  BACKEND_HOST_KEY: 'backend_host',
+  BACKEND_PORT_KEY: 'backend_port',
+  SYNC_ENABLED_KEY: 'sync_enabled',
+  DEFAULT_THEME: 'default',
+  THEME: 'theme',
   USER_PREFERENCES: 'user_preferences',
   RECENT_FILES: 'recent_files',
 } as const;

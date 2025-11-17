@@ -97,8 +97,8 @@ export function useServerHealth(options: UseServerHealthOptions = {}): ServerHea
   useEffect(() => {
     if (!autoSync || !enabled) return;
 
-    const wasUnhealthy = previousStatus.current === 'unhealthy';
-    const isNowHealthy = status === 'healthy';
+    const wasUnhealthy = previousStatus.current === ServerHealthStatusType.UNHEALTHY;
+    const isNowHealthy = status === ServerHealthStatusType.HEALTHY;
 
     // Sync when server reconnects
     if (wasUnhealthy && isNowHealthy) {
