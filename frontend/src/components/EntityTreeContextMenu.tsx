@@ -1,4 +1,4 @@
-import { useAppDispatch } from "@/hooks";
+import { useAppDispatch, useLongPress, useIsMobile } from "@/hooks";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -15,6 +15,7 @@ import { createEntity, deleteEntity } from "@/store/slices/entitySlice";
 import { openTab, closeTab } from "@/store/slices/tabsSlice";
 import { CONTENT_TYPE_CONFIG } from "@/config/constants";
 import { useDialog } from "@/contexts/DialogContext";
+import { useState, useRef } from "react";
 
 interface NoteTreeContextMenuProps {
     children: React.ReactNode;
@@ -24,11 +25,32 @@ interface NoteTreeContextMenuProps {
 export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuProps) {
     const dispatch = useAppDispatch();
     const { openFileUpload } = useDialog();
+    const isMobile = useIsMobile();
+    const [isOpen, setIsOpen] = useState(false);
+    const triggerRef = useRef<HTMLDivElement>(null);
+
+    // Long press handler for mobile
+    const longPressHandlers = useLongPress({
+        onLongPress: (event) => {
+            if (isMobile) {
+                event.preventDefault();
+                setIsOpen(true);
+            }
+        },
+        delay: 500,
+        shouldPreventDefault: false, // Allow normal clicks to propagate
+    });
 
     return (
-        <ContextMenu>
-            <ContextMenuTrigger>
-                {children}
+        <ContextMenu open={isOpen} onOpenChange={setIsOpen}>
+            <ContextMenuTrigger asChild>
+                <div
+                    ref={triggerRef}
+                    {...(isMobile ? longPressHandlers : {})}
+                    style={{ WebkitTouchCallout: 'none' }} // Disable iOS callout menu
+                >
+                    {children}
+                </div>
             </ContextMenuTrigger>
             <ContextMenuContent className="w-64 theme-explorer-background theme-explorer-item-text">
                 <ContextMenuSub>
