@@ -5,7 +5,7 @@
  * It only works in Electron's main process or with nodeIntegration enabled
  */
 
-import type { IRepositoryDriver, RepoEntity, RepoTag, UUID, ChangeOp, Cursor } from '../types';
+import type { IRepositoryDriver, RepoEntity, RepoTag, RepoTheme, UUID, ChangeOp, Cursor } from '../types';
 import { getDatabaseName } from '@/lib/platform';
 
 type Database = any;
@@ -74,6 +74,22 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
       )
     `);
 
+    // Create themes table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS themes (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        colors TEXT NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        rev INTEGER,
+        server_updated_at TEXT,
+        deleted INTEGER DEFAULT 0,
+        deleted_at TEXT
+      )
+    `);
+
     // Create outbox table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS outbox (
@@ -98,6 +114,8 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_entities_deleted ON entities(deleted)`);
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tags_updated_at ON tags(updated_at)`);
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tags_deleted ON tags(deleted)`);
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_themes_updated_at ON themes(updated_at)`);
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_themes_deleted ON themes(deleted)`);
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_outbox_id ON outbox(id)`);
   }
 
@@ -112,6 +130,7 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
     if (!this.db) return;
     this.db.exec('DELETE FROM entities');
     this.db.exec('DELETE FROM tags');
+    this.db.exec('DELETE FROM themes');
     this.db.exec('DELETE FROM outbox');
     this.db.exec('DELETE FROM sync_meta');
   }
@@ -236,6 +255,64 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
     });
   }
 
+  // Themes
+  async getTheme(id: UUID): Promise<RepoTheme | undefined> {
+    const stmt = this.db.prepare('SELECT * FROM themes WHERE id = ?');
+    const row = stmt.get(id);
+    if (!row) return undefined;
+    return this.deserializeTheme(row);
+  }
+
+  async putTheme(theme: RepoTheme): Promise<void> {
+    const themeToStore: RepoTheme = {
+      ...theme,
+      updated_at: theme.updated_at || theme.server_updated_at || new Date().toISOString(),
+    };
+
+    const serialized = this.serializeTheme(themeToStore);
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO themes
+      (id, name, type, colors, created_at, updated_at, rev, server_updated_at, deleted, deleted_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    stmt.run(
+      serialized.id,
+      serialized.name,
+      serialized.type,
+      serialized.colors,
+      serialized.created_at,
+      serialized.updated_at,
+      serialized.rev,
+      serialized.server_updated_at,
+      serialized.deleted,
+      serialized.deleted_at,
+    );
+  }
+
+  async deleteTheme(id: UUID): Promise<void> {
+    const theme = await this.getTheme(id);
+    if (theme) {
+      const updated = {
+        ...theme,
+        deleted: true,
+        deleted_at: new Date().toISOString(),
+      };
+      await this.putTheme(updated);
+    }
+  }
+
+  async listThemesUpdatedSince(isoCursor: string): Promise<RepoTheme[]> {
+    const stmt = this.db.prepare('SELECT * FROM themes');
+    const rows = stmt.all();
+    const allThemes = rows.map((row: any) => this.deserializeTheme(row));
+
+    return allThemes.filter((t: RepoTheme) => {
+      if (!t.updated_at) return true;
+      return t.updated_at >= isoCursor;
+    });
+  }
+
   // Outbox
   async enqueueEntity(op: ChangeOp<RepoEntity>): Promise<void> {
     // Check if there's already an outbox item for this entity
@@ -269,7 +346,23 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
     }
   }
 
-  async peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag>>> {
+  async enqueueTheme(op: ChangeOp<RepoTheme>): Promise<void> {
+    // Check if there's already an outbox item for this theme
+    const checkStmt = this.db.prepare('SELECT * FROM outbox WHERE id = ?');
+    const existing = checkStmt.get(op.id);
+
+    if (existing) {
+      // Update existing outbox item
+      const updateStmt = this.db.prepare('UPDATE outbox SET op = ?, client_rev = ?, data = ? WHERE id = ?');
+      updateStmt.run(op.op, op.client_rev, op.op === 'upsert' ? JSON.stringify(op.data) : null, op.id);
+    } else {
+      // Add new outbox item
+      const insertStmt = this.db.prepare('INSERT INTO outbox (op, id, client_rev, data) VALUES (?, ?, ?, ?)');
+      insertStmt.run(op.op, op.id, op.client_rev, op.op === 'upsert' ? JSON.stringify(op.data) : null);
+    }
+  }
+
+  async peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag> | ChangeOp<RepoTheme>>> {
     const stmt = this.db.prepare('SELECT * FROM outbox ORDER BY _id ASC LIMIT ?');
     const rows = stmt.all(limit);
     return rows.map((row: any) => {
@@ -338,6 +431,22 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
   private deserializeTag(row: any): RepoTag {
     return {
       ...row,
+      deleted: Boolean(row.deleted),
+    };
+  }
+
+  private serializeTheme(theme: RepoTheme): any {
+    return {
+      ...theme,
+      colors: JSON.stringify(theme.colors),
+      deleted: theme.deleted ? 1 : 0,
+    };
+  }
+
+  private deserializeTheme(row: any): RepoTheme {
+    return {
+      ...row,
+      colors: JSON.parse(row.colors),
       deleted: Boolean(row.deleted),
     };
   }

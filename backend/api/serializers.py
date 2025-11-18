@@ -106,3 +106,12 @@ class SyncEntitySerializer(serializers.ModelSerializer):
 
     def get_parent(self, obj):
         return str(obj.parent.id) if obj.parent else None
+
+
+class SyncThemeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Theme
+        fields = [
+            "id", "name", "type", "colors",
+            "rev", "server_updated_at", "deleted", "deleted_at",
+        ]

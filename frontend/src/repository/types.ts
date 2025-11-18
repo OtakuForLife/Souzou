@@ -32,6 +32,15 @@ export interface RepoTag extends BaseSyncFields {
   updated_at?: string;
 }
 
+export interface RepoTheme extends BaseSyncFields {
+  id: UUID;
+  name: string;
+  type: 'predefined' | 'custom';
+  colors: Record<string, any>; // ThemeColors as JSON
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type ChangeOp<T> =
   | { op: 'upsert'; id: UUID; client_rev: number; data: Partial<T> & { id: UUID } }
   | { op: 'delete'; id: UUID; client_rev: number };
@@ -41,6 +50,7 @@ export interface PullChanges {
   changes: {
     entities: { upserts: RepoEntity[]; deletes: UUID[] };
     tags: { upserts: RepoTag[]; deletes: UUID[] };
+    themes: { upserts: RepoTheme[]; deletes: UUID[] };
   };
 }
 
@@ -56,6 +66,7 @@ export interface PushResultsItem {
 export interface PushResults {
   entities: PushResultsItem[];
   tags: PushResultsItem[];
+  themes: PushResultsItem[];
 }
 
 export interface IRepositoryDriver {
@@ -76,10 +87,17 @@ export interface IRepositoryDriver {
   deleteTag(id: UUID): Promise<void>;
   listTagsUpdatedSince(isoCursor: string): Promise<RepoTag[]>; // optional helper
 
+  // Themes
+  getTheme(id: UUID): Promise<RepoTheme | undefined>;
+  putTheme(theme: RepoTheme): Promise<void>;
+  deleteTheme(id: UUID): Promise<void>;
+  listThemesUpdatedSince(isoCursor: string): Promise<RepoTheme[]>; // optional helper
+
   // Outbox
   enqueueEntity(op: ChangeOp<RepoEntity>): Promise<void>;
   enqueueTag(op: ChangeOp<RepoTag>): Promise<void>;
-  peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag>>>;
+  enqueueTheme(op: ChangeOp<RepoTheme>): Promise<void>;
+  peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag> | ChangeOp<RepoTheme>>>;
   removeFromOutbox(ids: string[]): Promise<void>;
 
   // Cursor
@@ -89,7 +107,11 @@ export interface IRepositoryDriver {
 
 export interface ISyncTransport {
   pull(since: Cursor): Promise<PullChanges>;
-  push(payload: { entities: ChangeOp<RepoEntity>[]; tags: ChangeOp<RepoTag>[] }): Promise<PushResults>;
+  push(payload: {
+    entities: ChangeOp<RepoEntity>[];
+    tags: ChangeOp<RepoTag>[];
+    themes: ChangeOp<RepoTheme>[];
+  }): Promise<PushResults>;
 }
 
 export interface ISyncOrchestrator {

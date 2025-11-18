@@ -1,6 +1,6 @@
 // HTTP transport to backend sync endpoints (uses api.ts)
 import api from '@/lib/api';
-import type { ISyncTransport, Cursor, PullChanges, ChangeOp, RepoEntity, RepoTag, PushResults } from './types';
+import type { ISyncTransport, Cursor, PullChanges, ChangeOp, RepoEntity, RepoTag, RepoTheme, PushResults } from './types';
 
 export class HttpSyncTransport implements ISyncTransport {
   async pull(since: Cursor): Promise<PullChanges> {
@@ -9,7 +9,11 @@ export class HttpSyncTransport implements ISyncTransport {
     return res.data;
   }
 
-  async push(payload: { entities: ChangeOp<RepoEntity>[]; tags: ChangeOp<RepoTag>[] }): Promise<PushResults> {
+  async push(payload: {
+    entities: ChangeOp<RepoEntity>[];
+    tags: ChangeOp<RepoTag>[];
+    themes: ChangeOp<RepoTheme>[];
+  }): Promise<PushResults> {
     const res = await api.post<PushResults>(`/api/sync/push`, payload);
     return res.data;
   }

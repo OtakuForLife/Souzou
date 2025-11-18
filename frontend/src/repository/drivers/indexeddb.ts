@@ -4,7 +4,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import type { IRepositoryDriver, RepoEntity, RepoTag, UUID, ChangeOp, Cursor } from '../types';
+import type { IRepositoryDriver, RepoEntity, RepoTag, RepoTheme, UUID, ChangeOp, Cursor } from '../types';
 import { getDatabaseName } from '@/lib/platform';
 
 // Outbox item with internal ID
@@ -13,7 +13,7 @@ interface OutboxItem {
   op: 'upsert' | 'delete';
   id: UUID;
   client_rev: number;
-  data?: Partial<RepoEntity> | Partial<RepoTag>;
+  data?: Partial<RepoEntity> | Partial<RepoTag> | Partial<RepoTheme>;
 }
 
 // Sync metadata
@@ -25,6 +25,7 @@ interface SyncMeta {
 class SouzouDatabase extends Dexie {
   entities!: Table<RepoEntity, UUID>;
   tags!: Table<RepoTag, UUID>;
+  themes!: Table<RepoTheme, UUID>;
   outbox!: Table<OutboxItem, string>;
   syncMeta!: Table<SyncMeta, string>;
 
@@ -34,6 +35,15 @@ class SouzouDatabase extends Dexie {
     this.version(1).stores({
       entities: 'id, updated_at, server_updated_at, deleted',
       tags: 'id, updated_at, server_updated_at, deleted',
+      outbox: '++_id, id, op',
+      syncMeta: 'key',
+    });
+
+    // Add themes table in version 2
+    this.version(2).stores({
+      entities: 'id, updated_at, server_updated_at, deleted',
+      tags: 'id, updated_at, server_updated_at, deleted',
+      themes: 'id, updated_at, server_updated_at, deleted',
       outbox: '++_id, id, op',
       syncMeta: 'key',
     });
@@ -144,6 +154,44 @@ export class IndexedDbDriver implements IRepositoryDriver {
     });
   }
 
+  // Themes
+  async getTheme(id: UUID): Promise<RepoTheme | undefined> {
+    return await this.db!.themes.get(id);
+  }
+
+  async putTheme(theme: RepoTheme): Promise<void> {
+    // Ensure updated_at is set (use server_updated_at as fallback, or current time)
+    const themeToStore: RepoTheme = {
+      ...theme,
+      updated_at: theme.updated_at || theme.server_updated_at || new Date().toISOString(),
+    };
+
+    await this.db!.themes.put(themeToStore);
+  }
+
+  async deleteTheme(id: UUID): Promise<void> {
+    // Mark as deleted instead of removing
+    const theme = await this.db!.themes.get(id);
+    if (theme) {
+      await this.db!.themes.put({
+        ...theme,
+        deleted: true,
+        deleted_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  async listThemesUpdatedSince(isoCursor: string): Promise<RepoTheme[]> {
+    // Get all themes and filter in memory
+    const allThemes = await this.db!.themes.toArray();
+
+    // Filter themes: include if updated_at >= cursor OR if updated_at is undefined
+    return allThemes.filter(t => {
+      if (!t.updated_at) return true; // Include themes without updated_at
+      return t.updated_at >= isoCursor;
+    });
+  }
+
   // Outbox
   async enqueueEntity(op: ChangeOp<RepoEntity>): Promise<void> {
     // Check if there's already an outbox item for this entity
@@ -195,7 +243,30 @@ export class IndexedDbDriver implements IRepositoryDriver {
     }
   }
 
-  async peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag>>> {
+  async enqueueTheme(op: ChangeOp<RepoTheme>): Promise<void> {
+    // Check if there's already an outbox item for this theme
+    // This implements deduplication: multiple edits before sync = one outbox item with latest data
+    const existing = await this.db!.outbox.where('id').equals(op.id).first();
+
+    if (existing) {
+      // Update existing outbox item with latest data
+      await this.db!.outbox.update(existing._id!, {
+        op: op.op,
+        client_rev: op.client_rev,
+        data: op.op === 'upsert' ? op.data : undefined,
+      });
+    } else {
+      // Add new outbox item
+      await this.db!.outbox.add({
+        op: op.op,
+        id: op.id,
+        client_rev: op.client_rev,
+        data: op.op === 'upsert' ? op.data : undefined,
+      });
+    }
+  }
+
+  async peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag> | ChangeOp<RepoTheme>>> {
     const items = await this.db!.outbox.limit(limit).toArray();
     return items.map(item => {
       if (item.op === 'upsert') {

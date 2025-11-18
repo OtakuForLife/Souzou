@@ -4,6 +4,7 @@ import type {
   ISyncTransport,
   RepoEntity,
   RepoTag,
+  RepoTheme,
   ChangeOp,
   PushResults,
 } from './types';
@@ -29,6 +30,10 @@ export class SyncOrchestrator {
       await this.store.putTag(t as RepoTag);
       pulled++;
     }
+    for (const th of pull.changes.themes.upserts) {
+      await this.store.putTheme(th as RepoTheme);
+      pulled++;
+    }
     // Apply server deletes
     for (const id of pull.changes.entities.deletes) {
       await this.store.deleteEntity(id);
@@ -36,6 +41,10 @@ export class SyncOrchestrator {
     }
     for (const id of pull.changes.tags.deletes) {
       await this.store.deleteTag(id);
+      pulled++;
+    }
+    for (const id of pull.changes.themes.deletes) {
+      await this.store.deleteTheme(id);
       pulled++;
     }
 
@@ -47,10 +56,11 @@ export class SyncOrchestrator {
     if (pending.length > 0) {
       const entities = pending.filter((x: any) => x.data?.type || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoEntity>[];
       const tags = pending.filter((x: any) => x.data?.name || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoTag>[];
+      const themes = pending.filter((x: any) => x.data?.colors || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoTheme>[];
 
-      console.log('[Sync] Pushing entities:', entities.length, 'tags:', tags.length);
-      const res: PushResults = await this.transport.push({ entities, tags });
-      pushed = res.entities.length + res.tags.length;
+      console.log('[Sync] Pushing entities:', entities.length, 'tags:', tags.length, 'themes:', themes.length);
+      const res: PushResults = await this.transport.push({ entities, tags, themes });
+      pushed = res.entities.length + res.tags.length + res.themes.length;
       console.log('[Sync] Push results:', res);
 
       // Update local entities with server rev and remove from outbox
@@ -103,6 +113,30 @@ export class SyncOrchestrator {
           conflictIds.push(result.id);
 
           console.log('[Sync] Resolved conflict by accepting server version for tag:', result.id);
+        }
+      }
+
+      for (const result of res.themes) {
+        if (result.status === 'applied') {
+          // Update local theme with new rev from server
+          const theme = await this.store.getTheme(result.id);
+          if (theme) {
+            theme.rev = result.rev;
+            theme.server_updated_at = result.server_updated_at;
+            await this.store.putTheme(theme);
+          }
+          appliedIds.push(result.id);
+        } else if (result.status === 'conflict' && result.server) {
+          // Conflict: server has a newer version
+          console.warn('[Sync] Conflict detected for theme:', result.id);
+
+          // Strategy: Accept server version (server wins)
+          await this.store.putTheme(result.server as RepoTheme);
+
+          // Remove from outbox since we accepted server version
+          conflictIds.push(result.id);
+
+          console.log('[Sync] Resolved conflict by accepting server version for theme:', result.id);
         }
       }
 

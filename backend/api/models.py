@@ -112,6 +112,12 @@ class Theme(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
 
+    # Sync fields
+    rev = models.IntegerField(default=0)
+    server_updated_at = models.DateTimeField(auto_now=True)
+    deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         ordering = ['type', 'name']
 

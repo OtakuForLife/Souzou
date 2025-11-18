@@ -1,6 +1,6 @@
 from .models import Entity, Theme, Tag
 from .serializers import EntitySerializer, ThemeSerializer, TagSerializer
-from .serializers import SyncEntitySerializer, SyncTagSerializer
+from .serializers import SyncEntitySerializer, SyncTagSerializer, SyncThemeSerializer
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -357,12 +357,19 @@ class SyncPullView(APIView):
         tags_upserts = SyncTagSerializer(tag_upserts_qs, many=True).data
         tags_deletes = [str(tid) for tid in tag_deletes_qs.values_list('id', flat=True)]
 
+        # Themes
+        theme_upserts_qs = Theme.objects.filter(server_updated_at__gt=since_dt, deleted=False)
+        theme_deletes_qs = Theme.objects.filter(server_updated_at__gt=since_dt, deleted=True)
+        themes_upserts = SyncThemeSerializer(theme_upserts_qs, many=True).data
+        themes_deletes = [str(tid) for tid in theme_deletes_qs.values_list('id', flat=True)]
+
         new_cursor = timezone.now().isoformat()
         return Response({
             "cursor": new_cursor,
             "changes": {
                 "entities": {"upserts": entities_upserts, "deletes": entities_deletes},
                 "tags": {"upserts": tags_upserts, "deletes": tags_deletes},
+                "themes": {"upserts": themes_upserts, "deletes": themes_deletes},
             },
         })
 
@@ -371,14 +378,17 @@ class SyncPushView(APIView):
     """Apply client changes with basic rev-based conflict detection."""
     def post(self, request):
         payload = request.data or {}
-        logger.info(f"Sync push: received {len(payload.get('entities', []))} entities, {len(payload.get('tags', []))} tags")
-        results = {"entities": [], "tags": []}
+        logger.info(f"Sync push: received {len(payload.get('entities', []))} entities, {len(payload.get('tags', []))} tags, {len(payload.get('themes', []))} themes")
+        results = {"entities": [], "tags": [], "themes": []}
 
         def serialize_entity(o):
             return SyncEntitySerializer(o).data
 
         def serialize_tag(o):
             return SyncTagSerializer(o).data
+
+        def serialize_theme(o):
+            return SyncThemeSerializer(o).data
 
         def apply_upsert(model_cls, item, serialize):
             obj_id = item.get('id') or (item.get('data') or {}).get('id')
@@ -478,6 +488,9 @@ class SyncPushView(APIView):
 
         for item in payload.get('tags', []):
             results['tags'].append(apply_upsert(Tag, item, serialize_tag))
+
+        for item in payload.get('themes', []):
+            results['themes'].append(apply_upsert(Theme, item, serialize_theme))
 
         # Log summary
         applied_entities = sum(1 for r in results['entities'] if r.get('status') == 'applied')

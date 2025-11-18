@@ -4,7 +4,7 @@
  * Uses @capacitor-community/sqlite plugin (async)
  */
 
-import type { IRepositoryDriver, RepoEntity, RepoTag, UUID, ChangeOp, Cursor } from '../types';
+import type { IRepositoryDriver, RepoEntity, RepoTag, RepoTheme, UUID, ChangeOp, Cursor } from '../types';
 import { getDatabaseName } from '@/lib/platform';
 
 type SQLiteDBConnection = any;
@@ -94,6 +94,22 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
       )
     `);
 
+    // Create themes table
+    await this.executeSQL(`
+      CREATE TABLE IF NOT EXISTS themes (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        colors TEXT NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        rev INTEGER,
+        server_updated_at TEXT,
+        deleted INTEGER DEFAULT 0,
+        deleted_at TEXT
+      )
+    `);
+
     // Create outbox table
     await this.executeSQL(`
       CREATE TABLE IF NOT EXISTS outbox (
@@ -118,6 +134,8 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
     await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_entities_deleted ON entities(deleted)`);
     await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_tags_updated_at ON tags(updated_at)`);
     await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_tags_deleted ON tags(deleted)`);
+    await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_themes_updated_at ON themes(updated_at)`);
+    await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_themes_deleted ON themes(deleted)`);
     await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_outbox_id ON outbox(id)`);
   }
 
@@ -151,6 +169,7 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
     if (!this.db) return;
     await this.executeSQL('DELETE FROM entities');
     await this.executeSQL('DELETE FROM tags');
+    await this.executeSQL('DELETE FROM themes');
     await this.executeSQL('DELETE FROM outbox');
     await this.executeSQL('DELETE FROM sync_meta');
   }
@@ -271,6 +290,62 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
     });
   }
 
+  // Themes
+  async getTheme(id: UUID): Promise<RepoTheme | undefined> {
+    const rows = await this.executeSQL('SELECT * FROM themes WHERE id = ?', [id]);
+    if (!rows || rows.length === 0) return undefined;
+    return this.deserializeTheme(rows[0]);
+  }
+
+  async putTheme(theme: RepoTheme): Promise<void> {
+    const themeToStore: RepoTheme = {
+      ...theme,
+      updated_at: theme.updated_at || theme.server_updated_at || new Date().toISOString(),
+    };
+
+    const serialized = this.serializeTheme(themeToStore);
+    await this.executeSQL(
+      `INSERT OR REPLACE INTO themes
+       (id, name, type, colors, created_at, updated_at, rev, server_updated_at, deleted, deleted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        serialized.id,
+        serialized.name,
+        serialized.type,
+        serialized.colors,
+        serialized.created_at,
+        serialized.updated_at,
+        serialized.rev,
+        serialized.server_updated_at,
+        serialized.deleted,
+        serialized.deleted_at,
+      ]
+    );
+  }
+
+  async deleteTheme(id: UUID): Promise<void> {
+    const rows = await this.executeSQL('SELECT * FROM themes WHERE id = ?', [id]);
+    if (rows && rows.length > 0) {
+      const theme = this.deserializeTheme(rows[0]);
+      const updated = {
+        ...theme,
+        deleted: true,
+        deleted_at: new Date().toISOString(),
+      };
+      await this.putTheme(updated);
+    }
+  }
+
+  async listThemesUpdatedSince(isoCursor: string): Promise<RepoTheme[]> {
+    const rows = await this.executeSQL('SELECT * FROM themes');
+    const allThemes = rows.map((row: any) => this.deserializeTheme(row));
+
+    return allThemes.filter((t: RepoTheme) => {
+      if (!t.updated_at) return true;
+      return t.updated_at >= isoCursor;
+    });
+  }
+
   // Outbox
   async enqueueEntity(op: ChangeOp<RepoEntity>): Promise<void> {
     // Check if there's already an outbox item for this entity
@@ -310,7 +385,26 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
     }
   }
 
-  async peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag>>> {
+  async enqueueTheme(op: ChangeOp<RepoTheme>): Promise<void> {
+    // Check if there's already an outbox item for this theme
+    const rows = await this.executeSQL('SELECT * FROM outbox WHERE id = ?', [op.id]);
+
+    if (rows && rows.length > 0) {
+      // Update existing outbox item
+      await this.executeSQL(
+        'UPDATE outbox SET op = ?, client_rev = ?, data = ? WHERE id = ?',
+        [op.op, op.client_rev, op.op === 'upsert' ? JSON.stringify(op.data) : null, op.id]
+      );
+    } else {
+      // Add new outbox item
+      await this.executeSQL(
+        'INSERT INTO outbox (op, id, client_rev, data) VALUES (?, ?, ?, ?)',
+        [op.op, op.id, op.client_rev, op.op === 'upsert' ? JSON.stringify(op.data) : null]
+      );
+    }
+  }
+
+  async peekOutbox(limit: number): Promise<Array<ChangeOp<RepoEntity> | ChangeOp<RepoTag> | ChangeOp<RepoTheme>>> {
     const rows = await this.executeSQL('SELECT * FROM outbox ORDER BY _id ASC LIMIT ?', [limit]);
     return rows.map((row: any) => {
       if (row.op === 'upsert') {
@@ -378,6 +472,22 @@ export class CapacitorSqliteDriver implements IRepositoryDriver {
   private deserializeTag(row: any): RepoTag {
     return {
       ...row,
+      deleted: Boolean(row.deleted),
+    };
+  }
+
+  private serializeTheme(theme: RepoTheme): any {
+    return {
+      ...theme,
+      colors: JSON.stringify(theme.colors),
+      deleted: theme.deleted ? 1 : 0,
+    };
+  }
+
+  private deserializeTheme(row: any): RepoTheme {
+    return {
+      ...row,
+      colors: JSON.parse(row.colors),
       deleted: Boolean(row.deleted),
     };
   }
