@@ -6,6 +6,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Theme, ThemeColors } from '@/types/themeTypes';
 import { themeService, CreateThemeRequest, UpdateThemeRequest } from '@/services/themeService';
+import { STORAGE_KEYS } from '@/config/constants';
 
 export interface ThemeState {
   allThemes: { [id: string]: Theme };
@@ -18,11 +19,14 @@ export interface ThemeState {
   customizationDraft: Partial<ThemeColors> | null;
 }
 
+// Load saved theme ID from localStorage
+const savedThemeId = localStorage.getItem(STORAGE_KEYS.THEME);
+
 const initialState: ThemeState = {
   allThemes: {},
   predefinedThemes: [],
   customThemes: [],
-  currentThemeId: null,
+  currentThemeId: savedThemeId || null,
   loading: false,
   error: null,
   isCustomizing: false,
@@ -77,7 +81,7 @@ const themeSlice = createSlice({
     setCurrentTheme: (state, action: PayloadAction<string>) => {
       state.currentThemeId = action.payload;
       // Store in localStorage for persistence
-      localStorage.setItem('currentThemeId', action.payload);
+      localStorage.setItem(STORAGE_KEYS.THEME, action.payload);
     },
 
     startCustomization: (state, action: PayloadAction<string>) => {
@@ -133,7 +137,7 @@ const themeSlice = createSlice({
         action.payload.forEach((theme) => {
           state.allThemes[theme.id] = theme;
 
-          if (theme.type === 'predefined') {
+          if (!theme.custom) {
             state.predefinedThemes.push(theme.id);
           } else {
             state.customThemes.push(theme.id);

@@ -99,15 +99,9 @@ class Entity(models.Model):
         return self.title
 
 
-class ThemeType(models.TextChoices):
-    PREDEFINED = "predefined", "Predefined"
-    CUSTOM = "custom", "Custom"
-
-
 class Theme(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, blank=False)
-    type = models.CharField(max_length=20, choices=ThemeType.choices, default=ThemeType.PREDEFINED)
     colors = models.JSONField()  # Store theme colors as JSON
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
@@ -119,10 +113,10 @@ class Theme(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['type', 'name']
+        ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.type})"
+        return self.name
 
 
 # Signal handlers for automatic vector indexing

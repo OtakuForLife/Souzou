@@ -3,12 +3,12 @@
  */
 
 export interface ThemeColors {
-
-  sidebar: {
+  // Optional fields to support both old and new theme structures
+  sidebar?: {
     background: string;
     text: string;
   };
-  explorer: {
+  explorer?: {
     background: string;
     item: {
       background: {
@@ -20,7 +20,7 @@ export interface ThemeColors {
       };
     };
   };
-  main: {
+  main?: {
     tabs:{
       background: string;
     };
@@ -43,7 +43,7 @@ export interface ThemeColors {
       text: string;
     };
   };
-  editor: {
+  editor?: {
     background: string;
     text: string;
     selection: string;
@@ -57,12 +57,35 @@ export interface ThemeColors {
       variable: string;
     };
   };
+
+  // Additional fields for compatibility with Light theme structure
+  primary?: string;
+  primaryHover?: string;
+  secondary?: string;
+  background?: string;
+  surface?: string;
+  surfaceHover?: string;
+  text?: {
+    primary?: string;
+    secondary?: string;
+    muted?: string;
+    onPrimary?: string;
+  };
+  border?: {
+    default?: string;
+    hover?: string;
+  };
+
+  // Allow any additional properties for flexibility
+  [key: string]: any;
 }
+
+
 
 export interface Theme {
   id: string;
   name: string;
-  type: 'predefined' | 'custom';
+  custom: boolean;
   isDefault: boolean;
   colors: ThemeColors;
   createdAt: string;

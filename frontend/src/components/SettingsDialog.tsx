@@ -1,5 +1,5 @@
-import { Settings, ChevronDown, Circle } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Settings, Circle } from "lucide-react";
+import { useState } from "react";
 
 import {
     Dialog,
@@ -12,9 +12,7 @@ import {
 } from "./ui/dialog"
 import {Button} from "./ui/button";
 import { Label } from "./ui/label";
-import { useTheme } from "@/hooks/useTheme";
 import { log } from "@/lib/logger";
-import { Theme } from "@/types/themeTypes";
 
 import { Input } from "./ui/input";
 import { DialogClose } from "./ui/dialog";
@@ -36,38 +34,6 @@ export default function SettingsDialog(){
     const [isSyncing, setIsSyncing] = useState(false);
     const [isFullSyncing, setIsFullSyncing] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
-
-    const { currentTheme, allThemes, switchTheme } = useTheme();
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-
-
-    const handleThemeChange = (newThemeId: string) => {
-        const newTheme = allThemes.find((t: Theme) => t.id === newThemeId);
-        log.info('User changing theme', {
-            from: currentTheme?.name,
-            to: newTheme?.name
-        });
-
-        // Close dropdown immediately
-        setIsDropdownOpen(false);
-
-        // Switch theme directly without delays
-        switchTheme(newThemeId);
-    };
 
     const handleTestConnection = async () => {
         setIsTesting(true);
@@ -212,37 +178,6 @@ export default function SettingsDialog(){
                             </div>
                         </div>
                     )}
-                    {/* Theme Setting */}
-                    <div className="flex flex-row items-center justify-between">
-                        <Label className="text-right">Theme</Label>
-                        <div className="w-1/2 relative" ref={dropdownRef}>
-                            {/* Custom Dropdown Trigger */}
-                            <button
-                                type="button"
-                                className="w-full px-3 py-2 text-left border rounded-md shadow-sm focus:outline-none focus:ring-2 flex items-center justify-between transition-colors"
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            >
-                                <span>{currentTheme?.name || 'Select theme'}</span>
-                                <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {/* Custom Dropdown Content */}
-                            {isDropdownOpen && (
-                                <div className="absolute z-50 w-full mt-1 theme-explorer-background theme-explorer-item-text border rounded-md shadow-lg max-h-60 overflow-auto">
-                                    {allThemes.map((theme: Theme) => (
-                                        <button
-                                            key={theme.id}
-                                            type="button"
-                                            className={`w-full px-3 py-2 text-left focus:outline-none transition-colors ${currentTheme?.id === theme.id ? 'theme-sidebar-background' : ''}`}
-                                            onClick={() => handleThemeChange(theme.id)}
-                                        >
-                                            {theme.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
                     {/* Danger Zone */}
                     <div className="pt-4 border-t">

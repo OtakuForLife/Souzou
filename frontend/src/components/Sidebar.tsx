@@ -4,6 +4,7 @@ import {
   Tag,
   Upload,
   Menu,
+  Palette,
 } from "lucide-react";
 import {
   Sidebar,
@@ -18,6 +19,7 @@ import {
 } from "./ui/sidebar";
 import SettingsDialog from "./SettingsDialog";
 import { TagManager } from "./TagManager";
+import { ThemeManager } from "./ThemeManager";
 import { useAppDispatch } from "@/hooks";
 import { createEntity } from "@/store/slices/entitySlice";
 import { openTab } from "@/store/slices/tabsSlice";
@@ -114,6 +116,13 @@ export default function AppSidebar({ onToggleNoteTree, isNoteTreeVisible }: AppS
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="p-1 m-0">
+              <ThemeManager>
+                <Palette className="w-full h-full p-1 cursor-pointer" />
+              </ThemeManager>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="p-1 m-0">
               <TagManager>

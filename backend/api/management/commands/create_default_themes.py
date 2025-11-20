@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand
-from api.models import Theme, ThemeType
+from api.models import Theme
 
 
 class Command(BaseCommand):
-    help = 'Create default predefined themes'
+    help = 'Create default themes'
 
     def handle(self, *args, **options):
         # Delete all existing themes first
@@ -14,7 +14,6 @@ class Command(BaseCommand):
         # Test theme
         test_theme, created = Theme.objects.get_or_create(
             name='Test',
-            type=ThemeType.PREDEFINED,
             defaults={
                 'colors': {
                     "sidebar": {
@@ -83,7 +82,6 @@ class Command(BaseCommand):
         # Default/Light theme (matches current CSS)
         default_theme, created = Theme.objects.get_or_create(
             name='Light',
-            type=ThemeType.PREDEFINED,
             defaults={
                 'colors': {
                     "primary": "#3b82f6",
@@ -129,7 +127,6 @@ class Command(BaseCommand):
         # Dark theme
         dark_theme, created = Theme.objects.get_or_create(
             name='Dark',
-            type=ThemeType.PREDEFINED,
             defaults={
                 'colors': {
                     "sidebar": {

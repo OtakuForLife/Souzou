@@ -79,7 +79,6 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
       CREATE TABLE IF NOT EXISTS themes (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        type TEXT NOT NULL,
         colors TEXT NOT NULL,
         created_at TEXT,
         updated_at TEXT,
@@ -272,14 +271,13 @@ export class BetterSqlite3Driver implements IRepositoryDriver {
     const serialized = this.serializeTheme(themeToStore);
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO themes
-      (id, name, type, colors, created_at, updated_at, rev, server_updated_at, deleted, deleted_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, name, colors, created_at, updated_at, rev, server_updated_at, deleted, deleted_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
       serialized.id,
       serialized.name,
-      serialized.type,
       serialized.colors,
       serialized.created_at,
       serialized.updated_at,

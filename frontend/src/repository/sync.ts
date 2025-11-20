@@ -54,11 +54,36 @@ export class SyncOrchestrator {
     const pending = await this.store.peekOutbox(100);
     console.log('[Sync] Outbox items to push:', pending.length, pending);
     if (pending.length > 0) {
-      const entities = pending.filter((x: any) => x.data?.type || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoEntity>[];
-      const tags = pending.filter((x: any) => x.data?.name || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoTag>[];
-      const themes = pending.filter((x: any) => x.data?.colors || x.op === 'delete' && x.id).map(x => x) as ChangeOp<RepoTheme>[];
+      // Categorize outbox items by checking unique fields in data
+      // - Themes: have 'colors' field (JSON object with theme colors)
+      // - Tags: have 'color' field (single color string) but NOT 'colors'
+      // - Entities: have 'type' field (entity type like 'note') but NOT 'colors' or 'color'
+      // For delete operations, we can't determine type from data, so we skip them for now
+      // TODO: Add a 'resource_type' field to outbox to handle deletes properly
 
-      console.log('[Sync] Pushing entities:', entities.length, 'tags:', tags.length, 'themes:', themes.length);
+      const themes = pending.filter((x: any) => {
+        if (x.op === 'upsert' && x.data?.colors !== undefined) {
+          return true;
+        }
+        return false;
+      }) as ChangeOp<RepoTheme>[];
+
+      const tags = pending.filter((x: any) => {
+        if (x.op === 'upsert' && x.data?.color !== undefined && x.data?.colors === undefined) {
+          return true;
+        }
+        return false;
+      }) as ChangeOp<RepoTag>[];
+
+      const entities = pending.filter((x: any) => {
+        if (x.op === 'upsert' && x.data?.type !== undefined && x.data?.colors === undefined && x.data?.color === undefined) {
+          return true;
+        }
+        return false;
+      }) as ChangeOp<RepoEntity>[];
+
+      console.log('[Sync] Categorized outbox items - entities:', entities.length, 'tags:', tags.length, 'themes:', themes.length);
+      console.log('[Sync] Themes to push:', themes);
       const res: PushResults = await this.transport.push({ entities, tags, themes });
       pushed = res.entities.length + res.tags.length + res.themes.length;
       console.log('[Sync] Push results:', res);

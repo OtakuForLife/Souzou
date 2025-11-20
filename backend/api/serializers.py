@@ -54,7 +54,7 @@ class EntitySerializer(serializers.ModelSerializer):
 class ThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Theme
-        fields = ["id", "name", "type", "colors", "created_at", "updated_at"]
+        fields = ["id", "name", "colors", "created_at", "updated_at"]
 
     def validate_colors(self, value):
         """
@@ -112,6 +112,6 @@ class SyncThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Theme
         fields = [
-            "id", "name", "type", "colors",
+            "id", "name", "colors",
             "rev", "server_updated_at", "deleted", "deleted_at",
         ]

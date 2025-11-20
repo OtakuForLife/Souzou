@@ -35,7 +35,6 @@ export interface RepoTag extends BaseSyncFields {
 export interface RepoTheme extends BaseSyncFields {
   id: UUID;
   name: string;
-  type: 'predefined' | 'custom';
   colors: Record<string, any>; // ThemeColors as JSON
   created_at?: string;
   updated_at?: string;
