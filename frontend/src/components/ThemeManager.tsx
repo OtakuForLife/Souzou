@@ -16,9 +16,17 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Palette } from 'lucide-react';
-import { Theme, ThemeColors } from '@/types/themeTypes';
+import { Theme, ThemeColors, THEME_COLORS_SCHEMA } from '@/types/themeTypes';
 import { ThemeItem } from './ThemeItem';
 import { Label } from './ui/label';
+import {
+  createDefaultThemeColors,
+  flattenSchema,
+  groupFieldsBySection,
+  getByPath,
+  setByPath,
+  getSectionName
+} from '@/utils/themeSchemaUtils';
 
 interface ThemeManagerProps {
   children: React.ReactNode;
@@ -29,62 +37,9 @@ interface NewTheme {
   colors: Partial<ThemeColors>;
 }
 
-// Default color structure based on create_default_themes.py
-const getDefaultColors = (): ThemeColors => ({
-  sidebar: {
-    background: '#ffffff',
-    text: '#1f2937',
-  },
-  explorer: {
-    background: '#f8fafc',
-    item: {
-      background: {
-        hover: '#f1f5f9',
-      },
-      text: {
-        default: '#1f2937',
-        hover: '#1f2937',
-      },
-    },
-  },
-  main: {
-    tabs: {
-      background: '#f8fafc',
-    },
-    tab: {
-      text: {
-        default: '#6b7280',
-        hover: '#1f2937',
-      },
-      background: {
-        default: '#ffffff',
-        hover: '#f1f5f9',
-      },
-      active: {
-        text: '#1f2937',
-        background: '#ffffff',
-      },
-    },
-    content: {
-      background: '#ffffff',
-      text: '#1f2937',
-    },
-  },
-  editor: {
-    background: '#ffffff',
-    text: '#1f2937',
-    selection: '#3b82f620',
-    cursor: '#3b82f6',
-    lineNumber: '#9ca3af',
-    syntax: {
-      keyword: '#7c3aed',
-      string: '#059669',
-      comment: '#6b7280',
-      function: '#dc2626',
-      variable: '#1f2937',
-    },
-  },
-});
+// Generate all color fields from schema
+const allColorFields = flattenSchema(THEME_COLORS_SCHEMA);
+const fieldsBySection = groupFieldsBySection(allColorFields);
 
 export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
   const dispatch = useAppDispatch();
@@ -93,7 +48,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTheme, setNewTheme] = useState<NewTheme>({
     name: '',
-    colors: getDefaultColors(),
+    colors: createDefaultThemeColors(),
   });
 
   const createNewTheme = async () => {
@@ -109,12 +64,20 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
       // Reset form
       setNewTheme({
         name: '',
-        colors: getDefaultColors(),
+        colors: createDefaultThemeColors(),
       });
       setShowCreateForm(false);
     } catch (error) {
       console.error('Failed to create theme:', error);
     }
+  };
+
+  // Helper to update a color field by path
+  const updateColorField = (path: string[], value: string) => {
+    setNewTheme({
+      ...newTheme,
+      colors: setByPath(newTheme.colors, path, value)
+    });
   };
 
   const handleThemeSelect = (themeId: string) => {
@@ -168,448 +131,32 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
                 />
               </div>
 
-              {/* Color Inputs - Organized by section */}
-              <div className="space-y-3">
-                <h5 className="text-sm font-semibold">Sidebar Colors</h5>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Background</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.sidebar?.background || '#ffffff'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            sidebar: { ...newTheme.colors.sidebar!, background: e.target.value }
-                          }
-                        })}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.sidebar?.background || '#ffffff'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            sidebar: { ...newTheme.colors.sidebar!, background: e.target.value }
-                          }
-                        })}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Text</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.sidebar?.text || '#1f2937'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            sidebar: { ...newTheme.colors.sidebar!, text: e.target.value }
-                          }
-                        })}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.sidebar?.text || '#1f2937'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            sidebar: { ...newTheme.colors.sidebar!, text: e.target.value }
-                          }
-                        })}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
+              {/* Color Inputs - Generated from schema */}
+              {Object.entries(fieldsBySection).map(([section, fields]) => (
+                <div key={section} className="space-y-3">
+                  <h5 className="text-sm font-semibold">{getSectionName([section])} Colors</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    {fields.map(field => (
+                      <div key={field.path.join('.')}>
+                        <Label className="text-xs">{field.label}</Label>
+                        <div className="flex gap-2 mt-1">
+                          <Input
+                            type="color"
+                            value={getByPath(newTheme.colors, field.path) || field.default}
+                            onChange={(e) => updateColorField(field.path, e.target.value)}
+                            className="w-12 h-8 p-1"
+                          />
+                          <Input
+                            value={getByPath(newTheme.colors, field.path) || field.default}
+                            onChange={(e) => updateColorField(field.path, e.target.value)}
+                            className="flex-1 text-xs"
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                <h5 className="text-sm font-semibold">Explorer Colors</h5>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Background</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.explorer?.background || '#f8fafc'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            explorer: { ...newTheme.colors.explorer!, background: e.target.value }
-                          }
-                        })}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.explorer?.background || '#f8fafc'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            explorer: { ...newTheme.colors.explorer!, background: e.target.value }
-                          }
-                        })}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Item Hover BG</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.explorer?.item?.background?.hover || '#f1f5f9'}
-                        onChange={(e) => {
-                          const explorer = newTheme.colors.explorer || { background: '#f8fafc', item: { background: { hover: '#f1f5f9' }, text: { default: '#1f2937', hover: '#1f2937' } } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              explorer: {
-                                ...explorer,
-                                item: {
-                                  ...explorer.item,
-                                  background: {
-                                    ...explorer.item.background,
-                                    hover: e.target.value
-                                  }
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.explorer?.item?.background?.hover || '#f1f5f9'}
-                        className="flex-1 text-xs"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h5 className="text-sm font-semibold">Main Content Colors</h5>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Tabs Background</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.main?.tabs?.background || '#f8fafc'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                tabs: {
-                                  background: e.target.value
-                                },
-                                tab: main.tab,
-                                content: main.content
-                              }
-                            }
-                          });
-                        }}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.main?.tabs?.background || '#f8fafc'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                tabs: {
-                                  background: e.target.value
-                                },
-                                tab: main.tab,
-                                content: main.content
-                              }
-                            }
-                          });
-                        }}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Tab Active BG</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.main?.tab?.active?.background || '#ffffff'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                tab: {
-                                  ...main.tab,
-                                  active: {
-                                    ...main.tab.active,
-                                    background: e.target.value
-                                  }
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.main?.tab?.active?.background || '#ffffff'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                tab: {
-                                  ...main.tab,
-                                  active: {
-                                    ...main.tab.active,
-                                    background: e.target.value
-                                  }
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Tab Active Text</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.main?.tab?.active?.text || '#1f2937'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                tab: {
-                                  ...main.tab,
-                                  active: {
-                                    ...main.tab.active,
-                                    text: e.target.value
-                                  }
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.main?.tab?.active?.text || '#1f2937'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                tab: {
-                                  ...main.tab,
-                                  active: {
-                                    ...main.tab.active,
-                                    text: e.target.value
-                                  }
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Content Background</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.main?.content?.background || '#ffffff'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                content: {
-                                  ...main.content,
-                                  background: e.target.value
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.main?.content?.background || '#ffffff'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                content: {
-                                  ...main.content,
-                                  background: e.target.value
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Content Text</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.main?.content?.text || '#1f2937'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                content: {
-                                  ...main.content,
-                                  text: e.target.value
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.main?.content?.text || '#1f2937'}
-                        onChange={(e) => {
-                          const main = newTheme.colors.main || { tabs: { background: '#f8fafc' }, tab: { text: { default: '#6b7280', hover: '#1f2937' }, background: { default: '#ffffff', hover: '#f1f5f9' }, active: { text: '#1f2937', background: '#ffffff' } }, content: { background: '#ffffff', text: '#1f2937' } };
-                          setNewTheme({
-                            ...newTheme,
-                            colors: {
-                              ...newTheme.colors,
-                              main: {
-                                ...main,
-                                content: {
-                                  ...main.content,
-                                  text: e.target.value
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h5 className="text-sm font-semibold">Editor Colors</h5>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Background</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.editor?.background || '#ffffff'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            editor: { ...newTheme.colors.editor!, background: e.target.value }
-                          }
-                        })}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.editor?.background || '#ffffff'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            editor: { ...newTheme.colors.editor!, background: e.target.value }
-                          }
-                        })}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Text</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        type="color"
-                        value={newTheme.colors.editor?.text || '#1f2937'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            editor: { ...newTheme.colors.editor!, text: e.target.value }
-                          }
-                        })}
-                        className="w-12 h-8 p-1"
-                      />
-                      <Input
-                        value={newTheme.colors.editor?.text || '#1f2937'}
-                        onChange={(e) => setNewTheme({
-                          ...newTheme,
-                          colors: {
-                            ...newTheme.colors,
-                            editor: { ...newTheme.colors.editor!, text: e.target.value }
-                          }
-                        })}
-                        className="flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
 
               <div className="flex gap-2 pt-2">
                 <Button onClick={createNewTheme} disabled={!newTheme.name.trim()}>
@@ -621,7 +168,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
                     setShowCreateForm(false);
                     setNewTheme({
                       name: '',
-                      colors: getDefaultColors(),
+                      colors: createDefaultThemeColors(),
                     });
                   }}
                 >

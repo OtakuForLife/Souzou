@@ -2,83 +2,72 @@
  * Theme-related TypeScript types
  */
 
-export interface ThemeColors {
-  // Optional fields to support both old and new theme structures
-  sidebar?: {
-    background: string;
-    text: string;
-  };
-  explorer?: {
-    background: string;
+// Schema definition - single source of truth for theme colors
+export const THEME_COLORS_SCHEMA = {
+  sidebar: {
+    background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
+    text: { type: 'color' as const, label: 'Text', default: '#1f2937' }
+  },
+  explorer: {
+    background: { type: 'color' as const, label: 'Background', default: '#f8fafc' },
     item: {
       background: {
-        hover: string;
-      };
+        hover: { type: 'color' as const, label: 'Hover', default: '#f1f5f9' }
+      },
       text: {
-        default: string;
-        hover: string;
-      };
-    };
-  };
-  main?: {
-    tabs:{
-      background: string;
-    };
-    tab:{
+        default: { type: 'color' as const, label: 'Default', default: '#1f2937' },
+        hover: { type: 'color' as const, label: 'Hover', default: '#1f2937' }
+      }
+    }
+  },
+  main: {
+    tabs: {
+      background: { type: 'color' as const, label: 'Background', default: '#f8fafc' }
+    },
+    tab: {
       text: {
-        default: string;
-        hover: string;
-      };
+        default: { type: 'color' as const, label: 'Default', default: '#6b7280' },
+        hover: { type: 'color' as const, label: 'Hover', default: '#1f2937' }
+      },
       background: {
-        default: string;
-        hover: string;
-      };
+        default: { type: 'color' as const, label: 'Default', default: '#ffffff' },
+        hover: { type: 'color' as const, label: 'Hover', default: '#f1f5f9' }
+      },
       active: {
-        text: string;
-        background: string;
-      };
-    };
+        text: { type: 'color' as const, label: 'Text', default: '#1f2937' },
+        background: { type: 'color' as const, label: 'Background', default: '#ffffff' }
+      }
+    },
     content: {
-      background: string;
-      text: string;
-    };
-  };
-  editor?: {
-    background: string;
-    text: string;
-    selection: string;
-    cursor: string;
-    lineNumber: string;
+      background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
+      text: { type: 'color' as const, label: 'Text', default: '#1f2937' }
+    }
+  },
+  editor: {
+    background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
+    text: { type: 'color' as const, label: 'Text', default: '#1f2937' },
+    selection: { type: 'color' as const, label: 'Selection', default: '#3b82f620' },
+    cursor: { type: 'color' as const, label: 'Cursor', default: '#3b82f6' },
+    lineNumber: { type: 'color' as const, label: 'Line Number', default: '#9ca3af' },
     syntax: {
-      keyword: string;
-      string: string;
-      comment: string;
-      function: string;
-      variable: string;
-    };
-  };
+      keyword: { type: 'color' as const, label: 'Keyword', default: '#7c3aed' },
+      string: { type: 'color' as const, label: 'String', default: '#059669' },
+      comment: { type: 'color' as const, label: 'Comment', default: '#6b7280' },
+      function: { type: 'color' as const, label: 'Function', default: '#dc2626' },
+      variable: { type: 'color' as const, label: 'Variable', default: '#1f2937' }
+    }
+  }
+} as const;
 
-  // Additional fields for compatibility with Light theme structure
-  primary?: string;
-  primaryHover?: string;
-  secondary?: string;
-  background?: string;
-  surface?: string;
-  surfaceHover?: string;
-  text?: {
-    primary?: string;
-    secondary?: string;
-    muted?: string;
-    onPrimary?: string;
-  };
-  border?: {
-    default?: string;
-    hover?: string;
-  };
+// Type inference helpers
+type SchemaLeaf = { type: 'color'; label: string; default: string };
 
-  // Allow any additional properties for flexibility
-  [key: string]: any;
-}
+type InferThemeColors<T> = T extends SchemaLeaf
+  ? string
+  : { [K in keyof T]: InferThemeColors<T[K]> };
+
+// Derive ThemeColors type from schema
+export type ThemeColors = InferThemeColors<typeof THEME_COLORS_SCHEMA>;
 
 
 
