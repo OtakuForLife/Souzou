@@ -29,36 +29,52 @@ const PREDEFINED_THEMES: RepoTheme[] = [
     id: 'theme-light',
     name: 'Light',
     colors: {
-      sidebar: { background: '#acacacff', text: '#1f2937' },
+      'nav-sidebar': { background: '#acacacff', text: '#1f2937' },
       explorer: {
         background: '#c8c8c8ff',
         item: {
-          background: { hover: '#f1f5f9' },
-          text: { default: '#1f2937', hover: '#1f2937' }
+          'background-hover': '#f1f5f9',
+          text: '#1f2937',
+          'text-hover': '#1f2937'
         }
       },
       main: {
         tabs: { background: '#f8fafcff' },
         tab: {
-          text: { default: '#6b7280', hover: '#1f2937' },
-          background: { default: '#ffffff', hover: '#f1f5f9' },
-          active: { text: '#1f2937', background: '#ffffff' }
+          inactive: {
+            text: '#6b7280',
+            'text-hover': '#1f2937',
+            background: '#ffffff',
+            'background-hover': '#f1f5f9'
+          },
+          active: {
+            text: '#1f2937',
+            'text-hover': '#0f172a',
+            background: '#ffffff',
+            'background-hover': '#f8fafc'
+          }
         },
-        content: { background: '#acacacff', text: '#1f2937' }
-      },
-      editor: {
-        background: '#bcbcbcff',
-        text: '#1f2937',
-        selection: '#3b82f620',
-        cursor: '#3b82f6',
-        lineNumber: '#9ca3af',
-        syntax: {
-          keyword: '#7c3aed',
-          string: '#059669',
-          comment: '#6b7280',
-          function: '#dc2626',
-          variable: '#1f2937'
+        content: {
+          background: '#acacacff',
+          title: '#1f2937',
+          text: '#1f2937',
+          editor: {
+            selection: '#dbeafe',
+            cursor: '#1f2937'
+          }
         }
+      },
+      'entity-sidebar': { background: '#ffffff', text: '#1f2937' },
+      dialog: {
+        background: '#ffffff',
+        border: '#e5e7eb',
+        text: '#1f2937',
+        'text-danger': '#dc2626',
+        button: '#3b82f6',
+        'button-hover': '#2563eb',
+        'button-hover-border': '#1d4ed8',
+        'button-clicked': '#1e40af',
+        'button-clicked-border': '#1e3a8a'
       }
     },
     created_at: new Date().toISOString(),
@@ -68,36 +84,52 @@ const PREDEFINED_THEMES: RepoTheme[] = [
     id: 'theme-dark',
     name: 'Dark',
     colors: {
-      sidebar: { background: '#111827', text: '#adadad' },
+      'nav-sidebar': { background: '#111827', text: '#adadad' },
       explorer: {
         background: '#1f2937',
         item: {
-          background: { hover: '#3a4657' },
-          text: { default: '#adadad', hover: '#adadad' }
+          'background-hover': '#3a4657',
+          text: '#adadad',
+          'text-hover': '#adadad'
         }
       },
       main: {
         tabs: { background: '#1f2937' },
         tab: {
-          text: { default: '#adadad', hover: '#adadad' },
-          background: { default: '#19202D', hover: '#19202D' },
-          active: { text: '#adadad', background: '#111827' }
+          inactive: {
+            text: '#adadad',
+            'text-hover': '#ffffff',
+            background: '#19202D',
+            'background-hover': '#374151'
+          },
+          active: {
+            text: '#ffffff',
+            'text-hover': '#ffffff',
+            background: '#111827',
+            'background-hover': '#1f2937'
+          }
         },
-        content: { background: '#111827', text: '#adadad' }
-      },
-      editor: {
-        background: '#111827',
-        text: '#adadad',
-        selection: '#FFFFFF',
-        cursor: '#adadad',
-        lineNumber: '#FFFFFF',
-        syntax: {
-          keyword: '#FFFFFF',
-          string: '#FFFFFF',
-          comment: '#FFFFFF',
-          function: '#FFFFFF',
-          variable: '#FFFFFF'
+        content: {
+          background: '#111827',
+          title: '#ffffff',
+          text: '#adadad',
+          editor: {
+            selection: '#3b82f640',
+            cursor: '#adadad'
+          }
         }
+      },
+      'entity-sidebar': { background: '#1f2937', text: '#adadad' },
+      dialog: {
+        background: '#1f2937',
+        border: '#374151',
+        text: '#adadad',
+        'text-danger': '#f87171',
+        button: '#3b82f6',
+        'button-hover': '#2563eb',
+        'button-hover-border': '#1d4ed8',
+        'button-clicked': '#1e40af',
+        'button-clicked-border': '#1e3a8a'
       }
     },
     created_at: new Date().toISOString(),
@@ -107,36 +139,52 @@ const PREDEFINED_THEMES: RepoTheme[] = [
     id: 'theme-test',
     name: 'Test',
     colors: {
-      sidebar: { background: '#0051FF', text: '#000000' },
+      'nav-sidebar': { background: '#0051FF', text: '#000000' },
       explorer: {
         background: '#FF0000',
         item: {
-          background: { hover: '#2AA11D' },
-          text: { default: '#000000', hover: '#21449F' }
+          'background-hover': '#2AA11D',
+          text: '#000000',
+          'text-hover': '#21449F'
         }
       },
       main: {
         tabs: { background: '#00FFEA' },
         tab: {
-          text: { default: '#FFFFFF', hover: '#525252' },
-          background: { default: '#573A3A', hover: '#FF9696' },
-          active: { text: '#840000', background: '#000000' }
+          inactive: {
+            text: '#FFFFFF',
+            'text-hover': '#525252',
+            background: '#573A3A',
+            'background-hover': '#FF9696'
+          },
+          active: {
+            text: '#840000',
+            'text-hover': '#FF0000',
+            background: '#000000',
+            'background-hover': '#333333'
+          }
         },
-        content: { background: '#C6C618', text: '#000000' }
-      },
-      editor: {
-        background: '#474BB0',
-        text: '#428048',
-        selection: '#FFFFFF',
-        cursor: '#FFFFFF',
-        lineNumber: '#FFFFFF',
-        syntax: {
-          keyword: '#FFFFFF',
-          string: '#FFFFFF',
-          comment: '#FFFFFF',
-          function: '#FFFFFF',
-          variable: '#FFFFFF'
+        content: {
+          background: '#C6C618',
+          title: '#000000',
+          text: '#000000',
+          editor: {
+            selection: '#FFFFFF40',
+            cursor: '#000000'
+          }
         }
+      },
+      'entity-sidebar': { background: '#474BB0', text: '#FFFFFF' },
+      dialog: {
+        background: '#FFFFFF',
+        border: '#000000',
+        text: '#000000',
+        'text-danger': '#FF0000',
+        button: '#0051FF',
+        'button-hover': '#0040CC',
+        'button-hover-border': '#003399',
+        'button-clicked': '#002266',
+        'button-clicked-border': '#001133'
       }
     },
     created_at: new Date().toISOString(),

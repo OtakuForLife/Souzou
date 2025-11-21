@@ -4,9 +4,10 @@ import { useAppDispatch } from '@/hooks';
 import { updateTheme, deleteTheme } from '@/store/slices/themeSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Check, Edit, Trash2, X, Save } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { ThemeColorEditor } from './ThemeColorEditor';
+import { setByPath } from '@/utils/themeSchemaUtils';
 
 interface ThemeItemProps {
   theme: Theme;
@@ -49,22 +50,12 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({ theme, isActive, onSelect 
     setIsEditing(false);
   };
 
-  const updateColor = (path: string, value: string) => {
-    const pathParts = path.split('.');
-
-    // Deep clone the colors object to avoid mutating read-only properties
-    const newColors = JSON.parse(JSON.stringify(editedTheme.colors));
-    let current: any = newColors;
-
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      if (!current[pathParts[i]]) {
-        current[pathParts[i]] = {};
-      }
-      current = current[pathParts[i]];
-    }
-
-    current[pathParts[pathParts.length - 1]] = value;
-    setEditedTheme({ ...editedTheme, colors: newColors as ThemeColors });
+  // Helper to update a color field by path
+  const updateColorField = (path: string[], value: string) => {
+    setEditedTheme({
+      ...editedTheme,
+      colors: setByPath(editedTheme.colors, path, value)
+    });
   };
 
   if (isEditing) {
@@ -86,214 +77,13 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({ theme, isActive, onSelect 
           </div>
         </div>
 
-        {/* Color Editors */}
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs font-semibold">Sidebar</Label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <div>
-                <Label className="text-xs text-muted-foreground">Background</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.sidebar?.background || '#ffffff'}
-                    onChange={(e) => updateColor('sidebar.background', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.sidebar?.background || '#ffffff'}
-                    onChange={(e) => updateColor('sidebar.background', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Text</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.sidebar?.text || '#1f2937'}
-                    onChange={(e) => updateColor('sidebar.text', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.sidebar?.text || '#1f2937'}
-                    onChange={(e) => updateColor('sidebar.text', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs font-semibold">Explorer</Label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <div>
-                <Label className="text-xs text-muted-foreground">Background</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.explorer?.background || '#f8fafc'}
-                    onChange={(e) => updateColor('explorer.background', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.explorer?.background || '#f8fafc'}
-                    onChange={(e) => updateColor('explorer.background', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Item Hover BG</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.explorer?.item?.background?.hover || '#f1f5f9'}
-                    onChange={(e) => updateColor('explorer.item.background.hover', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.explorer?.item?.background?.hover || '#f1f5f9'}
-                    onChange={(e) => updateColor('explorer.item.background.hover', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs font-semibold">Main - Tabs</Label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <div>
-                <Label className="text-xs text-muted-foreground">Tabs BG</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.main?.tabs?.background || '#f8fafc'}
-                    onChange={(e) => updateColor('main.tabs.background', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.main?.tabs?.background || '#f8fafc'}
-                    onChange={(e) => updateColor('main.tabs.background', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Tab Active BG</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.main?.tab?.active?.background || '#ffffff'}
-                    onChange={(e) => updateColor('main.tab.active.background', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.main?.tab?.active?.background || '#ffffff'}
-                    onChange={(e) => updateColor('main.tab.active.background', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Tab Active Text</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.main?.tab?.active?.text || '#1f2937'}
-                    onChange={(e) => updateColor('main.tab.active.text', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.main?.tab?.active?.text || '#1f2937'}
-                    onChange={(e) => updateColor('main.tab.active.text', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs font-semibold">Main - Content</Label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <div>
-                <Label className="text-xs text-muted-foreground">Content BG</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.main?.content?.background || '#ffffff'}
-                    onChange={(e) => updateColor('main.content.background', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.main?.content?.background || '#ffffff'}
-                    onChange={(e) => updateColor('main.content.background', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Content Text</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.main?.content?.text || '#1f2937'}
-                    onChange={(e) => updateColor('main.content.text', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.main?.content?.text || '#1f2937'}
-                    onChange={(e) => updateColor('main.content.text', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs font-semibold">Editor</Label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <div>
-                <Label className="text-xs text-muted-foreground">Background</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.editor?.background || '#ffffff'}
-                    onChange={(e) => updateColor('editor.background', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.editor?.background || '#ffffff'}
-                    onChange={(e) => updateColor('editor.background', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Text</Label>
-                <div className="flex gap-1">
-                  <Input
-                    type="color"
-                    value={editedTheme.colors.editor?.text || '#1f2937'}
-                    onChange={(e) => updateColor('editor.text', e.target.value)}
-                    className="w-10 h-7 p-0.5"
-                  />
-                  <Input
-                    value={editedTheme.colors.editor?.text || '#1f2937'}
-                    onChange={(e) => updateColor('editor.text', e.target.value)}
-                    className="flex-1 text-xs h-7"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Color Editors - Generated from schema */}
+        <ThemeColorEditor
+          colors={editedTheme.colors}
+          onColorChange={updateColorField}
+          showScrollArea={true}
+          scrollHeight="400px"
+        />
       </Card>
     );
   }

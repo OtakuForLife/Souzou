@@ -14,10 +14,30 @@ export interface ColorField {
 }
 
 /**
- * Flatten schema into array of color fields for easy iteration
+ * Type guard to check if a value is a color field definition
+ */
+interface ColorFieldDefinition {
+  type: 'color';
+  label: string;
+  default: string;
+}
+
+function isColorFieldDefinition(value: unknown): value is ColorFieldDefinition {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    value.type === 'color' &&
+    'label' in value &&
+    'default' in value
+  );
+}
+
+/**
+ * Flatten schema into array of color fields for easy iteration and UI generation
  */
 export function flattenSchema(
-  schema: any,
+  schema: Record<string, unknown>,
   parentPath: SchemaPath = [],
   parentLabel: string[] = []
 ): ColorField[] {
@@ -25,8 +45,8 @@ export function flattenSchema(
 
   for (const [key, value] of Object.entries(schema)) {
     const currentPath = [...parentPath, key];
-    
-    if (value && typeof value === 'object' && 'type' in value && value.type === 'color') {
+
+    if (isColorFieldDefinition(value)) {
       const currentLabel = [...parentLabel, value.label || key];
       fields.push({
         path: currentPath,
@@ -34,9 +54,9 @@ export function flattenSchema(
         fullLabel: currentLabel.join(' > '),
         default: value.default
       });
-    } else if (value && typeof value === 'object') {
+    } else if (typeof value === 'object' && value !== null) {
       // Recurse into nested object
-      fields.push(...flattenSchema(value, currentPath, parentLabel));
+      fields.push(...flattenSchema(value as Record<string, unknown>, currentPath, parentLabel));
     }
   }
 
@@ -66,17 +86,17 @@ export function setByPath(obj: any, path: SchemaPath, value: any): any {
 /**
  * Create default theme colors from schema
  */
-export function createDefaultThemeColors(schema: typeof THEME_COLORS_SCHEMA = THEME_COLORS_SCHEMA): ThemeColors {
+export function createDefaultThemeColors(schema: Record<string, unknown> = THEME_COLORS_SCHEMA): ThemeColors {
   const result: any = {};
-  
+
   for (const [key, value] of Object.entries(schema)) {
-    if (value && typeof value === 'object' && 'type' in value && value.type === 'color') {
+    if (isColorFieldDefinition(value)) {
       result[key] = value.default;
-    } else if (value && typeof value === 'object') {
-      result[key] = createDefaultThemeColors(value as any);
+    } else if (typeof value === 'object' && value !== null) {
+      result[key] = createDefaultThemeColors(value as Record<string, unknown>);
     }
   }
-  
+
   return result as ThemeColors;
 }
 

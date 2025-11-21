@@ -4,58 +4,60 @@
 
 // Schema definition - single source of truth for theme colors
 export const THEME_COLORS_SCHEMA = {
-  sidebar: {
+  'nav-sidebar': {
     background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
     text: { type: 'color' as const, label: 'Text', default: '#1f2937' }
   },
   explorer: {
     background: { type: 'color' as const, label: 'Background', default: '#f8fafc' },
     item: {
-      background: {
-        hover: { type: 'color' as const, label: 'Hover', default: '#f1f5f9' }
-      },
-      text: {
-        default: { type: 'color' as const, label: 'Default', default: '#1f2937' },
-        hover: { type: 'color' as const, label: 'Hover', default: '#1f2937' }
-      }
+      'background-hover': { type: 'color' as const, label: 'Item Background Hover', default: '#f1f5f9' },
+      text: { type: 'color' as const, label: 'Item Text', default: '#1f2937' },
+      'text-hover': { type: 'color' as const, label: 'Item Text Hover', default: '#1f2937' }
     }
   },
   main: {
     tabs: {
-      background: { type: 'color' as const, label: 'Background', default: '#f8fafc' }
+      background: { type: 'color' as const, label: 'Tab Bar Background', default: '#f8fafc' }
     },
     tab: {
-      text: {
-        default: { type: 'color' as const, label: 'Default', default: '#6b7280' },
-        hover: { type: 'color' as const, label: 'Hover', default: '#1f2937' }
-      },
-      background: {
-        default: { type: 'color' as const, label: 'Default', default: '#ffffff' },
-        hover: { type: 'color' as const, label: 'Hover', default: '#f1f5f9' }
+      inactive: {
+        text: { type: 'color' as const, label: 'Inactive Tab Text', default: '#6b7280' },
+        'text-hover': { type: 'color' as const, label: 'Inactive Tab Text Hover', default: '#1f2937' },
+        background: { type: 'color' as const, label: 'Inactive Tab Background', default: '#ffffff' },
+        'background-hover': { type: 'color' as const, label: 'Inactive Tab Background Hover', default: '#f1f5f9' }
       },
       active: {
-        text: { type: 'color' as const, label: 'Text', default: '#1f2937' },
-        background: { type: 'color' as const, label: 'Background', default: '#ffffff' }
+        text: { type: 'color' as const, label: 'Active Tab Text', default: '#1f2937' },
+        'text-hover': { type: 'color' as const, label: 'Active Tab Text Hover', default: '#0f172a' },
+        background: { type: 'color' as const, label: 'Active Tab Background', default: '#ffffff' },
+        'background-hover': { type: 'color' as const, label: 'Active Tab Background Hover', default: '#f8fafc' }
       }
     },
     content: {
       background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
-      text: { type: 'color' as const, label: 'Text', default: '#1f2937' }
+      title: { type: 'color' as const, label: 'Title', default: '#1f2937' },
+      text: { type: 'color' as const, label: 'Text', default: '#1f2937' },
+      editor: {
+        selection: { type: 'color' as const, label: 'Markdown Selection', default: '#dbeafe' },
+        cursor: { type: 'color' as const, label: 'Markdown Cursor', default: '#1f2937' }
+      }
     }
   },
-  editor: {
+  'entity-sidebar': {
     background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
+    text: { type: 'color' as const, label: 'Text', default: '#1f2937' }
+  },
+  dialog: {
+    background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
+    border: { type: 'color' as const, label: 'Border', default: '#e5e7eb' },
     text: { type: 'color' as const, label: 'Text', default: '#1f2937' },
-    selection: { type: 'color' as const, label: 'Selection', default: '#3b82f620' },
-    cursor: { type: 'color' as const, label: 'Cursor', default: '#3b82f6' },
-    lineNumber: { type: 'color' as const, label: 'Line Number', default: '#9ca3af' },
-    syntax: {
-      keyword: { type: 'color' as const, label: 'Keyword', default: '#7c3aed' },
-      string: { type: 'color' as const, label: 'String', default: '#059669' },
-      comment: { type: 'color' as const, label: 'Comment', default: '#6b7280' },
-      function: { type: 'color' as const, label: 'Function', default: '#dc2626' },
-      variable: { type: 'color' as const, label: 'Variable', default: '#1f2937' }
-    }
+    'text-danger': { type: 'color' as const, label: 'Text Danger', default: '#dc2626' },
+    button: { type: 'color' as const, label: 'Button', default: '#3b82f6' },
+    'button-hover': { type: 'color' as const, label: 'Button Hover', default: '#2563eb' },
+    'button-hover-border': { type: 'color' as const, label: 'Button Hover Border', default: '#1d4ed8' },
+    'button-clicked': { type: 'color' as const, label: 'Button Clicked', default: '#1e40af' },
+    'button-clicked-border': { type: 'color' as const, label: 'Button Clicked Border', default: '#1e3a8a' }
   }
 } as const;
 

@@ -24,25 +24,31 @@
     -moz-osx-font-smoothing: grayscale;
 
     /* Default theme colors */
-    --color-sidebar-background: #111827;
-    --color-sidebar-text: #adadad;
+    --color-nav-sidebar-background: #111827;
+    --color-nav-sidebar-text: #adadad;
+
     --color-explorer-background: #1f2937;
     --color-explorer-item-background-hover: #3a4657;
-    --color-explorer-item-text-default: #adadad;
+    --color-explorer-item-text: #adadad;
     --color-explorer-item-text-hover: #adadad;
+
     --color-main-tabs-background: #1f2937;
-    --color-main-tab-background-default: #19202D;
-    --color-main-tab-text-default: #adadad;
+
+    --color-main-tab-active-background: #19202D;
+    --color-main-tab-active-background-hover: #19202D;
     --color-main-tab-active-text: #adadad;
-    --color-main-tab-active-background: #111827;
-    --color-main-tab-background-hover: #19202D;
-    --color-main-tab-text-hover: #adadad;
+    --color-main-tab-active-text-hover: #adadad;
+    
+    --color-main-tab-inactive-background: #19202D;
+    --color-main-tab-inactive-background-hover: #19202D;
+    --color-main-tab-inactive-text: #adadad;
+    --color-main-tab-inactive-text-hover: #adadad;
+
     --color-main-content-background: #111827;
+    --color-main-content-title: #adadad;
     --color-main-content-text: #adadad;
 
     /* Editor theme colors */
-    --color-editor-background: #111827;
-    --color-editor-text: #adadad;
     --color-editor-selection: #3b82f620;
     --color-editor-cursor: #3b82f6;
     --color-editor-line-number: #6b7280;
@@ -58,12 +64,12 @@
 
 @layer utilities {
   /* Theme-specific utility classes with custom prefix */
-  .theme-sidebar-background {
-    background-color: var(--color-sidebar-background);
+  .theme-nav-sidebar-background {
+    background-color: var(--color-nav-sidebar-background);
   }
 
-  .theme-sidebar-text {
-    color: var(--color-sidebar-text);
+  .theme-nav-sidebar-text {
+    color: var(--color-nav-sidebar-text);
   }
 
   .theme-explorer-background {
@@ -76,11 +82,11 @@
 
   /* Drag-over styling for tree items */
   .drag-over .theme-explorer-item-background {
-    background-color: var(--color-explorer-item-background-hover) !important;
+    background-color: var(--color-explorer-background) !important;
   }
 
   .theme-explorer-item-text {
-    color: var(--color-explorer-item-text-default);
+    color: var(--color-explorer-item-text);
   }
 
   .theme-explorer-item-text-hover {
@@ -92,14 +98,14 @@
   }
 
   .theme-main-tab-background:not([data-state="active"]) {
-    background-color: var(--color-main-tab-background-default);
+    background-color: var(--color-main-tab-inactive-background);
   }
   .theme-main-tab-text:not([data-state="active"]) {
-    color: var(--color-main-tab-text-default);
+    color: var(--color-main-tab-inactive-text);
   }
 
   .theme-main-tab-text:not([data-state="active"]):hover {
-    color: var(--color-main-tab-text-hover);
+    color: var(--color-main-tab-inactive-text-hover);
   }
 
   .theme-main-tab-text[data-state="active"]  {
@@ -111,7 +117,7 @@
   }
 
   .theme-main-tab-background:not([data-state="active"]):hover {
-    background-color: var(--color-main-tab-background-hover);
+    background-color: var(--color-main-tab-inactive-background-hover);
   }
 
 
@@ -124,11 +130,11 @@
 
   /* Editor theme utility classes */
   .theme-editor-background {
-    background-color: var(--color-editor-background);
+    background-color: var(--color-main-content-background);
   }
 
   .theme-editor-text {
-    color: var(--color-editor-text);
+    color: var(--color-main-content-text);
   }
 
   /* Table extension styles */
@@ -167,7 +173,7 @@
 
   .cm-table-header {
     background-color: var(--color-explorer-background);
-    color: var(--color-explorer-item-text-default);
+    color: var(--color-explorer-item-text);
     padding: 0.25rem 0.5rem;
     text-align: left;
     font-weight: 600;
@@ -229,7 +235,7 @@
   .sort-indicator {
     font-size: 0.75rem;
     margin-left: 0.25rem;
-    color: var(--color-explorer-item-text-default);
+    color: var(--color-explorer-item-text);
   }
 
 }

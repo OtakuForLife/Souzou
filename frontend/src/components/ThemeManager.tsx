@@ -16,16 +16,13 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Palette } from 'lucide-react';
-import { Theme, ThemeColors, THEME_COLORS_SCHEMA } from '@/types/themeTypes';
+import { Theme, ThemeColors } from '@/types/themeTypes';
 import { ThemeItem } from './ThemeItem';
+import { ThemeColorEditor } from './ThemeColorEditor';
 import { Label } from './ui/label';
 import {
   createDefaultThemeColors,
-  flattenSchema,
-  groupFieldsBySection,
-  getByPath,
-  setByPath,
-  getSectionName
+  setByPath
 } from '@/utils/themeSchemaUtils';
 
 interface ThemeManagerProps {
@@ -36,10 +33,6 @@ interface NewTheme {
   name: string;
   colors: Partial<ThemeColors>;
 }
-
-// Generate all color fields from schema
-const allColorFields = flattenSchema(THEME_COLORS_SCHEMA);
-const fieldsBySection = groupFieldsBySection(allColorFields);
 
 export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
   const dispatch = useAppDispatch();
@@ -132,31 +125,11 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
               </div>
 
               {/* Color Inputs - Generated from schema */}
-              {Object.entries(fieldsBySection).map(([section, fields]) => (
-                <div key={section} className="space-y-3">
-                  <h5 className="text-sm font-semibold">{getSectionName([section])} Colors</h5>
-                  <div className="grid grid-cols-2 gap-3">
-                    {fields.map(field => (
-                      <div key={field.path.join('.')}>
-                        <Label className="text-xs">{field.label}</Label>
-                        <div className="flex gap-2 mt-1">
-                          <Input
-                            type="color"
-                            value={getByPath(newTheme.colors, field.path) || field.default}
-                            onChange={(e) => updateColorField(field.path, e.target.value)}
-                            className="w-12 h-8 p-1"
-                          />
-                          <Input
-                            value={getByPath(newTheme.colors, field.path) || field.default}
-                            onChange={(e) => updateColorField(field.path, e.target.value)}
-                            className="flex-1 text-xs"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <ThemeColorEditor
+                colors={newTheme.colors}
+                onColorChange={updateColorField}
+                showScrollArea={false}
+              />
 
               <div className="flex gap-2 pt-2">
                 <Button onClick={createNewTheme} disabled={!newTheme.name.trim()}>
