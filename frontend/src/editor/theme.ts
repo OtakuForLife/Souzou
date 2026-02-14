@@ -124,6 +124,20 @@ function createCustomTheme() {
     ".cm-scroller": {
         overflowX: "hidden", // Prevent horizontal scrolling on scroller
     },
+    // Scrollbar styling for Chrome/Safari
+    ".cm-scroller::-webkit-scrollbar": {
+        width: "8px",
+    },
+    ".cm-scroller::-webkit-scrollbar-track": {
+        backgroundColor: "transparent",
+    },
+    ".cm-scroller::-webkit-scrollbar-thumb": {
+        backgroundColor: `${vars.editorText}30`,
+        borderRadius: "4px",
+    },
+    ".cm-scroller::-webkit-scrollbar-thumb:hover": {
+        backgroundColor: `${vars.editorText}50`,
+    },
     ".cm-cursor": {
         borderLeft: `2px solid ${vars.editorCursor}`,
         borderRight: "none",
