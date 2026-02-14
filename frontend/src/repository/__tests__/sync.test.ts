@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SyncOrchestrator } from '../sync'
-import { IRepositoryDriver } from '../types'
+import { IRepositoryDriver, OPERATIONS } from '../types'
 import { RepoEntity } from '../types'
 
 // Mock repository driver
@@ -64,7 +64,7 @@ describe('SyncOrchestrator', () => {
       // Mock pull response (empty)
       mockTransport.pull.mockResolvedValue({
         cursor: '2025-01-01T00:00:00Z',
-        changes: { entities: { upserts: [], deletes: [] }, tags: { upserts: [], deletes: [] } },
+        changes: { entities: { upserts: [], deletes: [] }, tags: { upserts: [], deletes: [] }, themes: { upserts: [], deletes: [] } },
       })
 
       // Mock push response with conflict
@@ -77,6 +77,7 @@ describe('SyncOrchestrator', () => {
           },
         ],
         tags: [],
+        themes: [],
       })
 
       const outboxItem = {
@@ -131,7 +132,7 @@ describe('SyncOrchestrator', () => {
       // Mock pull response (empty)
       mockTransport.pull.mockResolvedValue({
         cursor: '2025-01-01T00:00:00Z',
-        changes: { entities: { upserts: [], deletes: [] }, tags: { upserts: [], deletes: [] } },
+        changes: { entities: { upserts: [], deletes: [] }, tags: { upserts: [], deletes: [] }, themes: { upserts: [], deletes: [] } },
       })
 
       mockTransport.push.mockResolvedValue({
@@ -140,11 +141,12 @@ describe('SyncOrchestrator', () => {
           { id: 'entity-2', status: 'conflict', server: serverEntity2 },
         ],
         tags: [],
+        themes: [],
       })
 
       mockDriver.peekOutbox.mockResolvedValue([
-        { op: 'upsert' as const, id: 'entity-1', client_rev: 1, data: serverEntity1 },
-        { op: 'upsert' as const, id: 'entity-2', client_rev: 1, data: serverEntity2 },
+        { op: OPERATIONS.UPSERT, id: 'entity-1', client_rev: 1, data: serverEntity1 },
+        { op: OPERATIONS.UPSERT, id: 'entity-2', client_rev: 1, data: serverEntity2 },
       ])
 
       await orchestrator.syncNow()
@@ -184,7 +186,7 @@ describe('SyncOrchestrator', () => {
       // Second enqueue (should update, not create new)
       entity.title = 'Second Update'
       await mockDriver.enqueueEntity({
-        op: 'upsert',
+        op: OPERATIONS.UPSERT,
         id: 'entity-1',
         client_rev: 1,
         data: entity,
@@ -225,12 +227,17 @@ describe('SyncOrchestrator', () => {
             upserts: [],
             deletes: [],
           },
+          themes: {
+            upserts: [],
+            deletes: [],
+          },
         },
       })
 
       mockTransport.push.mockResolvedValue({
         entities: [],
         tags: [],
+        themes: [],
       })
 
       const result = await orchestrator.syncNow()
@@ -268,7 +275,7 @@ describe('SyncOrchestrator', () => {
 
       mockTransport.pull.mockResolvedValue({
         cursor: '2025-01-01T00:00:00Z',
-        changes: { entities: { upserts: [], deletes: [] }, tags: { upserts: [], deletes: [] } },
+        changes: { entities: { upserts: [], deletes: [] }, tags: { upserts: [], deletes: [] }, themes: { upserts: [], deletes: [] } },
       })
 
       mockTransport.push.mockResolvedValue({
@@ -281,6 +288,7 @@ describe('SyncOrchestrator', () => {
           },
         ],
         tags: [],
+        themes: [],
       })
 
       const result = await orchestrator.syncNow()

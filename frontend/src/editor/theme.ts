@@ -5,8 +5,8 @@ import { tags as t } from "@lezer/highlight";
 
 // Get CSS variables for theming
 const computedStyle = getComputedStyle(document.documentElement);
-const editorBackground = computedStyle.getPropertyValue('--color-main-content-background').trim() || '#111827';
-const editorText = computedStyle.getPropertyValue('--color-main-content-text').trim() || '#adadad';
+const editorBackground = computedStyle.getPropertyValue('--color-surface-0').trim() || '#111827';
+const editorText = computedStyle.getPropertyValue('--color-text-primary').trim() || '#adadad';
 const editorSelection = computedStyle.getPropertyValue('--color-editor-selection').trim() || '#3b82f620';
 const editorCursor = computedStyle.getPropertyValue('--color-editor-cursor').trim() || '#3b82f6';
 const syntaxKeyword = computedStyle.getPropertyValue('--color-editor-syntax-keyword').trim() || '#a78bfa';

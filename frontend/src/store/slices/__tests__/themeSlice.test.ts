@@ -1,6 +1,7 @@
 import { expect, test, vi, afterEach, beforeEach, describe } from "vitest"
 import themeReducer, * as ThemeSlice from "@/store/slices/themeSlice";
 import { Theme, ThemeColors } from "@/types/themeTypes";
+import { STORAGE_KEYS } from "@/config/constants";
 
 const {
   setCurrentTheme,
@@ -37,67 +38,42 @@ vi.mock('@/services/themeService', () => ({
   }
 }));
 
-// Sample theme data for testing
+// Sample theme data for testing (FLAT structure)
 const mockThemeColors: ThemeColors = {
-  sidebar: {
-    background: '#f8fafc',
-    text: '#1f2937',
-  },
-  explorer: {
-    background: '#ffffff',
-    item: {
-      background: {
-        hover: '#f1f5f9',
-      },
-      text: {
-        default: '#1f2937',
-        hover: '#3b82f6',
-      },
-    },
-  },
-  main: {
-    tabs: {
-      background: '#f8fafc',
-    },
-    tab: {
-      text: {
-        default: '#6b7280',
-        hover: '#1f2937',
-      },
-      background: {
-        default: '#ffffff',
-        hover: '#f1f5f9',
-      },
-      active: {
-        text: '#3b82f6',
-        background: '#ffffff',
-      },
-    },
-    content: {
-      background: '#ffffff',
-      text: '#1f2937',
-    },
-  },
-  editor: {
-    background: '#ffffff',
-    text: '#1f2937',
-    selection: '#3b82f620',
-    cursor: '#3b82f6',
-    lineNumber: '#9ca3af',
-    syntax: {
-      keyword: '#7c3aed',
-      string: '#059669',
-      comment: '#6b7280',
-      function: '#dc2626',
-      variable: '#1f2937',
-    }
-  }
+  '--color-surface-0': '#ffffff',
+  '--color-surface-0-hover': '#f8fafc',
+  '--color-surface-1': '#f8fafc',
+  '--color-surface-1-hover': '#f1f5f9',
+  '--color-surface-2': '#f8fafc',
+  '--color-surface-2-hover': '#f1f5f9',
+
+  '--color-text-primary': '#1f2937',
+  '--color-text-primary-hover': '#1f2937',
+  '--color-text-secondary': '#6b7280',
+  '--color-text-secondary-hover': '#374151',
+  '--color-text-tertiary': '#9ca3af',
+  '--color-text-tertiary-hover': '#374151',
+
+  '--color-tab-active': '#ffffff',
+  '--color-tab-active-hover': '#ffffff',
+  '--color-tab-inactive': '#f8fafc',
+  '--color-tab-inactive-hover': '#f1f5f9',
+
+  '--color-border-primary': '#e5e7eb',
+
+  '--color-button-primary': '#3b82f6',
+  '--color-button-primary-hover': '#2563eb',
+  '--color-button-primary-clicked': '#1d4ed8',
+
+  '--color-button-alert': '#ef4444',
+  '--color-button-alert-hover': '#dc2626',
+  '--color-button-alert-clicked': '#b91c1c',
 };
 
 const mockLightTheme: Theme = {
   id: 'light-theme-id',
   name: 'Light',
-  type: 'predefined',
+  custom: false,
   isDefault: true,
   colors: mockThemeColors,
   createdAt: '2024-01-01T00:00:00Z',
@@ -107,62 +83,37 @@ const mockLightTheme: Theme = {
 const mockDarkTheme: Theme = {
   id: 'dark-theme-id',
   name: 'Dark',
-  type: 'predefined',
+  custom: false,
   isDefault: false,
   colors: {
-    sidebar: {
-      background: '#1f2937',
-      text: '#f9fafb',
-    },
-    explorer: {
-      background: '#111827',
-      item: {
-        background: {
-          hover: '#374151',
-        },
-        text: {
-          default: '#f9fafb',
-          hover: '#60a5fa',
-        },
-      },
-    },
-    main: {
-      tabs: {
-        background: '#1f2937',
-      },
-      tab: {
-        text: {
-          default: '#9ca3af',
-          hover: '#f9fafb',
-        },
-        background: {
-          default: '#111827',
-          hover: '#374151',
-        },
-        active: {
-          text: '#60a5fa',
-          background: '#111827',
-        },
-      },
-      content: {
-        background: '#111827',
-        text: '#f9fafb',
-      },
-    },
-    editor: {
-      background: '#1f2937',
-      text: '#f9fafb',
-      selection: '#60a5fa20',
-      cursor: '#60a5fa',
-      lineNumber: '#6b7280',
-      syntax: {
-        keyword: '#a78bfa',
-        string: '#34d399',
-        comment: '#6b7280',
-        function: '#f87171',
-        variable: '#f9fafb',
-      }
-    }
+    '--color-surface-0': '#111827',
+    '--color-surface-0-hover': '#1f2937',
+    '--color-surface-1': '#1f2937',
+    '--color-surface-1-hover': '#374151',
+    '--color-surface-2': '#1f2937',
+    '--color-surface-2-hover': '#374151',
+
+    '--color-text-primary': '#f9fafb',
+    '--color-text-primary-hover': '#f9fafb',
+    '--color-text-secondary': '#9ca3af',
+    '--color-text-secondary-hover': '#f9fafb',
+    '--color-text-tertiary': '#6b7280',
+    '--color-text-tertiary-hover': '#9ca3af',
+
+    '--color-tab-active': '#111827',
+    '--color-tab-active-hover': '#111827',
+    '--color-tab-inactive': '#1f2937',
+    '--color-tab-inactive-hover': '#374151',
+
+    '--color-border-primary': '#374151',
+
+    '--color-button-primary': '#60a5fa',
+    '--color-button-primary-hover': '#3b82f6',
+    '--color-button-primary-clicked': '#2563eb',
+
+    '--color-button-alert': '#f87171',
+    '--color-button-alert-hover': '#ef4444',
+    '--color-button-alert-clicked': '#dc2626',
   },
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
@@ -196,7 +147,7 @@ describe('Theme Slice', () => {
       const nextState = themeReducer(initialState, setCurrentTheme(themeId));
 
       expect(nextState.currentThemeId).toBe(themeId);
-      expect(setItemSpy).toHaveBeenCalledWith('currentThemeId', themeId);
+      expect(setItemSpy).toHaveBeenCalledWith(STORAGE_KEYS.THEME, themeId);
     });
   });
 
@@ -321,7 +272,7 @@ describe('Theme Slice', () => {
         ...mockLightTheme,
         id: 'custom-theme-id',
         name: 'Custom Theme',
-        type: 'custom',
+        custom: true,
         isDefault: false,
       };
 
