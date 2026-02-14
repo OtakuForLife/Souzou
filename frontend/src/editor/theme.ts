@@ -2,57 +2,69 @@ import { HighlightStyle } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
 import { tags as t } from "@lezer/highlight";
 
+/**
+ * Get current CSS variables for theming
+ * This function reads the current values from the DOM, allowing dynamic theme updates
+ */
+function getCSSVariables() {
+  const computedStyle = getComputedStyle(document.documentElement);
+  return {
+    editorBackground: computedStyle.getPropertyValue('--color-surface-0').trim() || '#111827',
+    editorText: computedStyle.getPropertyValue('--color-text-primary').trim() || '#adadad',
+    editorSelection: computedStyle.getPropertyValue('--color-editor-selection').trim() || '#3b82f620',
+    editorCursor: computedStyle.getPropertyValue('--color-editor-cursor').trim() || '#3b82f6',
+    syntaxKeyword: computedStyle.getPropertyValue('--color-editor-syntax-keyword').trim() || '#a78bfa',
+    syntaxString: computedStyle.getPropertyValue('--color-editor-syntax-string').trim() || '#34d399',
+    syntaxComment: computedStyle.getPropertyValue('--color-editor-syntax-comment').trim() || '#6b7280',
+    syntaxFunction: computedStyle.getPropertyValue('--color-editor-syntax-function').trim() || '#f87171',
+    syntaxLink: computedStyle.getPropertyValue('--color-editor-syntax-link').trim() || '#3746e7',
+  };
+}
 
-// Get CSS variables for theming
-const computedStyle = getComputedStyle(document.documentElement);
-const editorBackground = computedStyle.getPropertyValue('--color-surface-0').trim() || '#111827';
-const editorText = computedStyle.getPropertyValue('--color-text-primary').trim() || '#adadad';
-const editorSelection = computedStyle.getPropertyValue('--color-editor-selection').trim() || '#3b82f620';
-const editorCursor = computedStyle.getPropertyValue('--color-editor-cursor').trim() || '#3b82f6';
-const syntaxKeyword = computedStyle.getPropertyValue('--color-editor-syntax-keyword').trim() || '#a78bfa';
-const syntaxString = computedStyle.getPropertyValue('--color-editor-syntax-string').trim() || '#34d399';
-const syntaxComment = computedStyle.getPropertyValue('--color-editor-syntax-comment').trim() || '#6b7280';
-const syntaxFunction = computedStyle.getPropertyValue('--color-editor-syntax-function').trim() || '#f87171';
-const syntaxLink = computedStyle.getPropertyValue('--color-editor-syntax-link').trim() || '#3746e7';
 
-// Create custom highlight style for markdown
-const markdownHighlightStyle = HighlightStyle.define([
+
+/**
+ * Create markdown highlight style based on current CSS variables
+ */
+function createMarkdownHighlightStyle() {
+  const vars = getCSSVariables();
+  return HighlightStyle.define([
     // Headings
-    { tag: t.heading1, fontSize: "2em", fontWeight: "bold", color: editorText, lineHeight: "1.2" },
-    { tag: t.heading2, fontSize: "1.5em", fontWeight: "bold", color: editorText, lineHeight: "1.3" },
-    { tag: t.heading3, fontSize: "1.25em", fontWeight: "bold", color: editorText, lineHeight: "1.4" },
-    { tag: t.heading4, fontSize: "1.1em", fontWeight: "bold", color: editorText, lineHeight: "1.4" },
-    { tag: t.heading5, fontSize: "1em", fontWeight: "bold", color: editorText, lineHeight: "1.5" },
-    { tag: t.heading6, fontSize: "0.9em", fontWeight: "bold", color: editorText, lineHeight: "1.5" },
+    { tag: t.heading1, fontSize: "2em", fontWeight: "bold", color: vars.editorText, lineHeight: "1.2" },
+    { tag: t.heading2, fontSize: "1.5em", fontWeight: "bold", color: vars.editorText, lineHeight: "1.3" },
+    { tag: t.heading3, fontSize: "1.25em", fontWeight: "bold", color: vars.editorText, lineHeight: "1.4" },
+    { tag: t.heading4, fontSize: "1.1em", fontWeight: "bold", color: vars.editorText, lineHeight: "1.4" },
+    { tag: t.heading5, fontSize: "1em", fontWeight: "bold", color: vars.editorText, lineHeight: "1.5" },
+    { tag: t.heading6, fontSize: "0.9em", fontWeight: "bold", color: vars.editorText, lineHeight: "1.5" },
 
     // Text formatting
     { tag: t.strong, fontWeight: "bold" },
     { tag: t.emphasis, fontStyle: "italic" },
-    { tag: t.strikethrough, textDecoration: "line-through", color: syntaxComment },
+    { tag: t.strikethrough, textDecoration: "line-through", color: vars.syntaxComment },
 
     // Code
     {
         tag: t.monospace,
         fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace",
-        backgroundColor: `${editorText}15`,
+        backgroundColor: `${vars.editorText}15`,
         padding: "2px 4px",
         borderRadius: "3px",
         fontSize: "0.9em"
     },
 
     // Links
-    { tag: t.link, color: syntaxLink, textDecoration: "underline" },
-    { tag: t.url, color: syntaxFunction },
+    { tag: t.link, color: vars.syntaxLink, textDecoration: "underline" },
+    { tag: t.url, color: vars.syntaxFunction },
 
     // Lists
-    { tag: t.list, color: syntaxKeyword },
+    { tag: t.list, color: vars.syntaxKeyword },
 
     // Quotes
     {
         tag: t.quote,
-        color: syntaxComment,
+        color: vars.syntaxComment,
         fontStyle: "italic",
-        borderLeft: `4px solid ${syntaxComment}`,
+        borderLeft: `4px solid ${vars.syntaxComment}`,
         paddingLeft: "12px",
         marginLeft: "4px"
     },
@@ -60,7 +72,7 @@ const markdownHighlightStyle = HighlightStyle.define([
     // Code blocks
     {
         tag: t.contentSeparator,
-        backgroundColor: `${editorText}10`,
+        backgroundColor: `${vars.editorText}10`,
         padding: "8px 12px",
         borderRadius: "4px",
         fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace",
@@ -68,27 +80,33 @@ const markdownHighlightStyle = HighlightStyle.define([
     },
 
     // Syntax highlighting
-    { tag: t.keyword, color: syntaxKeyword },
-    { tag: t.string, color: syntaxString },
-    { tag: t.comment, color: syntaxComment },
-    { tag: t.function(t.variableName), color: syntaxFunction },
-    { tag: t.variableName, color: editorText },
+    { tag: t.keyword, color: vars.syntaxKeyword },
+    { tag: t.string, color: vars.syntaxString },
+    { tag: t.comment, color: vars.syntaxComment },
+    { tag: t.function(t.variableName), color: vars.syntaxFunction },
+    { tag: t.variableName, color: vars.editorText },
 
     // Markdown syntax characters (make them less prominent)
-    { tag: t.processingInstruction, color: syntaxComment, opacity: "0.7" },
-    { tag: t.punctuation, color: syntaxComment, opacity: "0.7" },
-]);
+    { tag: t.processingInstruction, color: vars.syntaxComment, opacity: "0.7" },
+    { tag: t.punctuation, color: vars.syntaxComment, opacity: "0.7" },
+  ]);
+}
 
-var customTheme = EditorView.theme({
+/**
+ * Create custom theme based on current CSS variables
+ */
+function createCustomTheme() {
+  const vars = getCSSVariables();
+  return EditorView.theme({
     // Basic editor styling
     "&": {
-        color: editorText,
-        backgroundColor: editorBackground,
+        color: vars.editorText,
+        backgroundColor: vars.editorBackground,
         overflowX: "hidden", // Prevent horizontal scrolling
     },
     ".cm-content": {
         padding: "0",
-        caretColor: editorCursor,
+        caretColor: vars.editorCursor,
         fontSize: "14px",
         lineHeight: "1.6",
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -107,12 +125,12 @@ var customTheme = EditorView.theme({
         overflowX: "hidden", // Prevent horizontal scrolling on scroller
     },
     ".cm-cursor": {
-        borderLeft: `2px solid ${editorCursor}`,
+        borderLeft: `2px solid ${vars.editorCursor}`,
         borderRight: "none",
         backgroundColor: "transparent",
     },
     ".cm-selectionBackground": {
-        backgroundColor: editorSelection,
+        backgroundColor: vars.editorSelection,
     },
 
     // Markdown-specific styling
@@ -192,15 +210,15 @@ var customTheme = EditorView.theme({
 
     // Wiki link syntax styling (for raw [[noteID]] text)
     ".cm-wiki-link-syntax": {
-        color: syntaxComment,
+        color: vars.syntaxComment,
         opacity: "0.7",
         fontStyle: "italic",
     },
 
     // Autocompletion popup styling
     ".cm-tooltip-autocomplete": {
-        backgroundColor: editorBackground,
-        border: `1px solid ${editorText}30`,
+        backgroundColor: vars.editorBackground,
+        border: `1px solid ${vars.editorText}30`,
         borderRadius: "8px",
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
         fontSize: "13px",
@@ -228,44 +246,44 @@ var customTheme = EditorView.theme({
     },
 
     ".cm-tooltip-autocomplete > ul > li:hover": {
-        backgroundColor: `${editorText}15`,
+        backgroundColor: `${vars.editorText}15`,
     },
 
     ".cm-tooltip-autocomplete > ul > li[aria-selected]": {
-        backgroundColor: `${syntaxKeyword}20`,
-        color: editorText,
+        backgroundColor: `${vars.syntaxKeyword}20`,
+        color: vars.editorText,
     },
 
     ".cm-tooltip-autocomplete .cm-completionLabel": {
-        color: editorText,
+        color: vars.editorText,
         fontWeight: "500",
         flex: "1",
     },
 
     ".cm-tooltip-autocomplete .cm-completionDetail": {
-        color: syntaxComment,
+        color: vars.syntaxComment,
         fontSize: "11px",
         fontStyle: "italic",
         marginLeft: "8px",
     },
 
     ".cm-tooltip-autocomplete .cm-completionInfo": {
-        backgroundColor: `${editorBackground}f0`,
-        border: `1px solid ${editorText}20`,
+        backgroundColor: `${vars.editorBackground}f0`,
+        border: `1px solid ${vars.editorText}20`,
         borderRadius: "6px",
         padding: "8px",
         fontSize: "12px",
-        color: syntaxComment,
+        color: vars.syntaxComment,
         maxWidth: "250px",
     },
 
     // Custom styling for note link suggestions
     ".cm-tooltip-autocomplete .cm-completionLabel[data-type='note']": {
-        color: syntaxFunction,
+        color: vars.syntaxFunction,
     },
 
     ".cm-tooltip-autocomplete .cm-completionLabel[data-type='note-id']": {
-        color: syntaxString,
+        color: vars.syntaxString,
     },
 
     // Checkbox styling for live preview
@@ -284,15 +302,15 @@ var customTheme = EditorView.theme({
         margin: "0",
         cursor: "pointer",
         appearance: "none",
-        border: `2px solid ${syntaxComment}`,
+        border: `2px solid ${vars.syntaxComment}`,
         borderRadius: "3px",
         backgroundColor: "transparent",
         transition: "all 0.15s ease",
     },
 
     ".cm-checkbox-widget input[type='checkbox']:checked": {
-        backgroundColor: syntaxKeyword,
-        borderColor: syntaxKeyword,
+        backgroundColor: vars.syntaxKeyword,
+        borderColor: vars.syntaxKeyword,
     },
 
     ".cm-checkbox-widget input[type='checkbox']:checked::before": {
@@ -301,12 +319,12 @@ var customTheme = EditorView.theme({
         left: "2px",
         top: "-1px",
         fontSize: "11px",
-        color: editorBackground,
+        color: vars.editorBackground,
         fontWeight: "bold",
     },
 
     ".cm-checkbox-widget input[type='checkbox']:hover": {
-        borderColor: syntaxKeyword,
+        borderColor: vars.syntaxKeyword,
         transform: "scale(1.05)",
     },
 
@@ -319,8 +337,13 @@ var customTheme = EditorView.theme({
     ".cm-checkbox-line-checked": {
         textDecoration: "line-through",
         opacity: "0.6",
-        color: syntaxComment,
+        color: vars.syntaxComment,
     },
-});
+  });
+}
 
-export { markdownHighlightStyle, customTheme };
+// Create initial instances for backward compatibility
+const markdownHighlightStyle = createMarkdownHighlightStyle();
+const customTheme = createCustomTheme();
+
+export { createMarkdownHighlightStyle, createCustomTheme, markdownHighlightStyle, customTheme };

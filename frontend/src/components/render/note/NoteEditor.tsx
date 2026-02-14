@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useCallback } from "react";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Compartment } from "@codemirror/state";
 import { EditorView, ViewUpdate } from "@codemirror/view";
 import { syntaxHighlighting } from "@codemirror/language";
 import { autocompletion } from "@codemirror/autocomplete";
@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 
 import { baseExtensions } from "@/editor/extensions";
 import { hideMarkdownSyntax } from "@/editor/hideSyntax";
-import { markdownHighlightStyle, customTheme } from "@/editor/theme";
+import { createMarkdownHighlightStyle, createCustomTheme } from "@/editor/theme";
 import { createCombinedLinkCompletion } from "@/editor/linkCompletion";
 import { createLinkDecorations } from "@/editor/linkDecorations";
 import { createWikiLinkDisplay } from "@/editor/wikiLinkDisplay";
@@ -16,9 +16,10 @@ import { createWikiLinkSyntax } from "@/editor/wikiLinkSyntax";
 import { checkboxPlugin } from "@/editor/checkboxExtension";
 import { tablePlugin } from "@/editor/tableExtension";
 import { RootState } from "@/store";
-import { useAppDispatch } from "@/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { openTab } from "@/store/slices/tabsSlice";
 import { Entity } from "@/models/Entity";
+import { selectCurrentTheme } from "@/store/selectors/themeSelectors";
 
 
 interface Props {
@@ -41,9 +42,16 @@ const NoteEditor: React.FC<Props> = ({
   const notesRef = useRef<Record<string, Entity>>({});
   const currentNoteIdRef = useRef<string | undefined>(currentNoteId);
 
+  // Create compartments for theme-related extensions
+  const themeCompartment = useRef(new Compartment());
+  const highlightCompartment = useRef(new Compartment());
+
   // Get notes from Redux store
   const notesState = useSelector((state: RootState) => state.entities);
   const dispatch = useAppDispatch();
+
+  // Get current theme to track changes
+  const currentTheme = useAppSelector(selectCurrentTheme);
 
   // Keep refs updated
   useEffect(() => {
@@ -91,12 +99,12 @@ const NoteEditor: React.FC<Props> = ({
         checkboxPlugin,
         // TanStack table rendering
         tablePlugin,
-        syntaxHighlighting(markdownHighlightStyle),
+        highlightCompartment.current.of(syntaxHighlighting(createMarkdownHighlightStyle())),
         hideMarkdownSyntax,
         wikiLinkSyntax, // Add wiki link syntax styling (for raw text)
         wikiLinkDisplay, // Add wiki link display (should come before linkDecorations)
         updateListener,
-        customTheme,
+        themeCompartment.current.of(createCustomTheme()),
         linkDecorations,
         autocompletion({ override: [linkCompletion] }), // Add link completion
       ],
@@ -128,6 +136,39 @@ const NoteEditor: React.FC<Props> = ({
       viewRef.current.dispatch(transaction);
     }
   }, [initialText]);
+
+  // Update editor theme when theme changes
+  useEffect(() => {
+    if (viewRef.current && currentTheme) {
+      // Use double requestAnimationFrame to ensure CSS variables are updated before reading them
+      // First frame: CSS variables are applied by useTheme.ts
+      // Second frame: We read the updated CSS variables
+      let frameId2: number;
+      const frameId1 = requestAnimationFrame(() => {
+        frameId2 = requestAnimationFrame(() => {
+          if (!viewRef.current) return;
+
+          // Reconfigure the editor with new theme (reads fresh CSS variables)
+          const newHighlightStyle = createMarkdownHighlightStyle();
+          const newCustomTheme = createCustomTheme();
+
+          viewRef.current.dispatch({
+            effects: [
+              // Reconfigure syntax highlighting
+              highlightCompartment.current.reconfigure(syntaxHighlighting(newHighlightStyle)),
+              // Reconfigure theme
+              themeCompartment.current.reconfigure(newCustomTheme),
+            ]
+          });
+        });
+      });
+
+      return () => {
+        cancelAnimationFrame(frameId1);
+        if (frameId2) cancelAnimationFrame(frameId2);
+      };
+    }
+  }, [currentTheme]);
 
   return (
     <div
