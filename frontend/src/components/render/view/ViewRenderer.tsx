@@ -175,12 +175,12 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({ entityID }) => {
           )}
         </div>
 
-        <div className="flex items-center gap-2 theme-explorer-background theme-explorer-item-text">
+        <div className="flex items-center gap-2">
           {/* Add Widget Button (only in config mode) */}
           {mode === ViewMode.CONFIG && (
             <AddWidgetButton
               onAddWidget={handleAddWidget}
-              className="theme-explorer-background theme-explorer-item-text"
+              className=""
             />
           )}
 

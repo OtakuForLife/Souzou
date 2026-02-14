@@ -40,7 +40,7 @@ export default function AppSidebar({ onToggleNoteTree, isNoteTreeVisible }: AppS
   return (
     <Sidebar
       collapsible="none"
-      className="min-w-11 !w-11 theme-nav-sidebar-background theme-nav-sidebar-text"
+      className="min-w-11 !w-11 theme-bg-surface-0 theme-text-primary"
     >
       <SidebarHeader>
         <SidebarMenu>

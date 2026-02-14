@@ -8,14 +8,14 @@
     width: 100%;
     height: 100vh;
     /* Set background to match theme or fallback to black */
-    background-color: var(--color-main-content-background, #000000);
+    background-color: var(--color-surface-0, #000000);
   }
 
   #root {
     width: 100%;
     height: 100vh;
     overflow: hidden;
-    background-color: var(--color-main-content-background, #000000);
+    background-color: var(--color-surface-0, #000000);
   }
 
   :root {
@@ -24,29 +24,35 @@
     -moz-osx-font-smoothing: grayscale;
 
     /* Default theme colors */
-    --color-nav-sidebar-background: #111827;
-    --color-nav-sidebar-text: #adadad;
+    --color-surface-0: #111827;
+    --color-surface-0-hover: #111827;
+    --color-surface-1: #1f2937;
+    --color-surface-1-hover: #1f2937;
+    --color-surface-2: #19202D;
+    --color-surface-2-hover: #19202D;
 
-    --color-explorer-background: #1f2937;
-    --color-explorer-item-background-hover: #3a4657;
-    --color-explorer-item-text: #adadad;
-    --color-explorer-item-text-hover: #adadad;
-
-    --color-main-tabs-background: #1f2937;
-
-    --color-main-tab-active-background: #19202D;
-    --color-main-tab-active-background-hover: #19202D;
-    --color-main-tab-active-text: #adadad;
-    --color-main-tab-active-text-hover: #adadad;
+    --color-text-primary: #adadad;
+    --color-text-primary-hover: #adadad;
+    --color-text-secondary: #adadad;
+    --color-text-secondary-hover: #adadad;
+    --color-text-tertiary: #adadad;
+    --color-text-tertiary-hover: #adadad;
     
-    --color-main-tab-inactive-background: #19202D;
-    --color-main-tab-inactive-background-hover: #19202D;
-    --color-main-tab-inactive-text: #adadad;
-    --color-main-tab-inactive-text-hover: #adadad;
+    --color-tab-active: #19202D;
+    --color-tab-active-hover: #19202D;
+    --color-tab-inactive: #19202D;
+    --color-tab-inactive-hover: #222b3d;
 
-    --color-main-content-background: #111827;
-    --color-main-content-title: #adadad;
-    --color-main-content-text: #adadad;
+    --color-border-primary: #adadad;
+
+    --color-button-primary: #111827;
+    --color-button-primary-hover: #111827;
+    --color-button-primary-clicked: #111827;
+
+    --color-button-alert: #111827;
+    --color-button-alert-hover: #111827;
+    --color-button-alert-clicked: #111827;
+
 
     /* Editor theme colors */
     --color-editor-selection: #3b82f620;
@@ -64,78 +70,102 @@
 
 @layer utilities {
   /* Theme-specific utility classes with custom prefix */
-  .theme-nav-sidebar-background {
-    background-color: var(--color-nav-sidebar-background);
+  .theme-bg-surface-0 {
+    background-color: var(--color-surface-0);
   }
 
-  .theme-nav-sidebar-text {
-    color: var(--color-nav-sidebar-text);
+  .theme-bg-surface-1 {
+    background-color: var(--color-surface-1);
   }
 
-  .theme-explorer-background {
-    background-color: var(--color-explorer-background);
+  .theme-bg-surface-2 {
+    background-color: var(--color-surface-2);
   }
 
-  .theme-explorer-item-background:hover {
-    background-color: var(--color-explorer-item-background-hover);
+  .theme-bg-surface-0-hover:hover {
+    background-color: var(--color-surface-0-hover);
   }
 
-  /* Drag-over styling for tree items */
-  .drag-over .theme-explorer-item-background {
-    background-color: var(--color-explorer-background) !important;
+  .theme-bg-surface-1-hover:hover {
+    background-color: var(--color-surface-1-hover);
   }
 
-  .theme-explorer-item-text {
-    color: var(--color-explorer-item-text);
+  .theme-bg-surface-2-hover:hover {
+    background-color: var(--color-surface-2-hover);
   }
 
-  .theme-explorer-item-text-hover {
-    color: var(--color-explorer-item-text-hover);
+  .theme-text-primary {
+    color: var(--color-text-primary);
   }
 
-  .theme-main-tabs-background {
-    background-color: var(--color-main-tabs-background);
+  .theme-text-primary-hover:hover {
+    color: var(--color-text-primary-hover);
   }
 
-  .theme-main-tab-background:not([data-state="active"]) {
-    background-color: var(--color-main-tab-inactive-background);
-  }
-  .theme-main-tab-text:not([data-state="active"]) {
-    color: var(--color-main-tab-inactive-text);
+  .theme-text-secondary {
+    color: var(--color-text-secondary);
   }
 
-  .theme-main-tab-text:not([data-state="active"]):hover {
-    color: var(--color-main-tab-inactive-text-hover);
+  .theme-text-secondary-hover:hover {
+    color: var(--color-text-secondary-hover);
   }
 
-  .theme-main-tab-text[data-state="active"]  {
-    color: var(--color-main-tab-active-text);
+  .theme-text-tertiary {
+    color: var(--color-text-tertiary);
   }
 
-  .theme-main-tab-background[data-state="active"] {
-    background-color: var(--color-main-tab-active-background);
+  .theme-text-tertiary-hover:hover {
+    color: var(--color-text-tertiary-hover);
   }
 
-  .theme-main-tab-background:not([data-state="active"]):hover {
-    background-color: var(--color-main-tab-inactive-background-hover);
+  .theme-tab {
+    background-color: var(--color-tab-active);
+    color: var(--color-text-primary);
   }
 
-
-  .theme-main-content-background {
-    background-color: var(--color-main-content-background);
-  }
-  .theme-main-content-text {
-    color: var(--color-main-content-text);
+  .theme-tab:hover {
+    background-color: var(--color-tab-active-hover);
+    color: var(--color-text-primary-hover);
   }
 
-  /* Editor theme utility classes */
-  .theme-editor-background {
-    background-color: var(--color-main-content-background);
+  .theme-tab:not([data-state="active"]) {
+    background-color: var(--color-tab-inactive);
+    color: var(--color-text-secondary);
   }
 
-  .theme-editor-text {
-    color: var(--color-main-content-text);
+  .theme-tab:not([data-state="active"]):hover {
+    background-color: var(--color-tab-inactive-hover);
+    color: var(--color-text-secondary-hover);
   }
+
+  .theme-border-primary {
+    border-color: var(--color-border-primary);
+  }
+
+  .theme-button-primary {
+    color: var(--color-button-primary);
+  }
+
+  .theme-button-primary-hover {
+    color: var(--color-button-primary-hover);
+  }
+
+  .theme-button-primary-clicked {
+    color: var(--color-button-primary-clicked);
+  }
+
+  .theme-button-alert {
+    color: var(--color-button-alert);
+  }
+
+  .theme-button-alert-hover {
+    color: var(--color-button-alert-hover);
+  }
+
+  .theme-button-alert-clicked {
+    color: var(--color-button-alert-clicked);
+  }
+
 
   /* Table extension styles */
   .cm-table-hidden {

@@ -87,7 +87,7 @@ const GraphWidgetConfigDialog: React.FC<GraphWidgetConfigProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose || onCancel}>
-      <DialogContent className="max-w-md theme-explorer-background theme-explorer-item-text">
+      <DialogContent className="max-w-md theme-bg-surface-1 theme-text-secondary">
         <DialogHeader>
           <DialogTitle>Configure Graph Widget</DialogTitle>
         </DialogHeader>

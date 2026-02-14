@@ -9,13 +9,13 @@ import {
     DialogFooter,
     DialogTitle,
     DialogTrigger,
+    DialogClose,
 } from "./ui/dialog"
 import {Button} from "./ui/button";
 import { Label } from "./ui/label";
 import { log } from "@/lib/logger";
 
 import { Input } from "./ui/input";
-import { DialogClose } from "./ui/dialog";
 import { getBackendURL, setBackendURL, getSyncEnabled, setSyncEnabled } from "@/lib/settings";
 import { ServerHealthStatusType, useServerHealth } from "@/hooks/useServerHealth";
 import { Checkbox } from "./ui/checkbox";
@@ -97,7 +97,7 @@ export default function SettingsDialog(){
             <DialogTrigger className="w-full h-full">
                 <Settings className="w-full h-full p-1 cursor-pointer"/>
             </DialogTrigger>
-            <DialogContent className="theme-explorer-background theme-explorer-item-text">
+            <DialogContent className="theme-bg-surface-1 theme-text-secondary">
                 <DialogHeader>
                     <DialogTitle>Settings</DialogTitle>
                     <DialogDescription>

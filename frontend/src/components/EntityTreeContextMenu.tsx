@@ -52,11 +52,11 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                     {children}
                 </div>
             </ContextMenuTrigger>
-            <ContextMenuContent className="w-64 theme-explorer-background theme-explorer-item-text">
+            <ContextMenuContent className="w-64 theme-bg-surface-1 theme-text-secondary">
                 <ContextMenuSub>
-                    <ContextMenuSubTrigger inset className="cursor-pointer theme-explorer-item-background theme-explorer-item-text">New</ContextMenuSubTrigger>
-                    <ContextMenuSubContent className="w-48 theme-explorer-background theme-explorer-item-text">
-                        <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text" onSelect={async ()=>{
+                    <ContextMenuSubTrigger inset className="cursor-pointer">New</ContextMenuSubTrigger>
+                    <ContextMenuSubContent className="w-48">
+                        <ContextMenuItem className="cursor-pointer" onSelect={async ()=>{
                             const result = await dispatch(createEntity({
                                 title: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_TITLE,
                                 content: CONTENT_TYPE_CONFIG.NOTE.DEFAULT_CONTENT,
@@ -71,7 +71,7 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                             Note
                             <ContextMenuShortcut>⌘[</ContextMenuShortcut>
                         </ContextMenuItem>
-                        <ContextMenuItem className="cursor-pointer theme-explorer-item-background theme-explorer-item-text" onSelect={async ()=>{
+                        <ContextMenuItem className="cursor-pointer" onSelect={async ()=>{
                             const result = await dispatch(createEntity({
                                 title: CONTENT_TYPE_CONFIG.VIEW.DEFAULT_TITLE,
                                 content: CONTENT_TYPE_CONFIG.VIEW.DEFAULT_CONTENT,
@@ -89,7 +89,7 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                         </ContextMenuItem>
                         <ContextMenuSeparator />
                         <ContextMenuItem
-                            className="cursor-pointer theme-explorer-item-background theme-explorer-item-text"
+                            className="cursor-pointer"
                             onSelect={() => openFileUpload(note.id)}
                         >
                             Upload Media
@@ -97,7 +97,7 @@ export function NoteTreeItemContextMenu({children, note}: NoteTreeContextMenuPro
                     </ContextMenuSubContent>
                 </ContextMenuSub>
                 <ContextMenuSeparator />
-                <ContextMenuItem inset className="cursor-pointer theme-explorer-item-background theme-explorer-item-text" onSelect={()=>{
+                <ContextMenuItem inset className="cursor-pointer" onSelect={()=>{
                     // Close the tab if it's open
                     dispatch(closeTab(note));
 

@@ -173,7 +173,7 @@ function Home() {
     };
 
     return (
-        <div className="flex w-full h-screen theme-main-content-background">
+        <div className="flex w-full h-screen">
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]} sensors={sensors}>
                 <SidebarProvider>
                     <AppSidebar
@@ -187,14 +187,14 @@ function Home() {
                             <ResizablePanelGroup direction="horizontal" className="h-full w-full">
                                 <ResizablePanel
                                     ref={navigationRef}
-                                    className="theme-explorer-background"
+                                    className="theme-bg-surface-1 theme-text-secondary"
                                     minSize={10}
                                     maxSize={25}
                                     defaultSize={15}
                                     collapsible={false}
                                 >
-                                    <div className="h-full flex flex-col theme-explorer-item-text">
-                                        <div className="flex items-center justify-between px-2 py-1.5 border-b theme-explorer-background">
+                                    <div className="h-full flex flex-col">
+                                        <div className="flex items-center justify-between px-2 py-1.5 border-b">
                                             <span className="text-sm font-semibold">Notes</span>
                                             <Button
                                                 variant="ghost"
@@ -211,8 +211,8 @@ function Home() {
                                         </div>
                                     </div>
                                 </ResizablePanel>
-                                <ResizableHandle className="w-1 theme-explorer-background"/>
-                                <ResizablePanel className="theme-main-content-background" defaultSize={85}>
+                                <ResizableHandle className="w-1"/>
+                                <ResizablePanel className="theme-bg-surface-0 theme-text-primary" defaultSize={85}>
                                     <ContentFrame/>
                                 </ResizablePanel>
                             </ResizablePanelGroup>
@@ -220,18 +220,18 @@ function Home() {
 
                         {/* Pinned Mode but Hidden */}
                         {isNoteTreePinned && !isNoteTreeVisible && (
-                            <div className="h-full w-full theme-main-content-background">
+                            <div className="h-full w-full">
                                 <ContentFrame/>
                             </div>
                         )}
 
                         {/* Floating Mode: Overlay */}
                         {!isNoteTreePinned && (
-                            <div className="relative h-full w-full theme-main-content-background">
+                            <div className="relative h-full w-full">
                                 <ContentFrame/>
                                 {isNoteTreeVisible && (
-                                    <div className="absolute top-0 left-0 h-full w-64 z-50 theme-explorer-background border-r shadow-lg flex flex-col">
-                                        <div className="flex items-center justify-between px-2 py-1.5 border-b theme-explorer-background theme-explorer-item-text">
+                                    <div className="absolute top-0 left-0 h-full w-64 z-50 border-r shadow-lg flex flex-col">
+                                        <div className="flex items-center justify-between px-2 py-1.5 border-b">
                                             <span className="text-sm font-semibold">Notes</span>
                                             <Button
                                                 variant="ghost"
@@ -257,14 +257,14 @@ function Home() {
                         <>
                             {/* Note tree item drag overlay */}
                             {activeDrag.data.current?.type === "treeitem" && (
-                                <div className="w-[150px] p-1 truncate rounded border border-lg border-black-100 theme-explorer-background theme-explorer-item-text opacity-70">
+                                <div className="w-[150px] p-1 truncate rounded border border-lg border-black-100 opacity-70">
                                     <span>{entities[activeDrag.data.current?.note]?.title}</span>
                                 </div>
                             )}
 
                             {/* Tab drag overlay */}
                             {activeDrag.data.current?.type === "tab" && (
-                                <div className="truncate border border-blue-500 rounded w-[150px] p-2 theme-explorer-background theme-explorer-item-text opacity-70">
+                                <div className="truncate border border-blue-500 rounded w-[150px] p-2 opacity-70">
                                     <span className="text-sm font-medium">
                                         {[EntityType.NOTE, EntityType.VIEW].includes(activeDrag.data.current?.objectType)
                                             ? entities[activeDrag.data.current?.objectID]?.title

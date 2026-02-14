@@ -12,9 +12,7 @@ import {
 } from '@dnd-kit/core';
 import {Active, Over} from '@dnd-kit/core/dist/store/types';
 
-
 import {NoteTreeItemContextMenu} from '@/components/EntityTreeContextMenu';
-
 
 import { useAppDispatch } from '@/hooks';
 import { EntityState, saveEntity } from '@/store/slices/entitySlice';
@@ -94,7 +92,7 @@ function VerticalLine({depth, maxDepth, lineSize, depthSize, children}: Vertical
   if(maxDepth>0){
       return (
         <div className='pl-3'>
-          <div className='border-l' style={{borderLeftColor: 'var(--color-explorer-item-text)', borderLeftWidth: lineSize, paddingLeft: `${depthSize}px` }}>
+          <div className='border-l' style={{borderLeftColor: 'var(--color-text-secondary)', borderLeftWidth: lineSize, paddingLeft: `${depthSize}px` }}>
             {depth>=maxDepth-1? children: <VerticalLine depth={depth+1} maxDepth={maxDepth} lineSize={lineSize} depthSize={depthSize}>{children}</VerticalLine>}
           </div>
         </div>
@@ -170,7 +168,7 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
           <TreeItemDraggable noteID={note.id} onDragStart={onDragStart}>
             <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
               <div className={cn(
-                'w-full theme-explorer-item-background theme-explorer-item-text rounded-md',
+                'w-full theme-bg-surface-1 theme-bg-surface-1-hover theme-text-secondary theme-text-secondary-hover rounded-md',
                 hasPendingOperation && 'opacity-75'
               )}>
                 <VerticalLine depth={0} maxDepth={depth} lineSize={1} depthSize={depthSize}>
@@ -211,11 +209,11 @@ function NoteTreeItem({ noteID, depth=0 }: NoteTreeItemProps) {
         <TreeItemDroppable noteID={note.id}>
           <TreeItemDraggable noteID={note.id} onDragStart={onDragStart}>
                 <div className={cn(
-                  'w-full theme-explorer-item-background rounded-md',
+                  'w-full theme-bg-surface-1 theme-bg-surface-1-hover theme-text-secondary theme-text-secondary-hover rounded-md',
                   hasPendingOperation && 'opacity-75'
                 )}>
                   <VerticalLine depth={0} maxDepth={depth} lineSize={1} depthSize={depthSize}>
-                    <div className="pl-2 flex flex-shrink items-center w-full h-7 theme-explorer-item-text">
+                    <div className="pl-2 flex flex-shrink items-center w-full h-7">
                         <StickyNote className="flex-none items-center w-4 h-4 mr-2"/>
                         <div className='cursor-pointer w-full truncate ... mr-1 flex items-center' onClick={onClick}>
                           <span className='text-xs'>{note.title}</span>

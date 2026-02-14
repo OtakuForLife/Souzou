@@ -25,7 +25,7 @@ export const TagBadge: React.FC<TagBadgeProps> = ({
   return (
     <Badge
       variant="secondary"
-      className={`inline-flex items-center gap-1 cursor-pointer hover:opacity-80 ${sizeClasses[size]} ${className} theme-explorer-item-text`}
+      className={`inline-flex items-center gap-1 cursor-pointer hover:opacity-80 ${sizeClasses[size]} ${className}`}
       style={{ 
         backgroundColor: `${tag.color}30`, 
         borderColor: tag.color,

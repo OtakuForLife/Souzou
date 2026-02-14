@@ -23,7 +23,8 @@ import {
   selectCustomizationDraft,
   selectEffectiveColors,
 } from '@/store/selectors/themeSelectors';
-import { applyTheme, applyColors, getNestedValue } from '@/utils/themeManager';
+import { applyTheme, applyColors } from '@/utils/themeManager';
+import { getByPath } from '@/utils/themeSchemaUtils';
 import { ThemeColors, Theme } from '@/types/themeTypes';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { STORAGE_KEYS } from '@/config/constants';
@@ -80,7 +81,7 @@ export function useTheme() {
       isApplyingTheme.current = true;
 
       const frameId = requestAnimationFrame(() => {
-        applyColors(effectiveColors);
+        applyColors(effectiveColors, currentTheme?.id || '');
         isApplyingTheme.current = false;
       });
 
@@ -144,6 +145,7 @@ export function useTheme() {
       const result = await dispatch(createCustomTheme({
         name,
         colors: customizationDraft as ThemeColors,
+        custom: true,
       }));
 
       if (createCustomTheme.fulfilled.match(result)) {
@@ -168,12 +170,12 @@ export function useTheme() {
 
   const getCurrentColor = useCallback((path: string): string => {
     if (isCustomizing && customizationDraft) {
-      const draftColor = getNestedValue(customizationDraft, path);
+      const draftColor = getByPath(customizationDraft, path);
       if (draftColor) return draftColor;
     }
 
     if (currentTheme) {
-      const themeColor = getNestedValue(currentTheme.colors, path);
+      const themeColor = getByPath(currentTheme.colors, path);
       if (themeColor) return themeColor;
     }
 

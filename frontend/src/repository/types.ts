@@ -1,4 +1,4 @@
-// Offline-first repository contracts (skeleton)
+
 export type UUID = string;
 
 export type Cursor = string | null; // ISO timestamp cursor
@@ -40,9 +40,14 @@ export interface RepoTheme extends BaseSyncFields {
   updated_at?: string;
 }
 
+export enum OPERATIONS {
+  UPSERT = 'upsert',
+  DELETE = 'delete',
+}
+
 export type ChangeOp<T> =
-  | { op: 'upsert'; id: UUID; client_rev: number; data: Partial<T> & { id: UUID } }
-  | { op: 'delete'; id: UUID; client_rev: number };
+  | { op: OPERATIONS.UPSERT; id: UUID; client_rev: number; data: Partial<T> & { id: UUID } }
+  | { op: OPERATIONS.DELETE; id: UUID; client_rev: number };
 
 export interface PullChanges {
   cursor: string; // ISO
@@ -53,9 +58,15 @@ export interface PullChanges {
   };
 }
 
+export enum PushStatus {
+  APPLIED = 'applied',
+  CONFLICT = 'conflict',
+  ERROR = 'error',
+}
+
 export interface PushResultsItem {
   id: UUID;
-  status: 'applied' | 'conflict' | 'error';
+  status: PushStatus;
   rev?: number;
   server_updated_at?: string;
   error?: string;

@@ -1,16 +1,14 @@
 /**
- * Utilities for working with the theme color schema
+ * Utilities for working with the FLAT theme color schema
  */
 
 import { THEME_COLORS_SCHEMA, ThemeColors } from '@/types/themeTypes';
 
-export type SchemaPath = string[];
-
 export interface ColorField {
-  path: SchemaPath;
-  label: string;
-  fullLabel: string; // e.g., "Sidebar > Background"
-  default: string;
+  key: string; // e.g., 'nav-sidebar-background'
+  label: string; // e.g., 'Nav Sidebar Background'
+  section: string; // e.g., 'Nav Sidebar'
+  default: string; // e.g., '#ffffff'
 }
 
 /**
@@ -19,6 +17,7 @@ export interface ColorField {
 interface ColorFieldDefinition {
   type: 'color';
   label: string;
+  section: string;
   default: string;
 }
 
@@ -29,34 +28,27 @@ function isColorFieldDefinition(value: unknown): value is ColorFieldDefinition {
     'type' in value &&
     value.type === 'color' &&
     'label' in value &&
+    'section' in value &&
     'default' in value
   );
 }
 
 /**
- * Flatten schema into array of color fields for easy iteration and UI generation
+ * Convert flat schema into array of color fields for easy iteration and UI generation
  */
 export function flattenSchema(
-  schema: Record<string, unknown>,
-  parentPath: SchemaPath = [],
-  parentLabel: string[] = []
+  schema: Record<string, unknown> = THEME_COLORS_SCHEMA
 ): ColorField[] {
   const fields: ColorField[] = [];
 
   for (const [key, value] of Object.entries(schema)) {
-    const currentPath = [...parentPath, key];
-
     if (isColorFieldDefinition(value)) {
-      const currentLabel = [...parentLabel, value.label || key];
       fields.push({
-        path: currentPath,
-        label: value.label || key,
-        fullLabel: currentLabel.join(' > '),
+        key,
+        label: value.label,
+        section: value.section,
         default: value.default
       });
-    } else if (typeof value === 'object' && value !== null) {
-      // Recurse into nested object
-      fields.push(...flattenSchema(value as Record<string, unknown>, currentPath, parentLabel));
     }
   }
 
@@ -64,27 +56,28 @@ export function flattenSchema(
 }
 
 /**
- * Get nested value from object using path array
+ * Get value from flat object using key
  */
-export function getByPath(obj: any, path: SchemaPath): any {
-  return path.reduce((acc, key) => acc?.[key], obj);
+export function getByPath(obj: any, path: string[] | string): any {
+  // For flat schema, path is just a single key
+  const key = Array.isArray(path) ? path[0] : path;
+  return obj?.[key];
 }
 
 /**
- * Set nested value in object using path array (immutable)
+ * Set value in flat object using key (immutable)
  */
-export function setByPath(obj: any, path: SchemaPath, value: any): any {
-  if (path.length === 0) return value;
-  
-  const [head, ...tail] = path;
+export function setByPath(obj: any, path: string[] | string, value: any): any {
+  // For flat schema, path is just a single key
+  const key = Array.isArray(path) ? path[0] : path;
   return {
     ...obj,
-    [head]: setByPath(obj[head] || {}, tail, value)
+    [key]: value
   };
 }
 
 /**
- * Create default theme colors from schema
+ * Create default theme colors from flat schema
  */
 export function createDefaultThemeColors(schema: Record<string, unknown> = THEME_COLORS_SCHEMA): ThemeColors {
   const result: any = {};
@@ -92,8 +85,6 @@ export function createDefaultThemeColors(schema: Record<string, unknown> = THEME
   for (const [key, value] of Object.entries(schema)) {
     if (isColorFieldDefinition(value)) {
       result[key] = value.default;
-    } else if (typeof value === 'object' && value !== null) {
-      result[key] = createDefaultThemeColors(value as Record<string, unknown>);
     }
   }
 
@@ -101,46 +92,30 @@ export function createDefaultThemeColors(schema: Record<string, unknown> = THEME
 }
 
 /**
- * Group fields by top-level section (sidebar, explorer, main, editor)
+ * Group fields by section
  */
 export function groupFieldsBySection(fields: ColorField[]): Record<string, ColorField[]> {
   const groups: Record<string, ColorField[]> = {};
-  
+
   for (const field of fields) {
-    const section = field.path[0];
+    const section = field.section;
     if (!groups[section]) {
       groups[section] = [];
     }
     groups[section].push(field);
   }
-  
+
   return groups;
 }
 
 /**
- * Get section name from path (first element, capitalized)
+ * Get section name (just return the section as-is since it's already formatted)
  */
-export function getSectionName(path: SchemaPath): string {
-  if (path.length === 0) return '';
-  return path[0].charAt(0).toUpperCase() + path[0].slice(1);
-}
-
-/**
- * Get subsection path (everything except first element)
- * e.g., ['editor', 'syntax', 'keyword'] -> ['syntax', 'keyword']
- */
-export function getSubsectionPath(path: SchemaPath): SchemaPath {
-  return path.slice(1);
-}
-
-/**
- * Format path as readable label
- * e.g., ['editor', 'syntax', 'keyword'] -> 'Syntax > Keyword'
- */
-export function formatPathLabel(path: SchemaPath, skipFirst: boolean = false): string {
-  const pathToFormat = skipFirst ? path.slice(1) : path;
-  return pathToFormat
-    .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' > ');
+export function getSectionName(sectionOrPath: string[] | string): string {
+  // For backwards compatibility, handle both array and string
+  if (Array.isArray(sectionOrPath)) {
+    return sectionOrPath[0] || '';
+  }
+  return sectionOrPath;
 }
 

@@ -12,7 +12,7 @@ import {
 
 interface ThemeColorEditorProps {
   colors: Partial<ThemeColors>;
-  onColorChange: (path: string[], value: string) => void;
+  onColorChange: (key: string, value: string) => void;
   showScrollArea?: boolean;
   scrollHeight?: string;
 }
@@ -31,21 +31,21 @@ export const ThemeColorEditor: React.FC<ThemeColorEditorProps> = ({
     <div className="space-y-3 pr-4">
       {Object.entries(fieldsBySection).map(([section, fields]) => (
         <div key={section}>
-          <Label className="text-xs font-semibold">{getSectionName([section])}</Label>
+          <Label className="text-xs font-semibold">{getSectionName(section)}</Label>
           <div className="grid grid-cols-2 gap-2 mt-1">
             {fields.map(field => (
-              <div key={field.path.join('.')}>
+              <div key={field.key}>
                 <Label className="text-xs text-muted-foreground">{field.label}</Label>
                 <div className="flex gap-1">
                   <Input
                     type="color"
-                    value={getByPath(colors, field.path) || field.default}
-                    onChange={(e) => onColorChange(field.path, e.target.value)}
+                    value={getByPath(colors, field.key) || field.default}
+                    onChange={(e) => onColorChange(field.key, e.target.value)}
                     className="w-10 h-7 p-0.5"
                   />
                   <Input
-                    value={getByPath(colors, field.path) || field.default}
-                    onChange={(e) => onColorChange(field.path, e.target.value)}
+                    value={getByPath(colors, field.key) || field.default}
+                    onChange={(e) => onColorChange(field.key, e.target.value)}
                     className="flex-1 text-xs h-7"
                   />
                 </div>

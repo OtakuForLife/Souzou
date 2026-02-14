@@ -8,7 +8,7 @@
 
 import { Theme, ThemeColors } from '@/types/themeTypes';
 import { log } from '@/lib/logger';
-import { getRepositoryDriver } from '@/repository';
+import { getRepositoryDriver, OPERATIONS } from '@/repository';
 import type { IRepositoryDriver, RepoTheme } from '@/repository/types';
 
 export interface CreateThemeRequest {
@@ -29,53 +29,34 @@ const PREDEFINED_THEMES: RepoTheme[] = [
     id: 'theme-light',
     name: 'Light',
     colors: {
-      'nav-sidebar': { background: '#acacacff', text: '#1f2937' },
-      explorer: {
-        background: '#c8c8c8ff',
-        item: {
-          'background-hover': '#f1f5f9',
-          text: '#1f2937',
-          'text-hover': '#1f2937'
-        }
-      },
-      main: {
-        tabs: { background: '#f8fafcff' },
-        tab: {
-          inactive: {
-            text: '#6b7280',
-            'text-hover': '#1f2937',
-            background: '#ffffff',
-            'background-hover': '#f1f5f9'
-          },
-          active: {
-            text: '#1f2937',
-            'text-hover': '#0f172a',
-            background: '#ffffff',
-            'background-hover': '#f8fafc'
-          }
-        },
-        content: {
-          background: '#acacacff',
-          title: '#1f2937',
-          text: '#1f2937',
-          editor: {
-            selection: '#dbeafe',
-            cursor: '#1f2937'
-          }
-        }
-      },
-      'entity-sidebar': { background: '#ffffff', text: '#1f2937' },
-      dialog: {
-        background: '#ffffff',
-        border: '#e5e7eb',
-        text: '#1f2937',
-        'text-danger': '#dc2626',
-        button: '#3b82f6',
-        'button-hover': '#2563eb',
-        'button-hover-border': '#1d4ed8',
-        'button-clicked': '#1e40af',
-        'button-clicked-border': '#1e3a8a'
-      }
+      '--color-surface-0': '#acacacff',
+      '--color-surface-0-hover': '#878787',
+      '--color-surface-1': '#c8c8c8ff',
+      '--color-surface-1-hover': '#f1f5f9',
+      '--color-surface-2': '#c8c8c8ff',
+      '--color-surface-2-hover': '#f1f5f9',
+
+      '--color-text-primary': '#1f2937',
+      '--color-text-primary-hover': '#1f2937',
+      '--color-text-secondary': '#6b7280',
+      '--color-text-secondary-hover': '#374151',
+      '--color-text-tertiary': '#9ca3af',
+      '--color-text-tertiary-hover': '#374151',
+
+      '--color-tab-active': '#acacacff',
+      '--color-tab-active-hover': '#acacacff',
+      '--color-tab-inactive': '#f8fafc',
+      '--color-tab-inactive-hover': '#f1f5f9',
+
+      '--color-border-primary': '#e5e7eb',
+
+      '--color-button-primary': '#3b82f6',
+      '--color-button-primary-hover': '#2563eb',
+      '--color-button-primary-clicked': '#1d4ed8',
+
+      '--color-button-alert': '#ef4444',
+      '--color-button-alert-hover': '#dc2626',
+      '--color-button-alert-clicked': '#b91c1c',
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -84,53 +65,34 @@ const PREDEFINED_THEMES: RepoTheme[] = [
     id: 'theme-dark',
     name: 'Dark',
     colors: {
-      'nav-sidebar': { background: '#111827', text: '#adadad' },
-      explorer: {
-        background: '#1f2937',
-        item: {
-          'background-hover': '#3a4657',
-          text: '#adadad',
-          'text-hover': '#adadad'
-        }
-      },
-      main: {
-        tabs: { background: '#1f2937' },
-        tab: {
-          inactive: {
-            text: '#adadad',
-            'text-hover': '#ffffff',
-            background: '#19202D',
-            'background-hover': '#374151'
-          },
-          active: {
-            text: '#ffffff',
-            'text-hover': '#ffffff',
-            background: '#111827',
-            'background-hover': '#1f2937'
-          }
-        },
-        content: {
-          background: '#111827',
-          title: '#ffffff',
-          text: '#adadad',
-          editor: {
-            selection: '#3b82f640',
-            cursor: '#adadad'
-          }
-        }
-      },
-      'entity-sidebar': { background: '#1f2937', text: '#adadad' },
-      dialog: {
-        background: '#1f2937',
-        border: '#374151',
-        text: '#adadad',
-        'text-danger': '#f87171',
-        button: '#3b82f6',
-        'button-hover': '#2563eb',
-        'button-hover-border': '#1d4ed8',
-        'button-clicked': '#1e40af',
-        'button-clicked-border': '#1e3a8a'
-      }
+      '--color-surface-0': '#111827',
+      '--color-surface-0-hover': '#19233a',
+      '--color-surface-1': '#293648',
+      '--color-surface-1-hover': '#314054', 
+      '--color-surface-2': '#19202D',
+      '--color-surface-2-hover': '#232d3f',
+
+      '--color-text-primary': '#adadad',
+      '--color-text-primary-hover': '#adadad',
+      '--color-text-secondary': '#adadad',
+      '--color-text-secondary-hover': '#adadad',
+      '--color-text-tertiary': '#adadad',
+      '--color-text-tertiary-hover': '#adadad',
+
+      '--color-tab-active': '#111827',
+      '--color-tab-active-hover': '#111827',
+      '--color-tab-inactive': '#19202D',
+      '--color-tab-inactive-hover': '#29354a',
+
+      '--color-border-primary': '#374151',
+
+      '--color-button-primary': '#3b82f6',
+      '--color-button-primary-hover': '#2563eb',  
+      '--color-button-primary-clicked': '#1d4ed8',
+
+      '--color-button-alert': '#f87171',
+      '--color-button-alert-hover': '#f87171',
+      '--color-button-alert-clicked': '#f87171',
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -139,53 +101,34 @@ const PREDEFINED_THEMES: RepoTheme[] = [
     id: 'theme-test',
     name: 'Test',
     colors: {
-      'nav-sidebar': { background: '#0051FF', text: '#000000' },
-      explorer: {
-        background: '#FF0000',
-        item: {
-          'background-hover': '#2AA11D',
-          text: '#000000',
-          'text-hover': '#21449F'
-        }
-      },
-      main: {
-        tabs: { background: '#00FFEA' },
-        tab: {
-          inactive: {
-            text: '#FFFFFF',
-            'text-hover': '#525252',
-            background: '#573A3A',
-            'background-hover': '#FF9696'
-          },
-          active: {
-            text: '#840000',
-            'text-hover': '#FF0000',
-            background: '#000000',
-            'background-hover': '#333333'
-          }
-        },
-        content: {
-          background: '#C6C618',
-          title: '#000000',
-          text: '#000000',
-          editor: {
-            selection: '#FFFFFF40',
-            cursor: '#000000'
-          }
-        }
-      },
-      'entity-sidebar': { background: '#474BB0', text: '#FFFFFF' },
-      dialog: {
-        background: '#FFFFFF',
-        border: '#000000',
-        text: '#000000',
-        'text-danger': '#FF0000',
-        button: '#0051FF',
-        'button-hover': '#0040CC',
-        'button-hover-border': '#003399',
-        'button-clicked': '#002266',
-        'button-clicked-border': '#001133'
-      }
+      '--color-surface-0': '#0051FF',
+      '--color-surface-0-hover': '#0051FF',
+      '--color-surface-1': '#FF0000',
+      '--color-surface-1-hover': '#FF0000',
+      '--color-surface-2': '#00FFEA',
+      '--color-surface-2-hover': '#00FFEA',
+
+      '--color-text-primary': '#000000',
+      '--color-text-primary-hover': '#000000',
+      '--color-text-secondary': '#000000',
+      '--color-text-secondary-hover': '#000000',
+      '--color-text-tertiary': '#000000',
+      '--color-text-tertiary-hover': '#000000',
+
+      '--color-tab-active': '#000000',
+      '--color-tab-active-hover': '#000000',
+      '--color-tab-inactive': '#000000',
+      '--color-tab-inactive-hover': '#000000',
+
+      '--color-border-primary': '#000000',
+
+      '--color-button-primary': '#0051FF',
+      '--color-button-primary-hover': '#0051FF',
+      '--color-button-primary-clicked': '#0051FF',
+
+      '--color-button-alert': '#FF0000',
+      '--color-button-alert-hover': '#FF0000',
+      '--color-button-alert-clicked': '#FF0000',
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -372,7 +315,7 @@ class ThemeService {
 
     // Queue for sync
     await this.driver!.enqueueTheme({
-      op: 'upsert',
+      op: OPERATIONS.UPSERT,
       id: themeId,
       client_rev: 1,
       data: repoTheme,
@@ -421,7 +364,7 @@ class ThemeService {
 
     // Queue for sync (only custom themes)
     await this.driver!.enqueueTheme({
-      op: 'upsert',
+      op: OPERATIONS.UPSERT,
       id: updateData.themeId,
       client_rev: client_rev,
       data: updatedTheme,
@@ -464,7 +407,7 @@ class ThemeService {
 
     // Queue for sync (only custom themes)
     await this.driver!.enqueueTheme({
-      op: 'delete',
+      op: OPERATIONS.DELETE,
       id: themeId,
       client_rev: client_rev,
     });

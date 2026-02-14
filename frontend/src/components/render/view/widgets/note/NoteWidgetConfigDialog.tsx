@@ -74,7 +74,7 @@ const NoteWidgetConfigDialog: React.FC<NoteWidgetConfigProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose || onCancel}>
-      <DialogContent className="max-w-md theme-explorer-background theme-explorer-item-text">
+      <DialogContent className="max-w-md theme-bg-surface-1 theme-text-secondary">
         <DialogHeader>
           <DialogTitle>Configure Note Widget</DialogTitle>
         </DialogHeader>
@@ -95,7 +95,7 @@ const NoteWidgetConfigDialog: React.FC<NoteWidgetConfigProps> = ({
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs">
               Select a note to display in this widget
             </p>
           </div>
@@ -111,7 +111,7 @@ const NoteWidgetConfigDialog: React.FC<NoteWidgetConfigProps> = ({
             />
             <Label htmlFor="isEditable">Allow Editing</Label>
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs">
             When enabled, the note content can be edited directly in the widget
           </p>
         </div>

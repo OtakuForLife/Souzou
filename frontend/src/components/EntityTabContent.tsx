@@ -56,8 +56,8 @@ function EntityTabContent({ entity, showSidePanel = true, showProperties = true,
             <ContentRenderer entityID={entity.id} />
           </div>
         </ResizablePanel>
-        <ResizableHandle className="h-1 theme-explorer-background" />
-        <ResizablePanel minSize={20} maxSize={60} defaultSize={40} collapsible={true} className="theme-explorer-background theme-explorer-item-text">
+        <ResizableHandle className="h-1 theme-bg-surface-1" />
+        <ResizablePanel minSize={20} maxSize={60} defaultSize={40} collapsible={true} className="theme-bg-surface-1 theme-text-secondary">
           <EntitySidePanel
             currentEntityId={entity.id}
             showProperties={showProperties}
@@ -89,8 +89,8 @@ function EntityTabContent({ entity, showSidePanel = true, showProperties = true,
           <ContentRenderer entityID={entity.id} />
         </div>
       </ResizablePanel>
-      <ResizableHandle className="w-1 theme-explorer-background" />
-      <ResizablePanel minSize={10} maxSize={30} defaultSize={20} collapsible={true} className="theme-explorer-background theme-explorer-item-text">
+      <ResizableHandle className="w-1" />
+      <ResizablePanel minSize={10} maxSize={30} defaultSize={20} collapsible={true} className="">
         <EntitySidePanel
           currentEntityId={entity.id}
           showProperties={showProperties}

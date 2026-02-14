@@ -50,11 +50,11 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({ theme, isActive, onSelect 
     setIsEditing(false);
   };
 
-  // Helper to update a color field by path
-  const updateColorField = (path: string[], value: string) => {
+  // Helper to update a color field by key
+  const updateColorField = (key: string, value: string) => {
     setEditedTheme({
       ...editedTheme,
-      colors: setByPath(editedTheme.colors, path, value)
+      colors: setByPath(editedTheme.colors, key, value)
     });
   };
 

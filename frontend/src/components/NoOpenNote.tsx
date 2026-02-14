@@ -21,7 +21,7 @@ export default function NoOpenNote(){
     };
 
     return (
-        <div className="h-full w-full flex justify-center items-center theme-main-content-background theme-main-content-text">
+        <div className="h-full w-full flex justify-center items-center">
             <Button variant="ghost" onClick={handleCreateNote}>
                 Create a Note
             </Button>

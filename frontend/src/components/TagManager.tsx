@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useAppDispatch } from '@/hooks';
-import { fetchTags, createTag } from '@/store/slices/tagSlice';
+import { createTag } from '@/store/slices/tagSlice';
 import {
   Dialog,
   DialogContent,
@@ -84,7 +84,7 @@ export const TagManager: React.FC<TagManagerProps> = ({ children }) => {
         {children}
       </DialogTrigger>
       <DialogContent
-        className="!max-w-none w-1/2 h-2/3 theme-explorer-background theme-explorer-item-text flex flex-col"
+        className="!max-w-none w-1/2 h-2/3 flex flex-col theme-bg-surface-1 theme-text-secondary"
       >
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export const TagManager: React.FC<TagManagerProps> = ({ children }) => {
 
           {/* Create Tag Form */}
           {showCreateForm && (
-            <div className="border rounded-lg p-4 space-y-4 bg-muted/20">
+            <div className="border rounded-lg p-4 space-y-4">
               <h4 className="font-medium">Create New Tag</h4>
 
               <div className="grid grid-cols-2 gap-4">
@@ -201,7 +201,7 @@ export const TagManager: React.FC<TagManagerProps> = ({ children }) => {
             {loading ? (
               <div className="text-center py-8">Loading tags...</div>
             ) : Object.keys(allTags).length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8">
                 No tags found. Create your first tag to get started.
               </div>
             ) : (

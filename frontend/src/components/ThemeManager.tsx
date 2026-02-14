@@ -65,11 +65,11 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
     }
   };
 
-  // Helper to update a color field by path
-  const updateColorField = (path: string[], value: string) => {
+  // Helper to update a color field by key
+  const updateColorField = (key: string, value: string) => {
     setNewTheme({
       ...newTheme,
-      colors: setByPath(newTheme.colors, path, value)
+      colors: setByPath(newTheme.colors, key, value)
     });
   };
 
@@ -87,7 +87,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
         {children}
       </DialogTrigger>
       <DialogContent
-        className="!max-w-none w-1/2 h-2/3 theme-explorer-background theme-explorer-item-text flex flex-col"
+        className="!max-w-none w-1/2 h-2/3 flex flex-col theme-bg-surface-1 theme-text-secondary"
       >
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
@@ -111,7 +111,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
 
           {/* Create Theme Form */}
           {showCreateForm && (
-            <div className="border rounded-lg p-4 space-y-4 bg-muted/20 max-h-96 overflow-y-auto">
+            <div className="border rounded-lg p-4 space-y-4 max-h-96 overflow-y-auto">
               <h4 className="font-medium">Create New Theme</h4>
 
               <div>
@@ -163,7 +163,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
                 {/* Predefined Themes */}
                 {predefinedThemes.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold mb-3 text-muted-foreground">Predefined Themes</h4>
+                    <h4 className="text-sm font-semibold mb-3">Predefined Themes</h4>
                     <div className="space-y-2">
                       {predefinedThemes.map((theme: Theme) => (
                         <ThemeItem
@@ -180,7 +180,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
                 {/* Custom Themes */}
                 {customThemes.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold mb-3 text-muted-foreground">Custom Themes</h4>
+                    <h4 className="text-sm font-semibold mb-3">Custom Themes</h4>
                     <div className="space-y-2">
                       {customThemes.map((theme: Theme) => (
                         <ThemeItem
@@ -195,7 +195,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({ children }) => {
                 )}
 
                 {themes.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-8">
                     No themes found. Create your first theme to get started.
                   </div>
                 )}

@@ -18,7 +18,7 @@ function FileUploadDialog() {
     return (
         <Dialog open={fileUpload.isOpen} onOpenChange={closeFileUpload}>
             <DialogContent
-                className="max-w-lg theme-explorer-background theme-explorer-item-text"
+                className="max-w-lg"
             >
                 <DialogHeader>
                     <DialogTitle>Upload Media Files</DialogTitle>

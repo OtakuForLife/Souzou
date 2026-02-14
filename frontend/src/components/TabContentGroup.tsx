@@ -108,7 +108,7 @@ export default function TabContentGroup() {
       onValueChange={onTabChange}
       activationMode="manual"
     >
-      <TabsList className="flex-shrink-0 flex items-center justify-start w-full theme-main-tabs-background p-0 gap-2 rounded-none">
+      <TabsList className="flex-shrink-0 flex items-center justify-start w-full theme-bg-surface-2 p-0 gap-2 rounded-none">
         <SortableContext items={visibleTabIDs} strategy={rectSortingStrategy}>
           {visibleTabIDs.map((tabId: string) => (
             <EntityTabTrigger key={tabId} entityID={tabId} />
@@ -119,12 +119,12 @@ export default function TabContentGroup() {
             <DropdownMenuTrigger asChild>
               <button
                 aria-label="Tab options"
-                className="p-1 rounded hover:bg-muted/50 theme-main-content-text"
+                className="p-1 rounded hover:bg-muted/50"
               >
                 <MoreHorizontal className="w-5 h-5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="theme-explorer-background theme-explorer-item-text">
+            <DropdownMenuContent align="end" className="theme-bg-surface-1 theme-text-secondary">
               <DropdownMenuLabel>View options</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
@@ -208,7 +208,7 @@ export default function TabContentGroup() {
           </DropdownMenu>
         </div>
       </TabsList>
-      <div className="flex-1 min-h-0 theme-main-content-background theme-main-content-text">
+      <div className="flex-1 min-h-0">
         {tabsState.openTabs.map((tabId: string) => {
           const entity = allEntities[tabId];
           return entity ? (

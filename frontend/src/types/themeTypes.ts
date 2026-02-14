@@ -2,76 +2,42 @@
  * Theme-related TypeScript types
  */
 
-// Schema definition - single source of truth for theme colors
+// Schema definition - single source of truth for theme colors (FLAT structure)
 export const THEME_COLORS_SCHEMA = {
-  'nav-sidebar': {
-    background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
-    text: { type: 'color' as const, label: 'Text', default: '#1f2937' }
-  },
-  explorer: {
-    background: { type: 'color' as const, label: 'Background', default: '#f8fafc' },
-    item: {
-      'background-hover': { type: 'color' as const, label: 'Item Background Hover', default: '#f1f5f9' },
-      text: { type: 'color' as const, label: 'Item Text', default: '#1f2937' },
-      'text-hover': { type: 'color' as const, label: 'Item Text Hover', default: '#1f2937' }
-    }
-  },
-  main: {
-    tabs: {
-      background: { type: 'color' as const, label: 'Tab Bar Background', default: '#f8fafc' }
-    },
-    tab: {
-      inactive: {
-        text: { type: 'color' as const, label: 'Inactive Tab Text', default: '#6b7280' },
-        'text-hover': { type: 'color' as const, label: 'Inactive Tab Text Hover', default: '#1f2937' },
-        background: { type: 'color' as const, label: 'Inactive Tab Background', default: '#ffffff' },
-        'background-hover': { type: 'color' as const, label: 'Inactive Tab Background Hover', default: '#f1f5f9' }
-      },
-      active: {
-        text: { type: 'color' as const, label: 'Active Tab Text', default: '#1f2937' },
-        'text-hover': { type: 'color' as const, label: 'Active Tab Text Hover', default: '#0f172a' },
-        background: { type: 'color' as const, label: 'Active Tab Background', default: '#ffffff' },
-        'background-hover': { type: 'color' as const, label: 'Active Tab Background Hover', default: '#f8fafc' }
-      }
-    },
-    content: {
-      background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
-      title: { type: 'color' as const, label: 'Title', default: '#1f2937' },
-      text: { type: 'color' as const, label: 'Text', default: '#1f2937' },
-      editor: {
-        selection: { type: 'color' as const, label: 'Markdown Selection', default: '#dbeafe' },
-        cursor: { type: 'color' as const, label: 'Markdown Cursor', default: '#1f2937' }
-      }
-    }
-  },
-  'entity-sidebar': {
-    background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
-    text: { type: 'color' as const, label: 'Text', default: '#1f2937' }
-  },
-  dialog: {
-    background: { type: 'color' as const, label: 'Background', default: '#ffffff' },
-    border: { type: 'color' as const, label: 'Border', default: '#e5e7eb' },
-    text: { type: 'color' as const, label: 'Text', default: '#1f2937' },
-    'text-danger': { type: 'color' as const, label: 'Text Danger', default: '#dc2626' },
-    button: { type: 'color' as const, label: 'Button', default: '#3b82f6' },
-    'button-hover': { type: 'color' as const, label: 'Button Hover', default: '#2563eb' },
-    'button-hover-border': { type: 'color' as const, label: 'Button Hover Border', default: '#1d4ed8' },
-    'button-clicked': { type: 'color' as const, label: 'Button Clicked', default: '#1e40af' },
-    'button-clicked-border': { type: 'color' as const, label: 'Button Clicked Border', default: '#1e3a8a' }
-  }
+  '--color-surface-0': { type: 'color' as const, label: 'Primary', section: 'Surface', default: '#ffffff' },
+  '--color-surface-0-hover': { type: 'color' as const, label: 'Primary Hover', section: 'Surface', default: '#1f2937' },
+  '--color-surface-1': { type: 'color' as const, label: 'Secondary', section: 'Surface', default: '#f8fafc' },
+  '--color-surface-1-hover': { type: 'color' as const, label: 'Secondary Hover', section: 'Surface', default: '#f1f5f9' },
+  '--color-surface-2': { type: 'color' as const, label: 'Tertiary', section: 'Surface', default: '#f8fafc' },
+  '--color-surface-2-hover': { type: 'color' as const, label: 'Tertiary Hover', section: 'Surface', default: '#f1f5f9' },
+
+  '--color-text-primary': { type: 'color' as const, label: 'Primary', section: 'Text', default: '#1f2937' },
+  '--color-text-primary-hover': { type: 'color' as const, label: 'Primary Hover', section: 'Text', default: '#1f2937' },
+  '--color-text-secondary': { type: 'color' as const, label: 'Secondary', section: 'Text', default: '#6b7280' },
+  '--color-text-secondary-hover': { type: 'color' as const, label: 'Secondary Hover', section: 'Text', default: '#374151' },
+  '--color-text-tertiary': { type: 'color' as const, label: 'Tertiary', section: 'Text', default: '#9ca3af' },
+  '--color-text-tertiary-hover': { type: 'color' as const, label: 'Tertiary Hover', section: 'Text', default: '#374151' },
+
+  '--color-tab-active': { type: 'color' as const, label: 'Active', section: 'Tabs', default: '#1f2937' },
+  '--color-tab-active-hover': { type: 'color' as const, label: 'Active Hover', section: 'Tabs', default: '#1f2937' },
+  '--color-tab-inactive': { type: 'color' as const, label: 'Inactive', section: 'Tabs', default: '#f8fafc' },
+  '--color-tab-inactive-hover': { type: 'color' as const, label: 'Inactive Hover', section: 'Tabs', default: '#f1f5f9' },
+
+  '--color-border-primary': { type: 'color' as const, label: 'Primary', section: 'Border', default: '#e5e7eb' },
+
+  '--color-button-primary': { type: 'color' as const, label: 'Primary', section: 'Buttons', default: '#3b82f6' },
+  '--color-button-primary-hover': { type: 'color' as const, label: 'Primary Hover', section: 'Buttons', default: '#2563eb' },
+  '--color-button-primary-clicked': { type: 'color' as const, label: 'Primary Clicked', section: 'Buttons', default: '#1d4ed8' },
+
+  '--color-button-alert': { type: 'color' as const, label: 'Alert', section: 'Buttons', default: '#ef4444' },
+  '--color-button-alert-hover': { type: 'color' as const, label: 'Alert Hover', section: 'Buttons', default: '#dc2626' },
+  '--color-button-alert-clicked': { type: 'color' as const, label: 'Alert Clicked', section: 'Buttons', default: '#b91c1c' },
 } as const;
 
-// Type inference helpers
-type SchemaLeaf = { type: 'color'; label: string; default: string };
-
-type InferThemeColors<T> = T extends SchemaLeaf
-  ? string
-  : { [K in keyof T]: InferThemeColors<T[K]> };
-
-// Derive ThemeColors type from schema
-export type ThemeColors = InferThemeColors<typeof THEME_COLORS_SCHEMA>;
-
-
+// Derive ThemeColors type from flat schema
+export type ThemeColors = {
+  [K in keyof typeof THEME_COLORS_SCHEMA]: string;
+};
 
 export interface Theme {
   id: string;
@@ -82,48 +48,6 @@ export interface Theme {
   createdAt: string;
   updatedAt: string;
 }
-
-export interface ColorPickerItem {
-  label: string;
-  path: string; // e.g., 'primary', 'text.primary', 'editor.syntax.keyword'
-  description?: string;
-  category: string;
-}
-
-// Color picker categories and items
-export const COLOR_PICKER_ITEMS: ColorPickerItem[] = [
-  // Base Colors
-  { label: 'Primary Color', path: 'primary', category: 'Base Colors', description: 'Main brand color' },
-  { label: 'Primary Hover', path: 'primaryHover', category: 'Base Colors', description: 'Primary color on hover' },
-  { label: 'Secondary Color', path: 'secondary', category: 'Base Colors' },
-  { label: 'Background', path: 'background', category: 'Base Colors' },
-  { label: 'Surface', path: 'surface', category: 'Base Colors', description: 'Cards, panels' },
-  { label: 'Surface Hover', path: 'surfaceHover', category: 'Base Colors' },
-  
-  // Text Colors
-  { label: 'Primary Text', path: 'text.primary', category: 'Text Colors' },
-  { label: 'Secondary Text', path: 'text.secondary', category: 'Text Colors' },
-  { label: 'Muted Text', path: 'text.muted', category: 'Text Colors' },
-  { label: 'Text on Primary', path: 'text.onPrimary', category: 'Text Colors' },
-  
-  // Border Colors
-  { label: 'Default Border', path: 'border.default', category: 'Borders' },
-  { label: 'Hover Border', path: 'border.hover', category: 'Borders' },
-  
-  // Editor Colors
-  { label: 'Editor Background', path: 'editor.background', category: 'Editor' },
-  { label: 'Editor Text', path: 'editor.text', category: 'Editor' },
-  { label: 'Selection', path: 'editor.selection', category: 'Editor' },
-  { label: 'Cursor', path: 'editor.cursor', category: 'Editor' },
-  { label: 'Line Numbers', path: 'editor.lineNumber', category: 'Editor' },
-  
-  // Syntax Highlighting
-  { label: 'Keywords', path: 'editor.syntax.keyword', category: 'Syntax Highlighting', description: 'if, for, class, etc.' },
-  { label: 'Strings', path: 'editor.syntax.string', category: 'Syntax Highlighting', description: '"text", \'text\'' },
-  { label: 'Comments', path: 'editor.syntax.comment', category: 'Syntax Highlighting', description: '// comments' },
-  { label: 'Functions', path: 'editor.syntax.function', category: 'Syntax Highlighting', description: 'function names' },
-  { label: 'Variables', path: 'editor.syntax.variable', category: 'Syntax Highlighting', description: 'variable names' },
-];
 
 // Preset colors for color picker
 export const PRESET_COLORS = [

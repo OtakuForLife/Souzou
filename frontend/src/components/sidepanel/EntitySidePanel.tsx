@@ -49,16 +49,16 @@ export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityI
   const defaultSize = enabledSections.length > 0 ? Math.floor(100 / enabledSections.length) : 100;
 
   return (
-    <div className="h-full flex flex-col theme-explorer-background theme-explorer-item-text">
+    <div className="h-full flex flex-col theme-bg-surface-1 theme-text-secondary">
       {enabledSections.length >= 2 ? (
         <ResizablePanelGroup direction="vertical" tagName="div" className="h-full w-full">
           {enabledSections.map((section, idx) => (
             <React.Fragment key={idx}>
-              <ResizablePanel className="theme-explorer-background" minSize={15} maxSize={100/enabledSections.length+5} defaultSize={defaultSize}>
+              <ResizablePanel className="" minSize={15} maxSize={100/enabledSections.length+5} defaultSize={defaultSize}>
                 {section}
               </ResizablePanel>
               {idx < enabledSections.length - 1 && (
-                <ResizableHandle className="w-1 theme-explorer-background" />
+                <ResizableHandle className="w-1d" />
               )}
             </React.Fragment>
           ))}
@@ -66,7 +66,7 @@ export const EntitySidePanel: React.FC<EntitySidePanelProps> = ({ currentEntityI
       ) : (
         <div className="h-full w-full overflow-auto">
           {hasAnySection ? enabledSections[0] : (
-            <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
+            <div className="h-full w-full flex items-center justify-center text-sm">
               Side panel is hidden
             </div>
           )}

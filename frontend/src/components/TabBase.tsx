@@ -48,7 +48,7 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
 
   return (
     <div
-      className="flex w-[150px]"
+      className="flex w-[150px] h-full pt-1"
       ref={setNodeRef}
       {...attributes}
       {...listeners}
@@ -59,8 +59,8 @@ function TabBase({ objectID, objectType, displayname, onClose, onDropped }: TabP
       <TabsTrigger
         asChild
         ref={tabRef}
-        key={uid}
-        className="flex justify-between w-full rounded-none rounded-t-lg p-1 theme-main-tab-background theme-main-tab-text"
+        key={uid} 
+        className="flex justify-between w-full rounded-none rounded-t-lg p-1 theme-tab"
         value={uid}
       >
         <div>

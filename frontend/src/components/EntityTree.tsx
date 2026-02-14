@@ -11,7 +11,7 @@ export const NoteTree = () => {
   const { globalLoading } = useSelector((state: RootState) => state.entities);
 
   return (
-    <div className="relative flex-initial justify-center w-full h-full theme-explorer-background">
+    <div className="relative flex-initial justify-center w-full h-full">
       <div className="px-1 py-4">
         {notes.map((note: Entity) => (
           <NoteTreeItem key={note.id} noteID={note.id} depth={0}/>
@@ -20,7 +20,7 @@ export const NoteTree = () => {
 
       {/* Loading overlay - only shown during initial fetch */}
       {globalLoading && (
-        <div className="absolute inset-0 bg-black/50 bg-opacity-30 flex items-center justify-center z-50">
+        <div className="absolute inset-0 bg-opacity-30 flex items-center justify-center z-50">
             <LoadingSpinner size="md" text="Loading notes..." />
         </div>
       )}

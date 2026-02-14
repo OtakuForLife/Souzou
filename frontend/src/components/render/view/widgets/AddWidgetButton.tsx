@@ -56,7 +56,7 @@ export const AddWidgetButton: React.FC<AddWidgetButtonProps> = ({
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-md theme-explorer-background theme-explorer-item-text">
+      <DialogContent className="sm:max-w-md theme-bg-surface-1 theme-text-secondary">
         <DialogHeader>
           <DialogTitle>Add Widget</DialogTitle>
           <DialogDescription>
@@ -66,7 +66,7 @@ export const AddWidgetButton: React.FC<AddWidgetButtonProps> = ({
         
         <div className="grid gap-3 py-4">
           {availableWidgets.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8">
               <p>No widgets available</p>
               <p className="text-sm mt-1">
                 Register widgets in the widget registry to see them here.

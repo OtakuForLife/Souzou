@@ -178,7 +178,7 @@ const PropertiesSection: React.FC<PropertiesSectionProps> = ({ currentEntity }) 
                     <SelectTrigger className="w-32 text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="theme-explorer-background theme-explorer-item-text">
+                    <SelectContent className="theme-bg-surface-1 theme-text-secondary">
                       {PROPERTY_TYPES.map((t) => (
                         <SelectItem key={t.type} value={t.type}>
                           <div className="flex items-center gap-2">
