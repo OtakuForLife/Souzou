@@ -2,7 +2,7 @@
 
 <img src="https://github.com/OtakuForLife/Souzou/blob/main/frontend/public/screenshots/Dashboard.png" height="400">
 
-**Souzou** is your personal digital sanctuary — a powerful yet serene knowledge and life management tool inspired by the best of Obsidian and Notion, but without the clutter and overwhelm.
+**Souzou** is your personal digital sanctuary — a powerful yet serene knowledge and life management tool inspired by the best of Obsidian and Notion and more.
 
 Whether you're building a second brain, tracking personal goals, managing tasks, or journaling your thoughts, Souzou provides an intuitive, unified environment to help you stay grounded and organized — all while growing your own life knowledge base.
 
@@ -22,16 +22,16 @@ I envision Souzou as a platform that is not another jumble of notes, but that is
 ---
 
 ## 🚀 Features
-
- - Simple Markdown Editor with Note linking
- - Themes
- - Notes-inside-Notes Hierarchy
- - 3 Entity Types
+ - Everything is an Entity
+ - Simple Markdown Editor with advanced Note linking and tagging
+ - advanced theming and crafting custom themes
+ - Entity-inside-Entity Hierarchy
+ - 2 Entity Types
     - Markdown Notes
     - Views
-    - AI Chat History (for now only Ollama provider supported)
  - familiar Layout
- - Build Customizable Dashboards (Views) with Widgets (Graph Widget, Note Widget, AI Chat Widget)
+ - Build Customizable Dashboards (Views) with Widgets (Graph Widget, Note Widget)
+
 
 ---
 
