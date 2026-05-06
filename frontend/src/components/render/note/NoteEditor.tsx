@@ -1,7 +1,8 @@
 
 import React, { useEffect, useRef, useCallback } from "react";
 import { EditorState, Compartment } from "@codemirror/state";
-import { EditorView, ViewUpdate } from "@codemirror/view";
+import { EditorView, ViewUpdate, tooltips } from "@codemirror/view";
+
 import { syntaxHighlighting } from "@codemirror/language";
 import { autocompletion } from "@codemirror/autocomplete";
 import { useSelector } from "react-redux";
@@ -94,6 +95,10 @@ const NoteEditor: React.FC<Props> = ({
     const state = EditorState.create({
       doc: initialText,
       extensions: [
+        // position:fixed lets the tooltip escape NoteRenderer's flex container.
+        // .cm-editor has height:100% and no overflow, so it is not a scroll
+        // container and cannot trap fixed children in Chromium/Electron.
+        tooltips({ position: "fixed" }),
         ...baseExtensions,
         // Obsidian-style checkbox live preview
         checkboxPlugin,
@@ -172,7 +177,7 @@ const NoteEditor: React.FC<Props> = ({
 
   return (
     <div
-      className="px-4 overflow-hidden"
+      className="h-full"
       ref={editorRef}
       style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
     />

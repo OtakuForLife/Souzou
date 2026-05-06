@@ -98,11 +98,16 @@ function createMarkdownHighlightStyle() {
 function createCustomTheme() {
   const vars = getCSSVariables();
   return EditorView.theme({
-    // Basic editor styling
+    // Basic editor styling.
+    // Do NOT set any overflow here: overflow-x:hidden forces overflow-y:auto
+    // (CSS spec), which makes .cm-editor a scroll container and causes
+    // Chromium/Electron to trap position:fixed tooltip children inside it.
+    // Horizontal overflow is prevented by .cm-scroller; height:100% lets the
+    // editor fill a flex parent so CodeMirror owns its own scrolling.
     "&": {
         color: vars.editorText,
         backgroundColor: vars.editorBackground,
-        overflowX: "hidden", // Prevent horizontal scrolling
+        height: "100%",
     },
     ".cm-content": {
         padding: "0",
@@ -119,7 +124,6 @@ function createCustomTheme() {
     },
     ".cm-editor": {
         fontSize: "14px",
-        overflowX: "hidden", // Prevent horizontal scrolling on editor
     },
     ".cm-scroller": {
         overflowX: "hidden", // Prevent horizontal scrolling on scroller
@@ -237,16 +241,32 @@ function createCustomTheme() {
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
         fontSize: "13px",
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        maxHeight: "200px",
         minWidth: "200px",
+        overflow: "hidden",
     },
 
     ".cm-tooltip-autocomplete > ul": {
         margin: "0",
         padding: "4px",
         listStyle: "none",
-        maxHeight: "180px",
+        maxHeight: "240px",
         overflowY: "auto",
+        overflowX: "hidden",
+        scrollbarWidth: "thin",
+        scrollbarColor: `${vars.editorText}30 transparent`,
+    },
+
+    ".cm-tooltip-autocomplete > ul::-webkit-scrollbar": {
+        width: "4px",
+    },
+
+    ".cm-tooltip-autocomplete > ul::-webkit-scrollbar-track": {
+        backgroundColor: "transparent",
+    },
+
+    ".cm-tooltip-autocomplete > ul::-webkit-scrollbar-thumb": {
+        backgroundColor: `${vars.editorText}30`,
+        borderRadius: "4px",
     },
 
     ".cm-tooltip-autocomplete > ul > li": {
@@ -289,15 +309,6 @@ function createCustomTheme() {
         fontSize: "12px",
         color: vars.syntaxComment,
         maxWidth: "250px",
-    },
-
-    // Custom styling for note link suggestions
-    ".cm-tooltip-autocomplete .cm-completionLabel[data-type='note']": {
-        color: vars.syntaxFunction,
-    },
-
-    ".cm-tooltip-autocomplete .cm-completionLabel[data-type='note-id']": {
-        color: vars.syntaxString,
     },
 
     // Checkbox styling for live preview

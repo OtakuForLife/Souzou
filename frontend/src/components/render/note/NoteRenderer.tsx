@@ -23,11 +23,11 @@ function NoteRenderer({ entityID }: EntityRendererProps) {
         );
     };
     return (
-        <div className="h-full overflow-y-scroll overflow-x-hidden">
-            <div className="pb-10">
-                {/* Header with Title */}
-                <EntityTitle entity={entity} editable/>
+        <div className="h-full flex flex-col overflow-hidden">
+            {/* Title is pinned at the top; editor owns its own scrolling */}
+            <EntityTitle entity={entity} editable/>
 
+            <div className="flex-1 min-h-0 px-4">
                 <NoteEditor
                     initialText={entity ? entity.content : ""}
                     onContentChange={handleContentChange}
