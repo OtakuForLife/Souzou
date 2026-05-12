@@ -1,5 +1,5 @@
 
-# Functional Requirements
+# Core Functional Requirements
 
 ## FR-001: Entity Management
 
@@ -35,7 +35,7 @@ The system must provide full-text search across all entity content and metadata.
 
 ---
 
-# Non-Functional Requirements
+# Core Non-Functional Requirements
 
 ## Performance
 
@@ -56,3 +56,10 @@ As this is a one-user program, there is no authentication and authorization need
 ## Usability
 
 The system must be usable without documentation for basic operations, with progressive disclosure of advanced features. The interface must be accessible, following WCAG 2.1 AA guidelines. Error messages must be clear, actionable, and avoid technical jargon. Keyboard navigation must be supported for all core functions.
+
+
+# Features
+
+## 
+
+

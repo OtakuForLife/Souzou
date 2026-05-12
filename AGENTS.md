@@ -5,8 +5,8 @@ This document defines rules and workflows for automated agents working in this r
 Agents must follow these guidelines when modifying the project.
 
 Reference documents:
-- `_docs/VISION.md`
-- `_docs/REQUIREMENTS.md`
+- `VISION.md`
+- `REQUIREMENTS.md`
 
 ---
 
@@ -27,7 +27,7 @@ Agents may:
 
 ## 2. Product Alignment
 
-Agents must ensure changes align with the product vision defined in `_docs/VISION.md`. Souzou is designed as a life management platform that bridges the gap between simple and overwhelming PKM tools, providing powerful features in a minimalist interface.
+Agents must ensure changes align with the product vision defined in `VISION.md`. Souzou is designed as a life management platform that bridges the gap between simple and overwhelming PKM tools, providing powerful features in a minimalist interface.
 
 Before implementing features:
 
@@ -42,7 +42,7 @@ Before implementing features:
 
 ## 3. Architecture Compliance
 
-All changes must respect the architecture defined in `_docs/ARCHITECTURE.md`. Souzou follows a clear separation between frontend and backend with an Entity-centric data model.
+All changes must respect the architecture defined in `ARCHITECTURE.md`. Souzou follows a clear separation between frontend and backend with an Entity-centric data model.
 
 Agents must:
 
@@ -52,7 +52,6 @@ Agents must:
 - Preserve the Entity-inside-Entity hierarchy implementation
 - Keep widget implementations modular and independent
 - Follow established patterns for Markdown processing with CodeMirror
-- Maintain PostgreSQL database schema integrity
 - Ensure theme customizations remain isolated and non-invasive
 
 ---
@@ -64,7 +63,7 @@ Standard workflow:
 1. **Understand the relevant module** - Review existing code, understand Entity relationships, and study how the feature interacts with existing Views and Widgets
 2. **Implement minimal necessary change** - Focus on the smallest change that delivers value while maintaining the calm, minimalist aesthetic
 3. **Add or update tests** - Write Vitest tests for frontend, Pytest tests for backend
-4. **Update documentation if needed** - Keep `_docs/VISION.md` and related docs current
+4. **Update documentation if needed** - Keep `VISION.md` and related docs current
 5. **Verify theming compatibility** - Ensure changes work across different themes
 6. **Test Entity interactions** - Confirm new features work with the Entity hierarchy system
 
@@ -90,7 +89,7 @@ Key directories and their purposes:
   /backend         # Backend documentation  
 	  /api.md      # API documentation
 	  /model.md    # database structure
-  /VISION.md       # Product vision and goals
+VISION.md       # Product vision and goals
 ```
 
 Frontend unit tests are located in a `__test__` subdirectory inside the same directory of the unit file.
@@ -191,7 +190,7 @@ Agents must update documentation when:
 Files commonly updated:
 
 - `README.md` - Project overview and quick start
-- `_docs/VISION.md` - Product vision and feature alignment
+- `VISION.md` - Product vision and feature alignment
 - `_docs/backend/api.md` for backend API documentation
 - `_docs/backend/model.md` for backend model documentation
 - Component documentation in the frontend
@@ -202,7 +201,7 @@ Files commonly updated:
 
 Agents may:
 
-- Implement features defined in `_docs/VISION.md` that support the life management platform goals
+- Implement features defined in `VISION.md` that support the life management platform goals
 - Improve internal code quality without changing external behavior
 - Add tests to increase coverage and reliability
 - Update documentation to improve clarity and completeness
@@ -260,32 +259,11 @@ Agents must:
 
 ---
 
-## 14. CI/CD Requirements
-
-Before completing changes:
-
-- Code must compile without errors (TypeScript for frontend, Python for backend)
-- Tests must pass (Vitest for frontend, Pytest for backend)
-- Linting must pass (ESLint for frontend, flake8/black for backend)
-- Docker builds must succeed
-- No regression in existing functionality
-
-CI/CD Pipeline:
-
-```bash
-# Run all checks locally before pushing
-npm run lint && npm run test     # Frontend
-pytest && flake8                 # Backend
-docker-compose build             # Docker build verification
-```
-
----
-
-## 15. Agent Execution Checklist
+## 14. Agent Execution Checklist
 
 Before finalizing work, verify all items are complete:
 
-- [ ] Implementation aligns with `_docs/VISION.md`
+- [ ] Implementation aligns with `VISION.md`
 - [ ] Architecture boundaries respected (Entity system, frontend/backend separation)
 - [ ] Tests added or updated (Vitest for frontend, Pytest for backend)
 - [ ] Documentation updated (API changes, new features, configuration updates)

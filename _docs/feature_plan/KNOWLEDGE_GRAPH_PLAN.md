@@ -4,7 +4,7 @@
 
 # 1. SYSTEM GOAL
 
-Build a knowledge graph system on top of an entity-based note platform where:
+Build a knowledge graph system in Souzou.
 
 ### Core principles
 
@@ -18,8 +18,6 @@ Build a knowledge graph system on top of an entity-based note platform where:
 
 You now have **three explicit graph layers**:
 
----
-
 ## 2.1 Structural Graph (SERVER AUTHORITY)
 
 ```text
@@ -29,18 +27,13 @@ Entity.parent → Entity.child
 ### Purpose
 
 - Hierarchy
-    
 - Organization
-    
 - Navigation tree
-    
 
 ### Source
 
 - Direct user assignment
-    
 - Fully persisted
-    
 
 ---
 
@@ -53,11 +46,8 @@ Entity (note) → Entity (linked entity)
 ### Source
 
 - Client parses `[[...]]`
-    
 - Client resolves entity IDs
-    
 - Server persists as explicit edges
-    
 
 ### Stored as:
 
@@ -79,11 +69,8 @@ Entity ↔ Entity (conceptual relationships)
 ### Source
 
 - server-side NLP
-    
 - embeddings
-    
 - mention extraction
-    
 
 ### Stored as:
 
@@ -132,11 +119,8 @@ CONCEPT = "concept"
 ## 3.3 Keep existing:
 
 - Entity
-    
 - Tag
-    
 - Parent-child field
-    
 
 No breaking changes required.
 
@@ -151,11 +135,8 @@ No breaking changes required.
 ### Responsibility
 
 - Detect `[[Text]]`
-    
 - Resolve entity ID
-    
 - Render inline
-    
 
 ### Output (NOT persisted):
 
@@ -177,13 +158,9 @@ No breaking changes required.
 On typing:
 
 1. Parse markdown
-    
 2. Detect wikilinks
-    
 3. Resolve entity IDs (cache-first)
-    
 4. Render immediately
-    
 
 NO server roundtrip required for display.
 
@@ -194,9 +171,7 @@ NO server roundtrip required for display.
 Client ALWAYS assumes:
 
 - link is valid
-    
 - entity exists or is creatable
-    
 
 ---
 
@@ -260,11 +235,8 @@ for link in wikilinks:
 ### Step 4: trigger async processing
 
 - mention extraction
-    
 - concept linking
-    
 - embedding updates
-    
 
 ---
 
@@ -295,9 +267,7 @@ Mention records (ephemeral semantic units)
 ## 6.3 Concept resolution
 
 - map mentions → concepts (Entity(type=CONCEPT))
-    
 - create or reuse concepts
-    
 
 ---
 
@@ -325,11 +295,8 @@ EntityEdge.objects.filter(to_entity_id=entity_id)
 Includes:
 
 - wikilinks (explicit)
-    
 - inferred edges
-    
 - structural edges (optional separate query)
-    
 
 ---
 
@@ -338,11 +305,8 @@ Includes:
 Weighted combination:
 
 - explicit links (high weight)
-    
 - inferred links (medium weight)
-    
 - structural proximity (low weight)
-    
 
 ---
 
@@ -353,13 +317,9 @@ Weighted combination:
 ## 8.1 Wikilinks (client-side only behavior)
 
 - instant highlight
-    
 - hover preview
-    
 - click navigation
-    
 - no loading delay
-    
 
 ---
 
@@ -380,9 +340,7 @@ Edge styling:
 Never ask user:
 
 - “confirm link”
-    
 - “resolve entity”
-    
 
 Everything is automatic.
 
@@ -390,7 +348,6 @@ Everything is automatic.
 
 # 9. CRITICAL SYSTEM RULES
 
----
 
 ## 9.1 Wikilinks rule
 
@@ -399,11 +356,8 @@ Everything is automatic.
 They are NOT:
 
 - inferred
-    
 - optional
-    
 - temporary in backend
-    
 
 ---
 
@@ -412,11 +366,8 @@ They are NOT:
 Server graph = source of truth for:
 
 - all edges
-    
 - all relationships
-    
 - all queries
-    
 
 Client graph = ephemeral view only
 
@@ -427,84 +378,57 @@ Client graph = ephemeral view only
 AI NEVER modifies:
 
 - explicit wikilinks
-    
 - parent-child relations
-    
 
 It only adds:
 
 - inferred edges
-    
 - concepts
-    
 
----
 
 # 10. PERFORMANCE STRATEGY
-
----
 
 ## 10.1 Client performance
 
 - zero server calls for rendering links
-    
 - local cache for entity resolution
-    
 - instant UI updates
-    
 
----
 
 ## 10.2 Server performance
 
 - async processing pipeline
-    
 - batch edge replacement
-    
 - indexed EntityEdge table
-    
 
 ---
 
 # 11. WHY THIS DESIGN WORKS
 
----
-
 ## 11.1 UX-first
 
 - wikilinks are instant
-    
 - no latency in writing flow
-    
 
----
 
 ## 11.2 Graph correctness
 
 - all links are persisted
-    
 - full queryability
-    
 
----
 
 ## 11.3 Clean separation
 
 - client = perception layer
-    
 - server = truth layer
-    
 - AI = inference layer
-    
 
 ---
 
 ## 11.4 No semantic pollution
 
 - UI constructs never contaminate inference
-    
 - inference never overwrites user intent
-    
 
 ---
 
@@ -538,5 +462,4 @@ AI LAYER
 If you want next, I can turn this into:
 
 - a production-ready Django app structure (files, services, tasks)
-    
 - or a sync protocol spec (how client diffing + edge reconciliation works efficiently)
